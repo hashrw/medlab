@@ -23,9 +23,8 @@ class StoreDiagnosticoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'paciente_id' => 'required|exists:pacientes,id',
+           
             'medico_id' => 'required|exists:medicos,id',
-            'enfermedad_id' => 'required|exists:enfermedads,id',
             'tipo_enfermedad' => 'string|max:255',
             'estado_enfermedad' => 'string|email|max:255|unique:users',
             'comienzo_cronica' => 'string|max:255',

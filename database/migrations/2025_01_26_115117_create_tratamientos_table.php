@@ -20,7 +20,7 @@ return new class extends Migration
             //se calcula a partir de la fecha de inicio de la 1ª línea de tratamiento y la fecha de fin de la última línea de tratamiento asignada.
             $table->integer('duracion_trat');
             $table->foreignId('medico_id')->constrained()->onDelete('cascade');
-            $table->foreignId('paciente_id')->constrained()->onDelete('cascade');
+            //$table->foreignId('paciente_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

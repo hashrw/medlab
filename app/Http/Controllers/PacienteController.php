@@ -58,6 +58,10 @@ class PacienteController extends Controller
     public function show(Paciente $paciente)
     {
         $this->authorize('view', $paciente);
+    
+        // Cargar las relaciones necesarias
+        $paciente->load('user', 'enfermedads', 'tratamientos');
+    
         return view('pacientes/show', ['paciente' => $paciente]);
     }
 

@@ -9,8 +9,8 @@ class Enfermedad extends Model
 {
     use HasFactory;
     
-    protected $fillable = ['tipo_trasplante','nombre_enfermedad','fecha_trasplante','origen_trasplante','identidad_hla',
-    'tipo_acondicionamiento','seropositividad_donante','seropositividad_receptor','paciente_id'];
+    protected $fillable = ['tipo_trasplante','fecha_trasplante','origen_trasplante','identidad_hla',
+    'tipo_acondicionamiento','seropositividad_donante','seropositividad_receptor'];
 
     protected $casts = [
         'fecha_trasplante' => 'date:Y-m-d',
@@ -18,6 +18,11 @@ class Enfermedad extends Model
 
     public function diagnosticos(){
         return $this->hasMany(Diagnostico::class);
+    }
+
+    public function pacientes()
+    {
+        return $this->belongsToMany(Paciente::class, 'paciente_enfermedad');
     }
     
 }

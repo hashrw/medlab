@@ -27,7 +27,7 @@ class OrganoSeeder extends Seeder
                     'nombre' => "Hígado",
                 ],
                 [
-                    'nombre' => "Ojo",
+                    'nombre' => "Ojos",
                 ],
                 [
                     'nombre' => "Pelo",

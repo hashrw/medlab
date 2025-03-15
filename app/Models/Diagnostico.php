@@ -11,16 +11,11 @@ class Diagnostico extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['paciente_id',
-                'enfermedad_id',
+    protected $fillable = [
                 'medico_id', // Relación con Médico
                 'dias_desde_trasplante',
                 'tipo_enfermedad' ,
-                'estado_enfermedad' ,
-                'comienzo_cronica' ,
-                'escala_karnofsky' ,
-                'estado_injerto' ,
-                'tipo_infeccion',
+                'estado_enfermedad',
                 'f_hospitalizacion',
                 'f_electromiografia',
                 'f_eval_injerto',
@@ -28,7 +23,7 @@ class Diagnostico extends Model
                 'f_espirometria',
                 'f_esplenectomia',
                 'hipoalbuminemia', 
-                'observaciones'];
+                'observaciones' ];
 
     protected $casts = [
         'f_hospitalizacion' => 'datetime:Y-m-d H:i',
@@ -37,7 +32,6 @@ class Diagnostico extends Model
         'f_esplenectomia' => 'datetime:Y-m-d H:i',
         'f_medulograma' => 'datetime:Y-m-d H:i',
         'f_espirometria' => 'datetime:Y-m-d H:i'
-                    
         ];
 
     protected $guarded = ['cie10']; // Protege el campo cie10 contra ediciones

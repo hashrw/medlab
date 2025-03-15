@@ -1,7 +1,8 @@
 @props([
     'name',
     'show' => false,
-    'maxWidth' => '2xl'
+    'maxWidth' => '2xl',
+    'paciente' // Añadimos la propiedad paciente
 ])
 
 @php
@@ -49,6 +50,7 @@ $maxWidth = [
     class="fixed inset-0 overflow-y-auto px-4 py-6 sm:px-0 z-50"
     style="display: {{ $show ? 'block' : 'none' }};"
 >
+    <!-- Fondo oscuro -->
     <div
         x-show="show"
         class="fixed inset-0 transform transition-all"
@@ -63,6 +65,7 @@ $maxWidth = [
         <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
     </div>
 
+    <!-- Contenedor del modal -->
     <div
         x-show="show"
         class="mb-6 bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:w-full {{ $maxWidth }} sm:mx-auto"
@@ -73,6 +76,54 @@ $maxWidth = [
         x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
         x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
     >
-        {{ $slot }}
+        <!-- Encabezado del modal -->
+        <div class="flex justify-between items-center px-6 py-4 border-b border-gray-200">
+            <h2 class="text-xl font-bold">Datos Clínicos de {{ $paciente->user->name }}</h2>
+            <button x-on:click="show = false" class="text-gray-500 hover:text-gray-700">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Contenido del modal -->
+        <div class="p-6 space-y-4">
+            <!-- Edad -->
+            <div>
+                <x-input-label :value="__('Edad')" />
+                <x-text-input readonly disabled class="block mt-1 w-full" :value="$paciente->edad . ' años'" />
+            </div>
+
+            <!-- Enfermedades -->
+            <div>
+                <x-input-label :value="__('Enfermedades')" />
+                <ul class="mt-1">
+                    @forelse ($paciente->enfermedads as $enfermedad)
+                        <li>{{ $enfermedad->nombre }}</li>
+                    @empty
+                        <li>{{ __('No hay enfermedades registradas.') }}</li>
+                    @endforelse
+                </ul>
+            </div>
+
+            <!-- Tratamientos -->
+            <div>
+                <x-input-label :value="__('Tratamientos')" />
+                <ul class="mt-1">
+                    @forelse ($paciente->tratamientos as $tratamiento)
+                        <li>{{ $tratamiento->nombre }} ({{ $tratamiento->descripcion }})</li>
+                    @empty
+                        <li>{{ __('No hay tratamientos registrados.') }}</li>
+                    @endforelse
+                </ul>
+            </div>
+        </div>
+
+        <!-- Pie del modal -->
+        <div class="px-6 py-4 bg-gray-100 text-right">
+            <x-danger-button x-on:click="show = false">
+                {{ __('Cerrar') }}
+            </x-danger-button>
+        </div>
     </div>
 </div>

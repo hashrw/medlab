@@ -34,6 +34,8 @@ class StorePacienteRequest extends FormRequest
             'peso' => 'required|numeric|max:255',
             'altura' => 'required|numeric|max:255',
             'sexo' => 'required|string|max:255',
+            'enfermedad_id' => 'exists:enfermedads,id',
+            'tratamiento_id' => 'exists:tratamientos,id'
         ];
     }
 }

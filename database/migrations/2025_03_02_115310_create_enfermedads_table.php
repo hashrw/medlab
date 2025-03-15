@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('enfermedads', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
+           // $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
             //Información del trasplante
+            $table->integer('dias_desde_trasplante')->nullable();
             $table->string('tipo_trasplante');
             //tipo_trasplante:['alogénico emparentado','alogénico no emparentado','autólogo ','singénico']
-            $table->string('nombre_enfermedad');
             $table->date('fecha_trasplante');
             $table->string('origen_trasplante');
             //origen_trasplante:['médula ósea','sangre periférica'])

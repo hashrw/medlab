@@ -11,7 +11,7 @@ class Tratamiento extends Model
     use HasFactory;
     
     
-    protected $fillable = ['tratamiento','fecha_asignacion','descripcion','duracion_trat','medico_id','paciente_id'];
+    protected $fillable = ['tratamiento','fecha_asignacion','descripcion','duracion_trat','medico_id'];
 
     protected $casts = [
         'fecha_asignacion' => 'date:Y-m-d',
@@ -26,7 +26,7 @@ class Tratamiento extends Model
                         'fecha_fin_linea',    // Fecha de fin de la línea de tratamiento
                         'fecha_resp_linea',   // Fecha de respuesta a la línea de tratamiento
                         'observaciones',      // Observaciones de la línea de tratamiento
-                        'tomas',              // Número de tomas
+                        'tomas',              // Número de tomass
                     ]);
     }
     

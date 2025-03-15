@@ -26,8 +26,7 @@ class UpdateTratamientoRequest extends FormRequest
             'fecha_asignacion' => 'required|date',
             'descripcion' => 'text',
             'duracion_trat' => 'required|numeric',
-            //'medico_id' => 'required|exists:medicos,id',
-            //'paciente_id' => 'required|exists:pacientes,id',
+            'medico_id' => 'required|exists:medicos,id',
         ];
     }
 }

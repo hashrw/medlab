@@ -2,19 +2,15 @@
     <x-slot name="header">
         <nav class="font-semibold text-xl text-gray-800 leading-tight" aria-label="Breadcrumb">
             <ol class="list-none p-0 inline-flex">
-                {{-- <li class="flex items-center">
-                  <a href="#">Home</a>
-                  <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/></svg>
-                </li> --}}
                 <li class="flex items-center">
-                    <a href="{{ route('medicos.index') }}">{{__('Médicos')}}</a>
+                    <a href="{{ route('pacientes.index') }}">{{ __('Pacientes') }}</a>
                     <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
                         <path
                             d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/>
                     </svg>
                 </li>
                 <li>
-                    <a href="#" class="text-gray-500" aria-current="page">{{__('Editar')}} {{$medico->user->name}}</a>
+                    <a href="#" class="text-gray-500" aria-current="page">{{ __('Datos Clínicos de') }} {{ $paciente->user->name }}</a>
                 </li>
             </ol>
         </nav>
@@ -24,70 +20,69 @@
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                    {{__('Información del médico')}}
+                    {{ __('Información del Paciente') }}
                 </div>
                 <div class="p-6 bg-white border-b border-gray-200">
-                    <div>
-                        <x-input-label for="name" :value="__('Nombre')"/>
+                    <!-- Botón para abrir el modal -->
+                    <button @click="open = true" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                        {{ __('Ver Datos Clínicos') }}
+                    </button>
 
-                        <x-text-input id="name" readonly disabled class="block mt-1 w-full" type="text" name="name"
-                                      :value="$medico->user->name" required autofocus/>
-                    </div>
+                    <!-- Modal -->
+                    <div x-data="{ open: false }">
+                        <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+                            <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-1/3 p-6">
+                                <!-- Encabezado del modal -->
+                                <div class="flex justify-between items-center mb-4">
+                                    <h2 class="text-xl font-bold">Datos Clínicos de {{ $paciente->user->name }}</h2>
+                                    <button @click="open = false" class="text-gray-500 hover:text-gray-700">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
 
-                    <div class="mt-4">
-                        <x-input-label for="email" :value="__('Email')"/>
+                                <!-- Contenido del modal -->
+                                <div class="space-y-4">
+                                    <!-- Edad -->
+                                    <div>
+                                        <x-input-label :value="__('Edad')" />
+                                        <x-text-input readonly disabled class="block mt-1 w-full" :value="$paciente->edad . ' años'" />
+                                    </div>
 
-                        <x-text-input id="email" readonly disabled class="block mt-1 w-full" type="email" name="email"
-                                      :value="$medico->user->email" required/>
-                    </div>
+                                    <!-- Enfermedades -->
+                                    <div>
+                                        <x-input-label :value="__('Enfermedades')" />
+                                        <ul class="mt-1">
+                                            @forelse ($paciente->enfermedads as $enfermedad)
+                                                <li>{{ $enfermedad->nombre }}</li>
+                                            @empty
+                                                <li>{{ __('No hay enfermedades registradas.') }}</li>
+                                            @endforelse
+                                        </ul>
+                                    </div>
 
-                    <div class="mt-4">
-                        <x-input-label for="fecha_contratacion" :value="__('Fecha contratación')"/>
+                                    <!-- Tratamientos -->
+                                    <div>
+                                        <x-input-label :value="__('Tratamientos')" />
+                                        <ul class="mt-1">
+                                            @forelse ($paciente->tratamientos as $tratamiento)
+                                                <li>{{ $tratamiento->nombre }} ({{ $tratamiento->descripcion }})</li>
+                                            @empty
+                                                <li>{{ __('No hay tratamientos registrados.') }}</li>
+                                            @endforelse
+                                        </ul>
+                                    </div>
+                                </div>
 
-                        <x-text-input readonly disabled id="fecha_contratacion" class="block mt-1 w-full"
-                                      type="date"
-                                      name="fecha_contratacion"
-                                      :value="$medico->fecha_contratacion->format('Y-m-d')"
-                                      required/>
-                    </div>
-
-                    <div class="mt-4">
-                        <x-input-label for="vacunado" :value="__('Vacunado')"/>
-
-
-                        <x-select readonly disabled id="vacunado" name="vacunado" required>
-                            <option value="">{{__('Elige una opción')}}</option>
-                            <option value="1" @if ($medico->vacunado) selected @endif>{{__('Sí')}}</option>
-                            <option value="0" @if (!$medico->vacunado) selected @endif>{{__('No')}}</option>
-                        </x-select>
-                    </div>
-
-                    <div class="mt-4">
-                        <x-input-label for="sueldo" :value="__('Sueldo')"/>
-
-                        <x-text-input readonly disabled id="sueldo" class="block mt-1 w-full" min="0" step="1"
-                                      type="number" name="sueldo" :value="$medico->sueldo" required/>
-                    </div>
-
-                    <div class="mt-4">
-                        <x-input-label for="especialidad_id" :value="__('Especialidad')"/>
-
-
-                        <x-select readonly disabled id="especialidad_id" name="especialidad_id" required>
-                            <option value="">{{__('Elige una opción')}}</option>
-                            @foreach ($especialidads as $especialidad)
-                                <option value="{{$especialidad->id}}"
-                                        @if ($medico->especialidad_id == $especialidad->id) selected @endif>{{$especialidad->nombre}}</option>
-                            @endforeach
-                        </x-select>
-                    </div>
-
-                    <div class="flex items-center justify-end mt-4">
-                        <x-danger-button type="button">
-                            <a href={{route('medicos.index')}}>
-                                {{ __('Volver al listado') }}
-                            </a>
-                        </x-danger-button>
+                                <!-- Botón para cerrar el modal -->
+                                <div class="mt-6 flex justify-end">
+                                    <x-danger-button @click="open = false">
+                                        {{ __('Cerrar') }}
+                                    </x-danger-button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

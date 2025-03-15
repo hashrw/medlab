@@ -25,15 +25,15 @@ class UpdatePacienteRequest extends FormRequest
     {
         return [
             
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'apellidos' => 'required|string|max:255',
+            'name' => 'string|max:255',
+            'email' => 'string|email|max:255|unique:users',
+            'apellidos' => 'string|max:255',
             'telefono' => 'numeric|max:255',
-            'nuhsa' => 'required|string|max:255',
+            'nuhsa' => 'string|max:255',
             'edad' => 'numeric|max:255',
             'peso' => 'numeric|max:255',
-            'altura' => 'required|numeric|max:255',
-            'sexo' => 'required|string|max:255',
+            'altura' => 'numeric|max:255',
+            'sexo' => 'string|max:255',
         ];
     }
 }

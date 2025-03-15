@@ -27,7 +27,6 @@ class TratamientoSeeder extends Seeder
                 'descripcion' => "No aplica",
                 'duracion_trat' => 1,
                 'medico_id' => 1,
-                'paciente_id' => 1,
                 ],
         ]);
     }

@@ -8,14 +8,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Paciente extends Model
 {
-    protected $fillable = ['nuhsa','fecha_nacimiento','peso','altura','sexo','user_id'];
+    protected $fillable = ['nuhsa','fecha_nacimiento','peso','altura','sexo','user_id','enfermedad_id','tratamiento_id'];
+
+    protected $casts = [
+        'fecha_nacimiento' => 'datetime:Y-m-d',
+    ];
     
     public function user(){
         return $this->belongsTo(User::class);
     }
 
-    public function enfermedads(){
-        return $this->hasMany(Enfermedad::class);
+    public function enfermedads()
+    {
+        return $this->belongsToMany(Enfermedad::class, 'paciente_enfermedad');
     }
 
     public function tratamientos(){
