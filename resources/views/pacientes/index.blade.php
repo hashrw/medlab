@@ -5,78 +5,46 @@
         </h2>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <!-- Botón de Atrás y Crear Paciente -->
-                <div class="flex justify-between items-center mt-4 px-4">
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                <div class="p-6 bg-blue-800 text-white flex justify-between items-center">
+                    <h3 class="text-lg font-semibold">Lista de Pacientes</h3>
                     <form method="GET" action="{{ route('pacientes.create') }}">
-                        <x-primary-button type="submit" class="ml-4">
-                            {{ __('Crear paciente') }}
-                        </x-primary-button>
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                            + Crear Paciente
+                        </button>
                     </form>
-                    <!-- Botón de Atrás -->
-                    <a href="{{ url()->previous() }}" class="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600">
-                        {{ __('Atrás') }}
-                    </a>
                 </div>
 
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <table class="min-w-max w-full table-auto">
-                        <thead>
-                            <tr class="bg-gray-200 text-gray-900 uppercase text-sm leading-normal">
-                                <th class="py-3 px-6 text-left">ID</th>
-                                <th class="py-3 px-6 text-left">Nombre</th>
-                                <th class="py-3 px-6 text-left">NUHSA</th>
-                                <th class="py-3 px-6 text-left">Fecha de Nacimiento</th>
-                                <th class="py-3 px-6 text-left">Peso (kg)</th>
-                                <th class="py-3 px-6 text-left">Altura (cm)</th>
-                                <th class="py-3 px-6 text-left">Sexo</th>
-                                <th class="py-3 px-6 text-right">Acciones</th>
+                <div class="overflow-x-auto p-4">
+                    <table class="min-w-full bg-white border border-gray-300 rounded-lg">
+                        <thead class="bg-blue-100 text-gray-900">
+                            <tr class="text-sm leading-normal text-left">
+                                <th class="py-3 px-4 border-b">ID</th>
+                                <th class="py-3 px-4 border-b">Nombre</th>
+                                <th class="py-3 px-4 border-b">NUHSA</th>
+                                <th class="py-3 px-4 border-b">Fecha de Nacimiento</th>
+                                <th class="py-3 px-4 border-b">Peso (kg)</th>
+                                <th class="py-3 px-4 border-b">Altura (cm)</th>
+                                <th class="py-3 px-4 border-b">Sexo</th>
+                                <th class="py-3 px-4 border-b text-center">Acciones</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-600 text-sm font-light">
+                        <tbody class="text-gray-700 text-sm">
                             @foreach ($pacientes as $paciente)
-                                <tr class="border-b border-gray-200 hover:bg-gray-100">
-                                    <td class="py-3 px-6 text-left whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span class="font-medium">{{ $paciente->id }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-6 text-left whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span class="font-medium">{{ $paciente->user->name }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-6 text-left whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span class="font-medium">{{ $paciente->nuhsa }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-6 text-left whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span class="font-medium">{{ $paciente->fecha_nacimiento->format('d/m/Y') }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-6 text-left whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span class="font-medium">{{ $paciente->peso }} kg</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-6 text-left whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span class="font-medium">{{ $paciente->altura }} cm</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-6 text-left whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span class="font-medium">{{ ucfirst($paciente->sexo) }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="py-3 px-6 text-center">
+                                <tr class="border-b hover:bg-gray-50">
+                                    <td class="py-3 px-4">{{ $paciente->id }}</td>
+                                    <td class="py-3 px-4">{{ $paciente->user->name }}</td>
+                                    <td class="py-3 px-4">{{ $paciente->nuhsa }}</td>
+                                    <td class="py-3 px-4">{{ $paciente->fecha_nacimiento->format('d/m/Y') }}</td>
+                                    <td class="py-3 px-4">{{ $paciente->peso }} kg</td>
+                                    <td class="py-3 px-4">{{ $paciente->altura }} cm</td>
+                                    <td class="py-3 px-4">{{ ucfirst($paciente->sexo) }}</td>
+                                    <td class="py-3 px-4 text-center">
                                         <div class="flex item-center justify-end">
-                                            <!-- Ver detalles -->
-                                            <div class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                                            <!-- Ver -->
+                                            <div class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110">
                                                 <a href="{{ route('pacientes.show', $paciente->id) }}">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -86,7 +54,7 @@
                                             </div>
 
                                             <!-- Editar -->
-                                            <div class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                                            <div class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110">
                                                 <a href="{{ route('pacientes.edit', $paciente->id) }}">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -95,7 +63,7 @@
                                             </div>
 
                                             <!-- Eliminar -->
-                                            <div class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
+                                            <div class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110">
                                                 <form id="delete-form-{{ $paciente->id }}" method="POST" action="{{ route('pacientes.destroy', $paciente->id) }}">
                                                     @csrf
                                                     @method('DELETE')
@@ -112,7 +80,9 @@
                             @endforeach
                         </tbody>
                     </table>
-                    {{ $pacientes->links() }} <!-- Paginación -->
+                    <div class="p-4">
+                        {{ $pacientes->links() }} <!-- Paginación -->
+                    </div>
                 </div>
             </div>
         </div>

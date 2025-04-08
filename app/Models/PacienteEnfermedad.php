@@ -3,9 +3,9 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class PacienteEnfermedad extends Model
+class PacienteEnfermedad extends Pivot
 {
     use HasFactory; // 
 

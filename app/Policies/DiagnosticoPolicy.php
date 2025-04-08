@@ -8,6 +8,23 @@ use Illuminate\Auth\Access\Response;
 
 class DiagnosticoPolicy
 {
+
+    //Métodos privados de la clase
+    private function esDiagnosticoPropioDeMedico(User $user, Diagnostico $diagnostico): bool
+    {
+        return $user->es_medico && $diagnostico->medico_id == $user->medico->id;
+    }
+
+    private function esDiagnosticoPropioDePaciente(User $user, Diagnostico $diagnostico): bool
+    {
+        return $user->es_paciente && $diagnostico->paciente_id == $user->paciente->id;
+    }
+
+    private function esDiagnosticoPropio(User $user, Diagnostico $diagnostico): bool
+    {
+        return $this->esDiagnosticoPropioDeMedico($user, $diagnostico) || $this->esDiagnosticoPropioDePaciente($user, $diagnostico);
+    }
+
     /**
      * Determina si el usuario puede ver cualquier modelo de Diagnostico.
      */
@@ -42,6 +59,16 @@ class DiagnosticoPolicy
     {
         // Solo administradores y médicos pueden actualizar diagnósticos
         return $user->es_administrador || $user->es_medico;
+    }
+
+    public function attach_sintoma(User $user, Diagnostico $diagnostico)
+    {
+        return $user->es_administrador || $this->esDiagnosticoPropioDeMedico($user, $diagnostico);
+    }
+
+    public function detach_sintoma(User $user, Diagnostico $diagnostico)
+    {
+        return $user->es_administrador || $this->esDiagnosticoPropioDeMedico($user, $diagnostico);
     }
 
     /**

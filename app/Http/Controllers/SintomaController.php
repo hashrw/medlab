@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Sintoma\StoreSintomaRequest;
 use App\Http\Requests\Sintoma\UpdateSintomaRequest;
+use App\Models\Organo;
 use Illuminate\Http\Request;
 use App\Models\Sintoma;
 
@@ -25,7 +26,9 @@ class SintomaController extends Controller
     public function create()
     {
         $this->authorize('create', Sintoma::class);
-        return view('sintomas/create');
+        $organos = Organo::all();
+
+        return view('sintomas/create', ['organos' => $organos]);
     }
 
     /**
@@ -54,7 +57,8 @@ class SintomaController extends Controller
     public function edit(Sintoma $sintoma)
     {
         $this->authorize('update', $sintoma);
-        return view('sintomas/edit', ['sintoma' => $sintoma]);
+        $organos = Organo::all();
+        return view('sintomas/edit', ['sintoma' => $sintoma, 'organos' => $organos]);
     }
 
     /**

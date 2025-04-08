@@ -10,6 +10,6 @@ class Especialidad extends Model
     protected $fillable = ['nombre'];
 
     public function medicos(){
-        return $this->hasMany(related: Medico::class);
+        return $this->hasMany(Medico::class);
     }
 }

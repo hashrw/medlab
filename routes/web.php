@@ -57,6 +57,13 @@ Route::middleware(['auth'])->group(function () {
         ->name('citas.detachMedicamento')
         ->middleware('can:detach_medicamento,cita');
     
+        Route::post('/diagnosticos/{diagnostico}/attach-sintoma', [DiagnosticoController::class, 'attach_sintoma'])
+        ->name('diagnosticos.attachSintoma')
+        ->middleware('can:attach_sintoma,diagnostico');
+    Route::delete('/diagnosticos/{diagnostico}/detach-sintoma/{sintoma}', [DiagnosticoController::class, 'detach_sintoma'])
+        ->name('diagnosticos.detachSintoma')
+        ->middleware('can:detach_sintoma,diagnostico');
+    
     Route::resources([
         'citas' => CitaController::class,
         'especialidads' => EspecialidadController::class,

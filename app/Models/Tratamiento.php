@@ -20,27 +20,25 @@ class Tratamiento extends Model
     // Relación con el modelo LineaTratamiento
     public function lineasTratamiento()
     {
-        return $this->belongsToMany(Medicamento::class)->using(MedicamentoTratamiento::class)->withPivot(['fecha_ini_linea',    // Fecha de inicio de la línea de tratamiento
-                        'duracion_linea',     // Duración de la línea de tratamiento
-                        'duracion_total',     // Duración total del tratamiento
-                        'fecha_fin_linea',    // Fecha de fin de la línea de tratamiento
-                        'fecha_resp_linea',   // Fecha de respuesta a la línea de tratamiento
-                        'observaciones',      // Observaciones de la línea de tratamiento
-                        'tomas',              // Número de tomass
-                    ]);
+        return $this->belongsToMany(Medicamento::class)->using(MedicamentoTratamiento::class)->withPivot('fecha_ini_linea','duracion_linea','duracion_total','fecha_fin_linea','fecha_resp_linea','observaciones','tomas');
+
     }
     
     // Accesor para calcular la duración total del tratamiento
     public function getDuracionTotalAttribute()
     {
-        $primeraLinea = $this->lineasTratamiento->sortBy('fecha_inicio')->first();
-        $ultimaLinea = $this->lineasTratamiento->sortByDesc('fecha_fin')->first();
+        $primeraLinea = $this->lineasTratamiento->sortBy('fecha_ini_linea')->first();
+        $ultimaLinea = $this->lineasTratamiento->sortByDesc('fecha_fin_linea')->first();
 
         if ($primeraLinea && $ultimaLinea) {
-            return $ultimaLinea->fecha_fin->diffInDays($primeraLinea->fecha_inicio);
+            return $ultimaLinea->fecha_fin_linea->diffInDays($primeraLinea->fecha_ini_linea);
         }
 
         return 0;
+    }
+
+    public function pacientes(){
+        return $this->belongsToMany(Paciente::class)->using(PacienteTratamiento::class)->withPivot('paciente_id','tratamiento_id');
     }
     
 }

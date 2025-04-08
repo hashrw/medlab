@@ -13,6 +13,9 @@ class Paciente extends Model
     protected $casts = [
         'fecha_nacimiento' => 'datetime:Y-m-d',
     ];
+
+    protected $guarded = ['nuhsa']; // Protege el campo cie10 contra ediciones
+
     
     public function user(){
         return $this->belongsTo(User::class);
@@ -20,11 +23,16 @@ class Paciente extends Model
 
     public function enfermedads()
     {
-        return $this->belongsToMany(Enfermedad::class, 'paciente_enfermedad');
+        return $this->belongsToMany(Enfermedad::class)->using(PacienteEnfermedad::class)->withPivot('paciente_id','enfermedad');
     }
 
     public function tratamientos(){
-        return $this->hasMany(Tratamiento::class);
+        return $this->belongsToMany(Tratamiento::class)->using(PacienteTratamiento::class)->withPivot('paciente_id','tratamiento_id');
+    }
+
+    public function diagnosticos(){
+        return $this->belongsToMany(Diagnostico::class)->using(DiagnosticoPaciente::class)->withPivot('diagnostico_id','paciente_id');
+
     }
 
     // Accesor para calcular la edad

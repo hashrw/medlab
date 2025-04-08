@@ -21,9 +21,9 @@ return new class extends Migration
             $table->date('fecha_fin_linea')->nullable();
             $table->date('fecha_resp_linea')->nullable();
             $table->text('observaciones')->nullable();
-            $table->foreignId('tratamiento_id')->constrained()->onDelete('cascade')->nullable();
-            $table->foreignId('medicamento_id')->constrained()->onDelete('cascade')->nullable();
             $table->integer('tomas')->nullable();
+            $table->foreignId('medicamento_id')->constrained()->onDelete('cascade')->nullable();
+            $table->foreignId('tratamiento_id')->constrained()->onDelete('cascade')->nullable();
             $table->timestamps();
         });
     }

@@ -27,9 +27,31 @@ class PacienteSeeder extends Seeder
                 'altura' => $faker->numberBetween(150, 200),
                 'sexo' => $faker->randomElement(['M', 'F']),
                 'user_id' => $userId, // Asignar el user_id correspondiente,
-                'enfermedad_id' => $faker->numberBetween(1, 3),
-                'tratamiento_id' => 1,
             ]);
         }
+
+        DB::table('paciente_enfermedad')->insert([
+            [
+                'paciente_id' => 1, 
+                'enfermedad_id' => 1,          
+            ],
+            [
+                'paciente_id' => 2, 
+                'enfermedad_id' => 1,   
+            ],
+        ]);
+
+        DB::table('paciente_tratamiento')->insert([
+            [
+                'paciente_id' => 1, 
+                'tratamiento_id' => 1,          
+            ],
+            [
+                'paciente_id' => 1, 
+                'tratamiento_id' => 1,   
+            ],
+        ]);
+
+        
     }
 }

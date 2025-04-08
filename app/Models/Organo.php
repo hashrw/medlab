@@ -12,7 +12,7 @@ class Organo extends Model
     protected $fillable = ['nombre'];
 
     public function sintomas(){
-        return $this->hasMany(Sintoma::class);
+        return $this->belongsTo(Sintoma::class);
     }
 
 }

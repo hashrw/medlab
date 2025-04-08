@@ -4,8 +4,8 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-/**El sistema deberá almacenar la información sobre los diagnósticos realizados tanto a nivel de síntomas específicos como del estado 
- * general de la enfermedad EICH. Cada diagnóstico general estará asociado a uno o más síntomas evaluados. 
+/**El sistema deberá almacenar la información sobre los diagnósticos realizados tanto a nivel de síntomas específicos como del estado
+ * general de la enfermedad EICH. Cada diagnóstico general estará asociado a uno o más síntomas evaluados.
  * Para cada síntoma evaluado, se almacenará: / */
 
 return new class extends Migration
@@ -17,21 +17,19 @@ return new class extends Migration
     {
         Schema::create('diagnosticos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('medico_id')->constrained('medicos')->onDelete('cascade'); // Relación con Médico            
-            //propiedad derivada de la fecha de trasplante y la fecha de diagnostico
             //puntuación o score_nih del síntoma, atender pregunta-comentario
             $table->string('tipo_enfermedad')->nullable(); //aguda o crónica
-            $table->string('estado_enfermedad')->nullable(); //['Enfermedad estable', 'Enfermedad progresiva', 'Otro', 'Recaída']
-            $table->date(column: 'f_eval_injerto')->nullable();
-            $table->string('tipo_infeccion')->nullable(); //['Vírica', 'Bacteriana', 'Fúngica']
+            $table->date('f_eval_injerto')->nullable();
             $table->string('estado_injerto')->nullable(); //['Estable', 'Pobre']
-            $table->date('f_hospitalizacion')->nullable();
+            $table->date('f_trasplante')->nullable();
+            //propiedad derivada de la fecha de trasplante y la fecha de diagnostico
+            $table->integer('dias_desde_trasplante')->nullable();
             $table->date('f_electromiografia')->nullable();
             $table->date('f_medulograma')->nullable();
             $table->date('f_espirometria')->nullable();
             $table->date('f_esplenectomia')->nullable();
-            $table->string('hipoalbuminemia')->nullable();  
-            $table->string('observaciones')->nullable();          
+            $table->string('hipoalbuminemia')->nullable();
+            $table->string('observaciones')->nullable();
             $table->timestamps();
         });
     }

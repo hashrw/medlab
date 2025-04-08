@@ -5,12 +5,19 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Models\Tratamiento;
+use App\Models\Paciente;
+use App\Models\Medico;
+use App\Models\Enfermedad;
 use App\Models\Diagnostico;
 use App\Models\Sintoma;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 use App\Http\Requests\Diagnostico\StoreDiagnosticoRequest;
 use App\Http\Requests\Diagnostico\UpdateDiagnosticoRequest;
-
+use App\Models\Comienzo;
+use App\Models\Estado;
+use App\Models\Infeccion;
+use Carbon\Carbon;
 
 class DiagnosticoController extends Controller
 {
@@ -26,8 +33,38 @@ class DiagnosticoController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', diagnostico::class);
-        return view('diagnosticos/create');
+        $this->authorize('create', Diagnostico::class);
+
+        // Verifica si el usuario está autenticado
+        $usuario = Auth::user();
+
+        // valida si el usuario es paciente o médico
+        $esPaciente = $usuario->es_paciente;
+        $esMedico = $usuario->es_medico;
+
+        // Lista de pacientes (solo si el usuario autenticado no es paciente)
+        $pacientes = Paciente::all();
+
+        // Lista de enfermedades
+        $enfermedades = Enfermedad::all();
+
+        // Lista de síntomas
+        $sintomas = Sintoma::all();
+
+        // Si el usuario es un médico, obtener sus pacientes
+        $medico = $esMedico ? $usuario->medico : null;
+        $estados = Estado::all();
+        $comienzos = Comienzo::all();
+        $infeccions = Infeccion::all();
+
+        $diasDesdeTrasplante = null;
+        if (old('f_trasplante')) {
+            $tmp = new \App\Models\Diagnostico();
+            $tmp->f_trasplante = old('f_trasplante');
+            $diasDesdeTrasplante = $tmp->dias_desde_trasplante;
+        }
+
+        return view('diagnosticos.create', compact('sintomas', 'comienzos', 'estados', 'infeccions', 'diasDesdeTrasplante'));
     }
 
     /**
@@ -42,6 +79,10 @@ class DiagnosticoController extends Controller
 
         // Validar los datos usando el Request
         $validatedData = $request->validated();
+        //Calcular días desde trasplante si se proporcionó fecha
+        if ($request->filled('f_trasplante')) {
+            $validatedData['dias_desde_trasplante'] = Carbon::parse($request->f_trasplante)->diffInDays(now());
+        }
 
         // Crear el diagnóstico
         $diagnostico = Diagnostico::create($validatedData);
@@ -58,7 +99,6 @@ class DiagnosticoController extends Controller
 
         // Redirigir con un mensaje de éxito
         return redirect()->route('diagnosticos.index')->with('success', 'Diagnóstico creado correctamente.');
-    
     }
 
     /**
@@ -67,6 +107,7 @@ class DiagnosticoController extends Controller
     public function show(Diagnostico $diagnostico)
     {
         $this->authorize('view', $diagnostico);
+        //$sintomas = $diagnostico->sintomas;
         return view('diagnosticos/show', ['diagnostico' => $diagnostico]);
     }
 
@@ -76,7 +117,11 @@ class DiagnosticoController extends Controller
     public function edit(Diagnostico $diagnostico)
     {
         $this->authorize('update', $diagnostico);
-        return view('diagnosticos/edit', ['diagnostico' => $diagnostico]);
+        $sintomas = Sintoma::all();
+        $estados = Estado::all();
+        $comienzos = Comienzo::all();
+        $infeccions = Infeccion::all();
+        return view('diagnosticos/edit', ['diagnostico' => $diagnostico, 'sintomas' => $sintomas, 'estados' => $estados, 'comienzos' => $comienzos, 'infeccions' => $infeccions]);
     }
 
     /**
@@ -97,7 +142,7 @@ class DiagnosticoController extends Controller
     public function destroy(Diagnostico $diagnostico)
     {
         $this->authorize('delete', $diagnostico);
-        if($diagnostico->delete())
+        if ($diagnostico->delete())
             session()->flash('success', 'Registro borrado correctamente.');
         else
             session()->flash('warning', 'No pudo borrarse el registro.');
@@ -107,7 +152,7 @@ class DiagnosticoController extends Controller
     /**
      * Adjunta un síntoma al diagnóstico.
      */
-    public function attachSintoma(Request $request, Diagnostico $diagnostico): RedirectResponse
+    public function attach_Sintoma(Request $request, Diagnostico $diagnostico): RedirectResponse
     {
         // Validación con un nombre de error bag específico ('attach')
         $this->validateWithBag('attach', $request, [
@@ -129,7 +174,7 @@ class DiagnosticoController extends Controller
     /**
      * Desvincula un síntoma del diagnóstico.
      */
-    public function detachSintoma(Diagnostico $diagnostico, Sintoma $sintoma): RedirectResponse
+    public function detach_Sintoma(Diagnostico $diagnostico, Sintoma $sintoma): RedirectResponse
     {
         // Desvincular el síntoma del diagnóstico
         $diagnostico->sintomas()->detach($sintoma->id);

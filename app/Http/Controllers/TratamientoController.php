@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Http\Requests\Paciente\UpdateTratamientoRequest;
-use App\Http\Requests\Paciente\StoreTratamientoRequest;
+use App\Http\Requests\Tratamiento\UpdateTratamientoRequest;
+use App\Http\Requests\Tratamiento\StoreTratamientoRequest;
+use App\Http\Requests\Tratamiento\UpdateTratamientoRequest as TratamientoUpdateTratamientoRequest;
 use App\Models\Tratamiento;
+use App\Models\Medicamento;
 
 
 class TratamientoController extends Controller
@@ -79,7 +81,43 @@ class TratamientoController extends Controller
         if($tratamiento->delete())
             session()->flash('success', 'Registro borrado correctamente.');
         else
-            session()->flash('warning', 'No pudo borrarse el Registro.');
+            session()->flash('warning', 'No pudo borrarse el registro.');
         return redirect()->route('tratamientos.index');
     }
+
+    //attach_medicamento
+    public function attach_medicamento(Request $request, Tratamiento $tratamiento)
+    {
+        
+        $this->validateWithBag('attach', $request, [
+            'medicamento_id' => 'required|exists:medicos,id',
+            'fecha_ini_linea' => 'required|date',
+            'fecha_fin_linea' => 'required|date|after:fecha_ini_linea',
+            'fecha_resp_linea' => 'required|date|after:fecha_ini_linea',
+            'observaciones' => 'nullable|string',
+            'tomas' => 'required|numeric|min:0',
+            'duracion_linea' => 'required|numeric|min:0',
+            'duracion_total' => 'required|numeric|min:0',
+
+        ]);
+        
+        $tratamiento->medicamentos()->attach($request->medicamento_id, [
+            'fecha_ini_linea' => $request->fecha_ini_linea,
+            'fecha_fin_linea' => $request->fecha_fin_linea,
+            'fecha_resp_linea' => $request->fecha_resp_linea,
+            'observaciones' => $request->observaciones,
+            'tomas' => $request->tomas_dia,
+            'duracion_linea' => $request->duracion_linea,
+            'duracion_total' => $request->duracion_total
+
+        ]);
+        return redirect()->route('tratamientos.edit', $tratamiento->id);
+    }
+
+    public function detach_medicamento(tratamiento $tratamiento, Medicamento $medicamento)
+    {
+        $tratamiento->medicamentos()->detach($medicamento->id);
+        return redirect()->route('tratamientos.edit', $tratamiento->id);
+    }
+    
 }

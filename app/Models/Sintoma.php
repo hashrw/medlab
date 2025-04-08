@@ -18,7 +18,8 @@ class Sintoma extends Model
     }
 
     public function diagnosticos(): BelongsToMany{
-        return $this->belongsToMany(Diagnostico::class)->withPivot('fecha_diagnostico', 'score_nih');
+        return $this->belongsToMany(Diagnostico::class)->using(DiagnosticoSintoma::class)->withPivot('fecha_diagnostico', 'score_nih');
+
     }
     
 }

@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->date('fecha_diagnostico')->nullable();
             $table->double('score_nih')->nullable();
-            $table->foreignId('sintoma_id')->constrained()->onDelete('cascade')->nullable();
             $table->foreignId('diagnostico_id')->constrained()->onDelete('cascade')->nullable();
+            $table->foreignId('sintoma_id')->constrained()->onDelete('cascade')->nullable();
             $table->timestamps();
         });
     }

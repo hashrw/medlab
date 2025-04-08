@@ -6,13 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class MedicamentoTratamiento extends Model
+class MedicamentoTratamiento extends Pivot
 {
     use HasFactory;
-
-    protected $fillable = ['fecha_ini_linea','duracion_linea','duracion_total','fecha_fin_linea','fecha_resp_linea',
-    'observaciones','tratamiento_id','medicamento_id'];
 
     protected $casts = [
         'fecha_ini_linea' => 'datetime:Y-m-d',
@@ -21,7 +19,18 @@ class MedicamentoTratamiento extends Model
 
     ];
 
-     // Relación con el modelo Tratamiento
+    // Accesor para calcular la duración de la línea de tratamiento
+    public function getDuracionAttribute()
+    {
+        if ($this->fecha_ini_linea && $this->fecha_fin_linea) {
+            return $this->fecha_fin_linea->diffInDays($this->fecha_ini_linea);
+        }
+
+        return 0;
+    }
+
+    /* 
+    // Relación con el modelo Tratamiento
      public function tratamiento(): BelongsTo
      {
          return $this->belongsTo(Tratamiento::class);
@@ -33,13 +42,5 @@ class MedicamentoTratamiento extends Model
          return $this->belongsToMany(Medicamento::class)->withPivot('tomas', 'observaciones');
      }
  
-     // Accesor para calcular la duración de la línea de tratamiento
-     public function getDuracionAttribute()
-     {
-         if ($this->fecha_ini_linea && $this->fecha_fin_linea) {
-             return $this->fecha_fin_linea->diffInDays($this->fecha_ini_linea);
-         }
- 
-         return 0;
-     }
+     */
 }

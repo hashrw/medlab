@@ -60,7 +60,7 @@ class PacienteController extends Controller
         $this->authorize('view', $paciente);
     
         // Cargar las relaciones necesarias
-        $paciente->load('user', 'enfermedads', 'tratamientos');
+        //$paciente->load('user', 'enfermedads', 'tratamientos');
     
         return view('pacientes/show', ['paciente' => $paciente]);
     }

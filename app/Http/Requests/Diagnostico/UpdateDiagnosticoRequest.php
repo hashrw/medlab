@@ -24,20 +24,27 @@ class UpdateDiagnosticoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tipo_enfermedad' => 'string|max:255',
-            'estado_enfermedad' => 'string|email|max:255|unique:users',
-            'comienzo_cronica' => 'string|max:255',
-            'escala_karnofsky' => 'date',
-            'estado_injerto' => 'boolean',
-            'tipo_infeccion' => 'numeric',
-            'f_hospitalizacion' => 'date',
-            'f_electromiografia' => 'date',
-            'f_eval_injerto' => 'date',
-            'f_medulograma' => 'date',
-            'f_espirometria' => 'date',
-            'f_esplenectomia' => 'date',
-            'hipoalbuminemia' => 'string|max:255',
-            'observaciones' => 'string',
+            
+            'tipo_enfermedad' => 'nullable|string|max:255',
+            'comienzo_cronica' => 'nullable|string|max:255',
+            'escala_karnofsky' => 'nullable|numeric',
+            'estado_injerto' => 'nullable|string',
+            'dias_desde_trasplante' => 'nullable|integer',
+            'tipo_infeccion' => 'nullable|string',
+            'f_trasplante' => 'nullable|date',
+            'f_electromiografia' => 'nullable|date',
+            'f_eval_injerto' => 'nullable|date',
+            'f_medulograma' => 'nullable|date',
+            'f_espirometria' => 'nullable|date',
+            'f_esplenectomia' => 'nullable|date',
+            'hipoalbuminemia' => 'nullable|string|max:255',
+            'observaciones' => 'nullable|string',
+            'sintomas' => 'nullable|array',
+            'sintomas.*.fecha_diagnostico' => 'nullable|date',
+            'sintomas.*.score_nih' => 'nullable|integer',
+            'estado_id' => 'required|exists:estados',
+            'comienzo_id' => 'required|exists:comienzos',
+            'infeccion_id' => 'required|exists:infeccions',
     
         ];
     }

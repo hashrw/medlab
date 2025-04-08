@@ -83,7 +83,6 @@
                             <div class="mt-4">
                                 <x-input-label for="especialidad_id" :value="__('Especialidad')" />
 
-
                                 <x-select id="especialidad_id" name="especialidad_id" required>
                                     <option value="">{{__('Elige una opción')}}</option>
                                     @foreach ($especialidads as $especialidad)

@@ -21,7 +21,7 @@ return new class extends Migration
             $table->foreignId('paciente_id')->constrained()->onDelete('cascade');
         });
 
-        ///ussssstajk
+       
     }
 
     /**

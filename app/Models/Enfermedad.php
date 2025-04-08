@@ -16,13 +16,19 @@ class Enfermedad extends Model
         'fecha_trasplante' => 'date:Y-m-d',
     ];
 
-    public function diagnosticos(){
-        return $this->hasMany(Diagnostico::class);
-    }
-
     public function pacientes()
     {
-        return $this->belongsToMany(Paciente::class, 'paciente_enfermedad');
+        return $this->belongsToMany(Paciente::class)->using(PacienteEnfermedad::class)->withPivot('paciente_id','enfermedad');
     }
+
+    public function diagnosticos(){
+        return $this->belongsToMany(Diagnostico::class)->using(DiagnosticoEnfermedad::class)->withPivot('grado_eich', 'escala_karnofsky');
+
+    }
+    
+     /*public function diagnosticos(){
+        return $this->hasMany(Diagnostico::class);
+    }*/
+
     
 }

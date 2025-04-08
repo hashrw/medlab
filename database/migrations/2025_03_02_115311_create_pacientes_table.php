@@ -23,9 +23,6 @@ return new class extends Migration
             $table->double('altura');
             $table->string('sexo')->nullable();
             $table->foreignId('user_id')->unique()->constrained()->onDelete('cascade');
-            $table->foreignId('enfermedad_id')->constrained()->onDelete('cascade');
-            $table->foreignId('tratamiento_id')->constrained()->onDelete('cascade');
-
 
         });
     }
