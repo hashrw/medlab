@@ -59,12 +59,13 @@ class DiagnosticoController extends Controller
 
         $diasDesdeTrasplante = null;
         if (old('f_trasplante')) {
-            $tmp = new \App\Models\Diagnostico();
+            $tmp = new Diagnostico();
             $tmp->f_trasplante = old('f_trasplante');
             $diasDesdeTrasplante = $tmp->dias_desde_trasplante;
         }
 
-        return view('diagnosticos.create', compact('sintomas', 'comienzos', 'estados', 'infeccions', 'diasDesdeTrasplante'));
+        return view('diagnosticos.create',compact(['sintomas'=> $sintomas,'comienzos' => $comienzos, 'estados' => $estados, 'infeccions' => $infeccions, 'diasDesdeTrasplante']));
+
     }
 
     /**

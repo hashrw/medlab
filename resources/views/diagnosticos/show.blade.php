@@ -63,7 +63,7 @@
                     <tbody class="divide-y divide-gray-200">
                         @foreach ($diagnostico->sintomas as $sintoma)
                             <tr>
-                                <td class="px-4 py-2">{{ $sintoma->nombre }}</td>
+                                <td class="px-4 py-2">{{ $sintoma->sintoma }}</td>
                                 <td class="px-4 py-2">{{ $sintoma->pivot->fecha_diagnostico->format('d/m/Y') }}</td>
                                 <td class="px-4 py-2">{{ $sintoma->pivot->score_nih }}</td>
                             </tr>

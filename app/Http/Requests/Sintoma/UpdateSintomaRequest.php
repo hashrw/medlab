@@ -24,9 +24,9 @@ class UpdateSintomaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sintoma' => 'required|string',
-            'manif_clinica' => 'required|string',
-            'organo' => 'required|string',
+            'sintoma' => 'string',
+            'manif_clinica' => 'string',
+            'organo' => 'string',
         ];
     }
 }

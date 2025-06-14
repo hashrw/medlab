@@ -9,105 +9,46 @@
                     </svg>
                 </li>
                 <li>
-                    <a href="#" class="text-gray-500" aria-current="page">Consultar datos</a>
+                    <span class="text-gray-500" aria-current="page">Consultar datos</span>
                 </li>
             </ol>
         </nav>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-3">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                    Información de la enfermedad
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                <div class="p-6 bg-blue-800 text-white">
+                    <h3 class="text-lg font-semibold">Información de la enfermedad</h3>
                 </div>
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <div class="mt-4">
-                        <x-input-label for="tipo_trasplante" :value="__('Tipo de trasplante')" />
-                        <x-text-input id="tipo_trasplante" class="block mt-1 w-full"
-                                      type="text"
-                                      name="tipo_trasplante"
-                                      disabled
-                                      :value="$enfermedad->tipo_trasplante"
-                                      required />
-                    </div>
 
-                    <div class="mt-4">
-                        <x-input-label for="nombre_enfermedad" :value="__('Nombre de la enfermedad')" />
-                        <x-text-input id="nombre_enfermedad" class="block mt-1 w-full"
-                                      type="text"
-                                      name="nombre_enfermedad"
-                                      disabled
-                                      :value="$enfermedad->nombre_enfermedad"
-                                      required />
-                    </div>
+                <div class="p-6 bg-white border-t border-gray-200">
+                    @php
+                        $campos = [
+                            'tipo_trasplante' => 'Tipo de trasplante',
+                            'nombre_enfermedad' => 'Nombre de la enfermedad',
+                            'fecha_trasplante' => 'Fecha de trasplante',
+                            'origen_trasplante' => 'Origen del trasplante',
+                            'identidad_hla' => 'Identidad HLA',
+                            'tipo_acondicionamiento' => 'Tipo de acondicionamiento',
+                            'seropositividad_donante' => 'Seropositividad del donante',
+                            'seropositividad_receptor' => 'Seropositividad del receptor',
+                        ];
+                    @endphp
 
-                    <div class="mt-4">
-                        <x-input-label for="fecha_trasplante" :value="__('Fecha de trasplante')" />
-                        <x-text-input id="fecha_trasplante" class="block mt-1 w-full"
-                                      type="date"
-                                      name="fecha_trasplante"
-                                      disabled
-                                      :value="$enfermedad->fecha_trasplante"
-                                      required />
-                    </div>
+                    @foreach ($campos as $campo => $label)
+                        <div class="mt-4">
+                            <x-input-label for="{{ $campo }}" :value="__($label)" />
+                            <x-text-input id="{{ $campo }}" class="block mt-1 w-full" type="text" name="{{ $campo }}"
+                                :value="$enfermedad->$campo" disabled />
+                        </div>
+                    @endforeach
 
-                    <div class="mt-4">
-                        <x-input-label for="origen_trasplante" :value="__('Origen del trasplante')" />
-                        <x-text-input id="origen_trasplante" class="block mt-1 w-full"
-                                      type="text"
-                                      name="origen_trasplante"
-                                      disabled
-                                      :value="$enfermedad->origen_trasplante"
-                                      required />
-                    </div>
-
-                    <div class="mt-4">
-                        <x-input-label for="identidad_hla" :value="__('Identidad HLA')" />
-                        <x-text-input id="identidad_hla" class="block mt-1 w-full"
-                                      type="text"
-                                      name="identidad_hla"
-                                      disabled
-                                      :value="$enfermedad->identidad_hla"
-                                      required />
-                    </div>
-
-                    <div class="mt-4">
-                        <x-input-label for="tipo_acondicionamiento" :value="__('Tipo de acondicionamiento')" />
-                        <x-text-input id="tipo_acondicionamiento" class="block mt-1 w-full"
-                                      type="text"
-                                      name="tipo_acondicionamiento"
-                                      disabled
-                                      :value="$enfermedad->tipo_acondicionamiento"
-                                      required />
-                    </div>
-
-                    <div class="mt-4">
-                        <x-input-label for="seropositividad_donante" :value="__('Seropositividad del donante')" />
-                        <x-text-input id="seropositividad_donante" class="block mt-1 w-full"
-                                      type="text"
-                                      name="seropositividad_donante"
-                                      disabled
-                                      :value="$enfermedad->seropositividad_donante"
-                                      required />
-                    </div>
-
-                    <div class="mt-4">
-                        <x-input-label for="seropositividad_receptor" :value="__('Seropositividad del receptor')" />
-                        <x-text-input id="seropositividad_receptor" class="block mt-1 w-full"
-                                      type="text"
-                                      name="seropositividad_receptor"
-                                      disabled
-                                      :value="$enfermedad->seropositividad_receptor"
-                                      required />
-                    </div>
-
-                    <div class="flex items-center justify-end mt-4">
-                        <x-danger-button type="button">
-                            <a href="{{ route('enfermedads.index') }}">
-                                {{ __('Volver') }}
-                            </a>
-                        </x-danger-button>
+                    <div class="flex items-center justify-end mt-6">
+                        <a href="{{ route('enfermedads.index') }}"
+                           class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                            {{ __('Volver') }}
+                        </a>
                     </div>
                 </div>
             </div>

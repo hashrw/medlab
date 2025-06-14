@@ -16,17 +16,19 @@ return new class extends Migration
            // $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
             //Información del trasplante
             $table->integer('dias_desde_trasplante')->nullable();
-            $table->string('tipo_trasplante');
+            $table->string('tipo_trasplante')->nullable();
             //tipo_trasplante:['alogénico emparentado','alogénico no emparentado','autólogo ','singénico']
-            $table->date('fecha_trasplante');
-            $table->string('origen_trasplante');
+            $table->date('fecha_trasplante')->nullable();
+            $table->string('origen_trasplante')->nullable();
             //origen_trasplante:['médula ósea','sangre periférica'])
-            $table->string('identidad_hla');
+            $table->string('identidad_hla')->nullable();
             //identidad_hla:['idéntico','disparidad clase I','disparidad clase II']
-            $table->string('tipo_acondicionamiento'); //de intensidad reducida o mieloablativo
-            $table->string('seropositividad_donante');
-            $table->string('seropositividad_receptor');
+            $table->string('tipo_acondicionamiento')->nullable(); //de intensidad reducida o mieloablativo
+            $table->string('seropositividad_donante')->nullable();
+            $table->string('seropositividad_receptor')->nullable();
+            
             //histórico de diagnósticos
+
             $table->timestamps();
         });
     }

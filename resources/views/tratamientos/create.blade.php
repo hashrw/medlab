@@ -46,9 +46,9 @@
 
                         <div class="mt-4">
                             <x-input-label for="descripcion" :value="__('Descripción')" />
-                            <x-textarea id="descripcion" class="block mt-1 w-full"
+                            <x-text-area id="descripcion" class="block mt-1 w-full"
                                          name="descripcion"
-                                         required>{{ old('descripcion') }}</x-textarea>
+                                         required>{{ old('descripcion') }}</x-text-area>
                         </div>
 
                         <div class="mt-4">
@@ -78,29 +78,6 @@
                                     <option value="">{{__('Elige un paciente')}}</option>
                                     @foreach ($pacientes as $paciente)
                                         <option value="{{$paciente->id}}" @if (old('paciente_id') == $paciente->id) selected @endif>{{$paciente->user->name}} ({{$paciente->nuhsa}})</option>
-                                    @endforeach
-                                </x-select>
-                            @endisset
-                        </div>
-
-                        <div class="mt-4">
-                            <x-input-label for="medico_id" :value="__('Médico')" />
-                            @isset($medico)
-                                <x-text-input id="medico_id" class="block mt-1 w-full"
-                                              type="hidden"
-                                              name="medico_id"
-                                              :value="$medico->id"
-                                              required />
-                                <x-text-input class="block mt-1 w-full"
-                                              type="text"
-                                              disabled
-                                              value="{{$medico->user->name}} ({{$medico->especialidad->nombre}})"
-                                />
-                            @else
-                                <x-select id="medico_id" name="medico_id" required>
-                                    <option value="">{{__('Elige un médico')}}</option>
-                                    @foreach ($medicos as $medico)
-                                        <option value="{{$medico->id}}" @if (old('medico_id') == $medico->id) selected @endif>{{$medico->user->name}} ({{$medico->especialidad->nombre}})</option>
                                     @endforeach
                                 </x-select>
                             @endisset

@@ -34,6 +34,8 @@ class UpdatePacienteRequest extends FormRequest
             'peso' => 'numeric|max:255',
             'altura' => 'numeric|max:255',
             'sexo' => 'string|max:255',
+            'enfermedad_id' => 'exists:enfermedads,id',
+            'tratamiento_id' => 'exists:tratamientos,id'
         ];
     }
 }

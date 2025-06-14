@@ -31,15 +31,17 @@
                             </x-select>
                         </div>
 
-                        <div>
-                            <x-input-label for="estado_id" :value="__('Estado de enfermedad')" />
-                            <x-select id="estado_id" name="estado_id" required>
-                                <option value="">{{ __('Elige una opción') }}</option>
-                                @foreach ($estados as $estado)
-                                    <option value="{{ $estado->id }}" @selected(old('estado_id', $diagnostico->estado_id) == $estado->id)>{{ $estado->estado }}</option>
-                                @endforeach
-                            </x-select>
-                        </div>
+                        <div class="mt-4">
+                                <x-input-label for="estado_id" :value="__('Estado de la enfermedad')" />
+
+
+                                <x-select id="estado_id" name="estado_id" required>
+                                    <option value="">{{__('Elige una opción')}}</option>
+                                    @foreach ($estados as $estado)
+                                    <option value="{{$estado->id}}" @if ($diagnostico->estado_id == $estado->id) selected @endif>{{$estado->estado}}</option>
+                                    @endforeach
+                                </x-select>
+                            </div>
 
                         <div>
                             <x-input-label for="comienzo_id" :value="__('Comienzo fase crónica')" />
@@ -121,7 +123,7 @@
 
                     <!-- Síntomas Asociados -->
                     <div class="mt-8">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Síntomas Asociados</h4>
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Síntomas asociados</h4>
 
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
@@ -134,7 +136,7 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 @foreach ($diagnostico->sintomas as $sintoma)
                                     <tr>
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ $sintoma->nombre }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ $sintoma->sintoma }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $sintoma->pivot->fecha_diagnostico->format('d/m/Y') }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ $sintoma->pivot->score_nih }}</td>
                                     </tr>
@@ -142,17 +144,70 @@
                             </tbody>
                         </table>
                     </div>
-
-                    <div class="flex items-center justify-end mt-8">
-                        <x-danger-button type="button">
-                            <a href="{{ route('diagnosticos.index') }}">{{ __('Cancelar') }}</a>
-                        </x-danger-button>
-                        <x-primary-button class="ml-4">
-                            {{ __('Guardar') }}
-                        </x-primary-button>
-                    </div>
                 </form>
             </div>
         </div>
     </div>
+    @if(!Auth::user()->es_paciente)
+        <div class="py-2">
+            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
+                    <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
+                        Nuevos síntomas diagnosticados
+                    </div>
+                    <div class="p-6 bg-white border-b border-gray-200">
+                        <!-- Errores de validación en servidor. Fíjate cómo accedo al bag "attach" que hemos realizado en el método attach_sintoma de diagnosticoController con validateWithBag -->
+                        <x-input-error class="mb-4" :messages="$errors->attach->all()"/>
+                        <form method="POST" action="{{ route('diagnosticos.attachSintoma', [$diagnostico->id]) }}">
+                            @csrf
+                            <div class="mt-4">
+                                <x-input-label for="sintoma_id" :value="__('Síntoma')"/>
+
+                                <x-select id="sintoma_id" name="sintoma_id" required>
+                                    <option value="">{{__('Elige un síntoma')}}</option>
+                                    @foreach ($sintomas as $sintoma)
+                                        <option value="{{$sintoma->id}}"
+                                                @if (old('sintoma_id') == $sintoma->id) selected @endif>{{$sintoma->sintoma}}
+                                        </option>
+                                    @endforeach
+                                </x-select>
+                            </div>
+
+                            <div class="mt-4">
+                                <x-input-label for="fecha_diagnostico" :value="__('Fecha de diagnóstico')"/>
+
+                                <x-text-input id="fecha_diagnostico" class="block mt-1 w-full"
+                                              type="date"
+                                              name="fecha_diagnostico"
+                                              :value="old('fecha_diagnostico')"
+                                              required/>
+                            </div>
+
+                            <div>
+                                <x-input-label for="score_nih" :value="__('Score NIH')"/>
+
+                                <x-select id="score_nih" name="score_nih" required>
+                                    <option value="">{{__('Marcar el valor')}}</option>
+                                    @for($i = 1; $i <= 4; $i++)
+                                        <option :value="$i" @if (old('score_nih') == $i) selected @endif>{{$i}}</option>
+                                    @endfor
+                                </x-select>
+                            </div>
+
+                            <div class="flex items-center justify-end mt-4">
+                                <x-danger-button type="button">
+                                    <a href={{route('diagnosticos.index')}}>
+                                        {{ __('Cancelar') }}
+                                    </a>
+                                </x-danger-button>
+                                <x-primary-button class="ml-4">
+                                    {{ __('Guardar') }}
+                                </x-primary-button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 </x-app-layout>

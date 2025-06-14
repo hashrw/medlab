@@ -18,7 +18,7 @@ class Enfermedad extends Model
 
     public function pacientes()
     {
-        return $this->belongsToMany(Paciente::class)->using(PacienteEnfermedad::class)->withPivot('paciente_id','enfermedad');
+        return $this->belongsToMany(Paciente::class)->using(PacienteEnfermedad::class)->withPivot('paciente_id','enfermedad_id');
     }
 
     public function diagnosticos(){

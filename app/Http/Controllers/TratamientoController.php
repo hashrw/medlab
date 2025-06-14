@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Medico;
 use Illuminate\Http\Request;
 use App\Http\Requests\Tratamiento\UpdateTratamientoRequest;
 use App\Http\Requests\Tratamiento\StoreTratamientoRequest;
 use App\Http\Requests\Tratamiento\UpdateTratamientoRequest as TratamientoUpdateTratamientoRequest;
 use App\Models\Tratamiento;
 use App\Models\Medicamento;
+use App\Models\Paciente;
 
 
 class TratamientoController extends Controller
@@ -28,7 +30,10 @@ class TratamientoController extends Controller
     public function create()
     {
         $this->authorize('create', Tratamiento::class);
-        return view('tratamientos/create');
+        $pacientes = Paciente::all();
+        $medicos = Medico::all();
+
+        return view('tratamientos/create',['pacientes'=>$pacientes,['medicos'=>$medicos]]);
     }
 
     /**

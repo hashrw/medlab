@@ -72,4 +72,9 @@ class Diagnostico extends Model
 
         return Carbon::parse($this->f_trasplante)->diffInDays(now());
     }
+
+    public function estado():  BelongsTo
+    {
+        return $this->belongsTo(Estado::class);
+    }
 }

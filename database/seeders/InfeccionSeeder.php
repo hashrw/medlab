@@ -24,6 +24,9 @@ class InfeccionSeeder extends Seeder
             [
                 'nombre' => "Bacteriana",
             ],
+            [
+                'nombre' => "N/A ",
+            ],
         ]);
     }
 }

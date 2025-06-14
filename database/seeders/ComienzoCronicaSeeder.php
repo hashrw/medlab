@@ -26,6 +26,9 @@ class ComienzoCronicaSeeder extends Seeder
             [
                 'tipo_comienzo' => "Segundo o sucesivos episodios",
             ],
+            [
+                'tipo_comienzo' => "N/A",
+            ],
         ]);
     }
 }

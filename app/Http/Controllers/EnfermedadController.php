@@ -3,8 +3,9 @@
 namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Enfermedad;
-use App\Http\Requests\StoreEnfermedadRequest;
-use App\Http\Requests\UpdateEnfermedadRequest;
+use App\Models\Paciente;
+use App\Http\Requests\Enfermedad\StoreEnfermedadRequest;
+use App\Http\Requests\Enfermedad\UpdateEnfermedadRequest;
 
 class EnfermedadController extends Controller
 {
@@ -21,7 +22,8 @@ class EnfermedadController extends Controller
     public function create()
     {
         $this->authorize('create', Enfermedad::class);
-        return view('enfermedads/create');
+        $pacientes = Paciente::all();
+        return view('enfermedads/create', ['pacientes' => $pacientes]);
     }
 
     /**

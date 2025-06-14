@@ -12,6 +12,6 @@ class Estado extends Model
     protected $fillable = ['estado'];
 
     public function diagnosticos(){
-        return $this->belongsTo(Diagnostico::class);
+        return $this->hasMany(Diagnostico::class);
     }
 }

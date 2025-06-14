@@ -9,56 +9,49 @@
                     </svg>
                 </li>
                 <li>
-                    <a href="#" class="text-gray-500" aria-current="page">Consultar datos</a>
+                    <span class="text-gray-500" aria-current="page">Consultar datos</span>
                 </li>
             </ol>
         </nav>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-3">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                    Información del síntoma
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                <div class="p-6 bg-blue-800 text-white">
+                    <h3 class="text-lg font-semibold">Información del síntoma</h3>
                 </div>
-                <div class="p-6 bg-white border-b border-gray-200">
+
+                <div class="p-6 bg-white border-t border-gray-200">
+
                     <div class="mt-4">
                         <x-input-label for="sintoma" :value="__('Síntoma')" />
                         <x-text-input id="sintoma" class="block mt-1 w-full"
-                                      type="text"
-                                      name="sintoma"
-                                      disabled
-                                      :value="$sintoma->sintoma"
-                                      required />
+                                      type="text" name="sintoma" disabled
+                                      :value="$sintoma->sintoma" required />
                     </div>
 
                     <div class="mt-4">
                         <x-input-label for="manif_clinica" :value="__('Manifestación clínica')" />
                         <x-text-input id="manif_clinica" class="block mt-1 w-full"
-                                      type="text"
-                                      name="manif_clinica"
-                                      disabled
-                                      :value="$sintoma->manif_clinica"
-                                      required />
+                                      type="text" name="manif_clinica" disabled
+                                      :value="$sintoma->manif_clinica" required />
                     </div>
 
                     <div class="mt-4">
                         <x-input-label for="organo_id" :value="__('Órgano asociado')" />
                         <x-text-input id="organo_id" class="block mt-1 w-full"
-                                      type="text"
-                                      name="organo_id"
-                                      disabled
-                                      :value="$sintoma->organo->nombre"
-                                      required />
+                                      type="text" name="organo_id" disabled
+                                      :value="$sintoma->organo->nombre" required />
                     </div>
 
-                    <div class="flex items-center justify-end mt-4">
-                        <x-danger-button type="button">
-                            <a href="{{ route('sintomas.index') }}">
-                                {{ __('Volver') }}
-                            </a>
-                        </x-danger-button>
+                    <div class="flex items-center justify-end mt-6">
+                        <a href="{{ route('sintomas.index') }}"
+                           class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                            {{ __('Volver') }}
+                        </a>
                     </div>
+
                 </div>
             </div>
         </div>

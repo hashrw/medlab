@@ -4,6 +4,7 @@ namespace App\Http\Requests\Diagnostico;
 
 use App\Models\Diagnostico;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateDiagnosticoRequest extends FormRequest
 {
@@ -23,8 +24,13 @@ class UpdateDiagnosticoRequest extends FormRequest
      */
     public function rules(): array
     {
+        if ($this->user()->es_medico)
+            return [
+                'medico_id' => ['required', 'exists:medicos,id', Rule::in($this->user()->medico->id)]
+            ];
+
         return [
-            
+
             'tipo_enfermedad' => 'nullable|string|max:255',
             'comienzo_cronica' => 'nullable|string|max:255',
             'escala_karnofsky' => 'nullable|numeric',
@@ -42,10 +48,10 @@ class UpdateDiagnosticoRequest extends FormRequest
             'sintomas' => 'nullable|array',
             'sintomas.*.fecha_diagnostico' => 'nullable|date',
             'sintomas.*.score_nih' => 'nullable|integer',
-            'estado_id' => 'required|exists:estados',
-            'comienzo_id' => 'required|exists:comienzos',
-            'infeccion_id' => 'required|exists:infeccions',
-    
+            'estado_id' => 'required|exists:estados,id',
+            'comienzo_id' => 'required|exists:comienzos,id',
+            'infeccion_id' => 'required|exists:infeccions,id',
+
         ];
     }
 }

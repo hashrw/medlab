@@ -13,9 +13,9 @@
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     @if(Auth::user()->es_administrador || Auth::user()->es_paciente || Auth::user()->es_medico)
-                        <x-nav-link :href="route('citas.index')" :active="request()->routeIs('citas.index') or request()->routeIs('citas.create') or request()->routeIs('citas.edit') or request()->routeIs('citas.show')">
-                            {{ __('Mis citas') }}
-                        </x-nav-link>
+                        <!--{{ <x-nav-link :href="route('citas.index')" :active="request()->routeIs('citas.index') or request()->routeIs('citas.create') or request()->routeIs('citas.edit') or request()->routeIs('citas.show')">
+                            {{ __('Mis citas') }} }}
+                        </x-nav-link>-->
                         <x-nav-link :href="route('enfermedads.index')" :active="request()->routeIs('enfermedads.index') or request()->routeIs('enfermedads.create') or request()->routeIs('enfermedads.edit') or request()->routeIs('enfermedads.show')">
                             {{ __('EICH') }}
                         </x-nav-link>
@@ -31,9 +31,7 @@
                         <x-nav-link :href="route('organos.index')" :active="request()->routeIs('organos.index') or request()->routeIs('organos.create') or request()->routeIs('organos.edit') or request()->routeIs('organos.show')">
                             {{ __('Órganos') }}
                         </x-nav-link>
-                        <x-nav-link :href="route('especialidads.index')" :active="request()->routeIs('especialidads.index') or request()->routeIs('especialidads.create') or request()->routeIs('especialidads.edit')">
-                            {{ __('Especialidades') }}
-                        </x-nav-link>
+                        
                     @endif
                     @if(Auth::user()->es_administrador)
                         <x-nav-link :href="route('medicamentos.index')" :active="request()->routeIs('medicamentos.index') or request()->routeIs('medicamentos.create') or request()->routeIs('medicamentos.edit') or request()->routeIs('medicamentos.show')">

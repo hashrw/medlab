@@ -24,10 +24,10 @@ class UpdateEnfermedadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tipo_trasplante'=> 'required|string',
-            'nombre_enfermedad'=> 'required|string',
-            'fecha_trasplante'=> 'required|date',
-            'origen_trasplante'=> 'required|string',
+            'tipo_trasplante'=> 'string',
+            'nombre_enfermedad'=> 'string',
+            'fecha_trasplante'=> 'date',
+            'origen_trasplante'=> 'string',
             'tipo_acondicionamiento'=> 'string',
             'seropositividad_donante' => 'string',
             'seropositividad_receptor' => 'string',

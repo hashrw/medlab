@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Paciente extends Model
 {
-    protected $fillable = ['nuhsa','fecha_nacimiento','peso','altura','sexo','user_id','enfermedad_id','tratamiento_id'];
+    protected $fillable = ['nuhsa','fecha_nacimiento','peso','altura','sexo','user_id'];
 
     protected $casts = [
         'fecha_nacimiento' => 'datetime:Y-m-d',
@@ -21,9 +21,9 @@ class Paciente extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function enfermedads()
+    public function enfermedades()
     {
-        return $this->belongsToMany(Enfermedad::class)->using(PacienteEnfermedad::class)->withPivot('paciente_id','enfermedad');
+        return $this->belongsToMany(Enfermedad::class)->using(PacienteEnfermedad::class)->withPivot('paciente_id','enfermedad_id');
     }
 
     public function tratamientos(){
@@ -33,6 +33,11 @@ class Paciente extends Model
     public function diagnosticos(){
         return $this->belongsToMany(Diagnostico::class)->using(DiagnosticoPaciente::class)->withPivot('diagnostico_id','paciente_id');
 
+    }
+
+    //helper última ficha trasplante paciente
+    public function getFichaTrasplanteActual(){
+        return $this->enfermedades()->orderByDesc('fecha_trasplante')->first();
     }
 
     // Accesor para calcular la edad

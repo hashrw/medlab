@@ -100,33 +100,6 @@
                                           required/>
                         </div>
 
-                        <div class="mt-4">
-                            <x-input-label for="paciente_id" :value="__('Paciente')"/>
-
-                            @isset($paciente)
-                                <x-text-input id="paciente_id" class="block mt-1 w-full"
-                                              type="hidden"
-                                              name="paciente_id"
-                                              :value="$paciente->id"
-                                              required/>
-                                <x-text-input class="block mt-1 w-full"
-                                              type="text"
-                                              disabled
-                                              value="{{$paciente->user->name}} ({{$paciente->nuhsa}})"
-                                />
-                            @else
-                                <x-select id="paciente_id" name="paciente_id" required>
-                                    <option value="">{{__('Elige un paciente')}}</option>
-                                    @foreach ($pacientes as $paciente)
-                                        <option value="{{$paciente->id}}"
-                                                @if ($enfermedad->paciente_id == $paciente->id) selected @endif>{{$paciente->user->name}}
-                                            ({{$paciente->nuhsa}})
-                                        </option>
-                                    @endforeach
-                                </x-select>
-                            @endisset
-                        </div>
-
                         <div class="flex items-center justify-end mt-4">
                             <x-danger-button type="button">
                                 <a href={{route('enfermedads.index')}}>

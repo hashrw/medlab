@@ -45,7 +45,7 @@
                                 <!-- Tarjeta de Pacientes -->
                                 <div class="bg-white p-6 rounded-lg shadow-md">
                                     <h2 class="text-xl font-bold mb-4">Pacientes</h2>
-                                    <p class="text-gray-700">Total de pacientes: <span class="font-bold">120</span></p>
+                                     <!--<p class="text-gray-700">Total de pacientes: <span class="font-bold">120</span></p>-->
                                     <a href="{{ route('pacientes.index') }}" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                         Ver todos
                                     </a>
@@ -54,7 +54,7 @@
                                 <!-- Tarjeta de Diagnósticos -->
                                 <div class="bg-white p-6 rounded-lg shadow-md">
                                     <h2 class="text-xl font-bold mb-4">Diagnósticos</h2>
-                                    <p class="text-gray-700">Diagnósticos realizados: <span class="font-bold">45</span></p>
+                                    <!--<p class="text-gray-700">Diagnósticos realizados: <span class="font-bold">45</span></p> -->
                                     <a href="{{ route('diagnosticos.index') }}" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                         Ver todos
                                     </a>
@@ -63,7 +63,7 @@
                                 <!-- Tarjeta de Tratamientos -->
                                 <div class="bg-white p-6 rounded-lg shadow-md">
                                     <h2 class="text-xl font-bold mb-4">Tratamientos</h2>
-                                    <p class="text-gray-700">Tratamientos activos: <span class="font-bold">30</span></p>
+                                     <!--<p class="text-gray-700">Tratamientos activos: <span class="font-bold">30</span></p>-->
                                     <a href="{{ route('tratamientos.index') }}" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                         Ver todos
                                     </a>
@@ -71,12 +71,15 @@
 
                                 <!-- Tarjeta de Estadísticas -->
                                 <div class="bg-white p-6 rounded-lg shadow-md">
-                                    <h2 class="text-xl font-bold mb-4">Estadísticas</h2>
-                                    <div class="space-y-2">
+                                    <h2 class="text-xl font-bold mb-4">Registro de medicamentos</h2>
+                                     <!--<div class="space-y-2">
                                         <p class="text-gray-700">Pacientes atendidos: <span class="font-bold">120</span></p>
                                         <p class="text-gray-700">Diagnósticos comunes: <span class="font-bold">Gripe (25 casos)</span></p>
                                         <p class="text-gray-700">Tratamientos activos: <span class="font-bold">30</span></p>
-                                    </div>
+                                    </div>-->
+                                    <a href="{{ route('medicamentos.index') }}" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
+                                        Ver todos
+                                    </a>
                                 </div>
                             </div>
                         </main>

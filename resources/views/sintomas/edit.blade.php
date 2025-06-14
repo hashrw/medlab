@@ -10,61 +10,61 @@
                     </svg>
                 </li>
                 <li>
-                    <a href="#" class="text-gray-500" aria-current="page">Editar síntoma</a>
+                    <span class="text-gray-500" aria-current="page">Editar síntoma</span>
                 </li>
             </ol>
         </nav>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-3">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                    Información del síntoma
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                <div class="p-6 bg-blue-800 text-white">
+                    <h3 class="text-lg font-semibold">Editar síntoma</h3>
                 </div>
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <!-- Errores de validación en servidor -->
-                    <x-input-error class="mb-4" :messages="$errors->all()"/>
+
+                <div class="p-6 bg-white border-t border-gray-200">
+                    <!-- Errores de validación -->
+                    <x-input-error class="mb-4" :messages="$errors->all()" />
+
                     <form method="POST" action="{{ route('sintomas.update', $sintoma->id) }}">
                         @csrf
                         @method('put')
+
                         <div class="mt-4">
-                            <x-input-label for="sintoma" :value="__('Síntoma')"/>
-                            <x-text-input id="sintoma" class="block mt-1 w-full"
-                                          type="text"
-                                          name="sintoma"
-                                          :value="$sintoma->sintoma"
-                                          required/>
+                            <x-input-label for="sintoma" :value="__('Síntoma')" />
+                            <x-text-input id="sintoma" class="block mt-1 w-full" type="text"
+                                          name="sintoma" :value="$sintoma->sintoma" required />
                         </div>
 
                         <div class="mt-4">
-                            <x-input-label for="manif_clinica" :value="__('Manifestación clínica')"/>
-                            <x-text-input id="manif_clinica" class="block mt-1 w-full"
-                                          type="text"
-                                          name="manif_clinica"
-                                          :value="$sintoma->manif_clinica"
-                                          required/>
+                            <x-input-label for="manif_clinica" :value="__('Manifestación clínica')" />
+                            <x-text-input id="manif_clinica" class="block mt-1 w-full" type="text"
+                                          name="manif_clinica" :value="$sintoma->manif_clinica" required />
                         </div>
 
                         <div class="mt-4">
-                            <x-input-label for="organo_id" :value="__('Órgano asociado')"/>
-                            <x-select id="organo_id" name="organo_id" required>
-                                <option value="">{{__('Elige un órgano')}}</option>
+                            <x-input-label for="organo_id" :value="__('Órgano asociado')" />
+                            <x-select id="organo_id" name="organo_id" required class="block mt-1 w-full">
+                                <option value="">{{ __('Elige un órgano') }}</option>
                                 @foreach ($organos as $organo)
-                                    <option value="{{$organo->id}}"
-                                            @if ($sintoma->organo_id == $organo->id) selected @endif>{{$organo->nombre}}</option>
+                                    <option value="{{ $organo->id }}"
+                                        @selected($sintoma->organo_id == $organo->id)>
+                                        {{ $organo->nombre }}
+                                    </option>
                                 @endforeach
                             </x-select>
                         </div>
-                        <div class="flex items-center justify-end mt-4">
-                            <x-danger-button type="button">
-                                <a href="{{ route('sintomas.index') }}">
-                                    {{ __('Cancelar') }}
-                                </a>
-                            </x-danger-button>
-                            <x-primary-button class="ml-4">
+
+                        <div class="flex items-center justify-end mt-6">
+                            <a href="{{ route('sintomas.index') }}"
+                               class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                                {{ __('Cancelar') }}
+                            </a>
+                            <button type="submit"
+                                    class="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                                 {{ __('Guardar') }}
-                            </x-primary-button>
+                            </button>
                         </div>
                     </form>
                 </div>

@@ -66,15 +66,6 @@
                                 </td>
                                 @endif
 
-                                <!-- Médico (si el usuario no es paciente) -->
-                                @if(!Auth::user()->es_paciente)
-                                <td class="py-3 px-6 text-left whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <span class="font-medium">{{ $tratamiento->medico->user->name }}</span>
-                                    </div>
-                                </td>
-                                @endif
-
                                 <!-- Líneas de Tratamiento -->
                                 <td class="py-3 px-6 text-left whitespace-nowrap">
                                     <div class="flex items-center">

@@ -40,7 +40,7 @@
                                     <option value="{{$estado->id}}" @if (old('estado_id') == $estado->id) selected @endif>{{$estado->estado}}</option>
                                     @endforeach
                                 </x-select>
-                        </div>
+                            </div>
 
                         <div>
                             <x-input-label for="comienzo_id" :value="__('Tipo de comienzo fase crónica')" />

@@ -6,7 +6,7 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class EstadoEnfermedadSeeder extends Seeder
+class EstadoSeeder extends Seeder
 {
     /**
      * Run the database seeds.

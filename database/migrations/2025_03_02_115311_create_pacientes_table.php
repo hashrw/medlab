@@ -23,6 +23,8 @@ return new class extends Migration
             $table->double('altura');
             $table->string('sexo')->nullable();
             $table->foreignId('user_id')->unique()->constrained()->onDelete('cascade');
+            //relación con Diagnósticos y Tratamientos
+            
 
         });
     }
