@@ -10,18 +10,29 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 class Sintoma extends Model
 {
     use HasFactory;
-    
-    protected $fillable = ['sintoma','manif_clinica','organo_id'];
 
-    public function organo(){
+    protected $fillable = ['sintoma', 'manif_clinica', 'organo_id'];
+
+    public function organo()
+    {
         return $this->belongsTo(Organo::class);
     }
 
-    public function diagnosticos(): BelongsToMany{
+    public function diagnosticos(): BelongsToMany
+    {
         return $this->belongsToMany(Diagnostico::class)->using(DiagnosticoSintoma::class)->withPivot('fecha_diagnostico', 'score_nih');
 
     }
-    
+
+    public function pacientes()
+    {
+        return $this->belongsToMany(Paciente::class, 'paciente_sintoma')
+            ->withPivot('fecha_observacion', 'activo', 'fuente')
+            ->wherePivot('activo', true)
+            ->withTimestamps();
+    }
+
+
 }
 
 

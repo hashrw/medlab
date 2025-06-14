@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Paciente extends Model
 {
-    protected $fillable = ['nuhsa','fecha_nacimiento','peso','altura','sexo','user_id'];
+    protected $fillable = ['nuhsa', 'fecha_nacimiento', 'peso', 'altura', 'sexo', 'user_id'];
 
     protected $casts = [
         'fecha_nacimiento' => 'datetime:Y-m-d',
@@ -16,27 +16,40 @@ class Paciente extends Model
 
     protected $guarded = ['nuhsa']; // Protege el campo cie10 contra ediciones
 
-    
-    public function user(){
+
+    public function user()
+    {
         return $this->belongsTo(User::class);
     }
 
     public function enfermedades()
     {
-        return $this->belongsToMany(Enfermedad::class)->using(PacienteEnfermedad::class)->withPivot('paciente_id','enfermedad_id');
+        return $this->belongsToMany(Enfermedad::class)->using(PacienteEnfermedad::class)->withPivot('paciente_id', 'enfermedad_id');
     }
 
-    public function tratamientos(){
-        return $this->belongsToMany(Tratamiento::class)->using(PacienteTratamiento::class)->withPivot('paciente_id','tratamiento_id');
+    public function tratamientos()
+    {
+        return $this->belongsToMany(Tratamiento::class)->using(PacienteTratamiento::class)->withPivot('paciente_id', 'tratamiento_id');
     }
 
-    public function diagnosticos(){
-        return $this->belongsToMany(Diagnostico::class)->using(DiagnosticoPaciente::class)->withPivot('diagnostico_id','paciente_id');
+    public function diagnosticos()
+    {
+        return $this->belongsToMany(Diagnostico::class)->using(DiagnosticoPaciente::class)->withPivot('diagnostico_id', 'paciente_id');
 
     }
+
+    public function sintomas()
+    {
+        return $this->belongsToMany(Sintoma::class, 'paciente_sintoma')
+            ->withPivot('fecha_observacion', 'activo', 'fuente')
+            ->wherePivot('activo', true)
+            ->withTimestamps();
+    }
+
 
     //helper última ficha trasplante paciente
-    public function getFichaTrasplanteActual(){
+    public function getFichaTrasplanteActual()
+    {
         return $this->enfermedades()->orderByDesc('fecha_trasplante')->first();
     }
 
@@ -58,25 +71,25 @@ class Paciente extends Model
         });
     }
 
-   /* public function citas(){
-        return $this->hasMany(Cita::class);
-    }
+    /* public function citas(){
+         return $this->hasMany(Cita::class);
+     }
 
-    public function medicos(){
-        return $this->hasManyThrough(Medico::class, Cita::class);
-    }
+     public function medicos(){
+         return $this->hasManyThrough(Medico::class, Cita::class);
+     }
 
-    public function getMedicamentosActualesAttribute(){
-        $medicamentos_actuales = collect([]);
-        foreach ($this->citas as $cita) {
-            $medicamentos_actuales->merge($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->get());
-            /* Alternativa
-            if($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->exists()){
-                $medicamentos_actuales->merge($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->get());
-            }
-            
-        }
-        return $medicamentos_actuales;
-    }*/
+     public function getMedicamentosActualesAttribute(){
+         $medicamentos_actuales = collect([]);
+         foreach ($this->citas as $cita) {
+             $medicamentos_actuales->merge($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->get());
+             /* Alternativa
+             if($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->exists()){
+                 $medicamentos_actuales->merge($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->get());
+             }
+             
+         }
+         return $medicamentos_actuales;
+     }*/
 
 }

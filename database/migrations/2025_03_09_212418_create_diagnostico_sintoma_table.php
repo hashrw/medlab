@@ -17,7 +17,10 @@ return new class extends Migration
             $table->double('score_nih')->nullable();
             $table->foreignId('diagnostico_id')->constrained()->onDelete('cascade')->nullable();
             $table->foreignId('sintoma_id')->constrained()->onDelete('cascade')->nullable();
+            $table->enum('origen', ['Inferido', 'Validado'])->nullable(); //por defecto no puede estar a validado.
             $table->timestamps();
+
+            $table->unique(['diagnostico_id', 'sintoma_id']);
         });
     }
 

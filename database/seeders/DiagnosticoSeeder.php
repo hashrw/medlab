@@ -57,13 +57,16 @@ class DiagnosticoSeeder extends Seeder
                 'fecha_diagnostico' => '2022-01-01',
                 'score_nih' => 3.5,
                 'sintoma_id' => 1, //ID de un síntoma existente
-                'diagnostico_id' => $diagnosticoId,          
+                'diagnostico_id' => $diagnosticoId, 
+                'origen'         => 'Inferido'
             ],
             [
                 'fecha_diagnostico' => '2022-01-01',
                 'score_nih' => 2.0,
                 'sintoma_id' => 2, //ID de otro síntoma existente
                 'diagnostico_id' => $diagnosticoId,
+                'origen'         => 'Inferido'
+
             ],
         ]);
 
