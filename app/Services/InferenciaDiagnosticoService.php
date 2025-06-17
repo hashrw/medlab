@@ -9,39 +9,53 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
+/**
+ * Servicio responsable de inferir diagnósticos clínicos estructurados
+ * usando reglas definidas en la base de datos.
+ */
 class InferenciaDiagnosticoService
 {
     /**
      * Ejecuta la inferencia de diagnóstico para un paciente dado.
      *
-     * @param Paciente $paciente Instancia del paciente sobre el que se evaluarán las reglas.
-     * @return Diagnostico|null Retorna el diagnóstico creado si hubo coincidencia, o null si no se infiere ninguno.
+     * @param Paciente $paciente
+     * @return Diagnostico|null
      */
     public function ejecutar(Paciente $paciente): ?Diagnostico
     {
-        // 1. Obtener los IDs de los síntomas activos del paciente
-        $sintomasActivos = $paciente->sintomas()->pluck('sintoma_id')->toArray();
-
-        // 2. Obtener todas las reglas activas
+        $sintomasActivos = $paciente->sintomas()->pluck('sintomas.id')->toArray();
         $reglas = ReglaDecision::all();
 
         foreach ($reglas as $regla) {
-            $condiciones = json_decode($regla->condiciones_json, true);
+            $condiciones = $regla->condiciones;
+            /*dd([
+                'regla_id' => $regla->id,
+                'nombre' => $regla->nombre_regla,
+                'condiciones_crudas' => $regla->getRawOriginal('condiciones'),
+                'condiciones_array' => $regla->condiciones,
+                'sintomas_regla' => $regla->condiciones['sintomas'] ?? [],
+                'sintomas_paciente' => $sintomasActivos,
+                'diff_faltantes' => array_diff($regla->condiciones['sintomas'] ?? [], $sintomasActivos),
+            ]);*/
 
             if (isset($condiciones['sintomas']) && $this->cumpleCondiciones($condiciones['sintomas'], $sintomasActivos)) {
-                // Transacción para mantener coherencia
+                Log::info('📋 Requiere síntomas:', $condiciones['sintomas']);
                 return DB::transaction(function () use ($paciente, $regla, $sintomasActivos) {
-                    // 3. Crear diagnóstico
-                    $diagnostico = Diagnostico::create([
-                        'descripcion' => $regla->resultado,
-                        'origen' => 'inferido',
-                    ]);
+                    $datos = $regla->diagnostico;
 
-                    // 4. Relacionar con paciente y enfermedad
+                    // Si la regla incluye una fecha de trasplante, calcula días desde trasplante
+                    if (isset($datos['f_trasplante'])) {
+                        $datos['dias_desde_trasplante'] = Carbon::parse($datos['f_trasplante'])->diffInDays(now());
+                    }
+
+                    // Crear el diagnóstico estructurado
+                    $diagnostico = Diagnostico::create($datos);
+
+                    // Relacionar con paciente y enfermedad
                     $diagnostico->pacientes()->attach($paciente->id);
                     $diagnostico->enfermedades()->attach($paciente->enfermedad_id);
 
-                    // 5. Copiar síntomas con información pivot
+                    // Registrar síntomas en tabla pivot diagnostico_sintoma
                     $pivotData = [];
                     $hoy = Carbon::now()->toDateString();
 
@@ -49,23 +63,22 @@ class InferenciaDiagnosticoService
                         $pivotData[$sintomaId] = [
                             'fecha_diagnostico' => $hoy,
                             'score_nih' => null,
-                            'validado' => false,
+                            'origen' => 'Inferido',
                         ];
                     }
 
                     $diagnostico->sintomas()->sync($pivotData);
-
-                    Log::info("Diagnóstico inferido para paciente ID {$paciente->id}");
-
                     return $diagnostico;
                 });
             }
         }
 
-        Log::info("No se encontró diagnóstico inferido para paciente ID {$paciente->id}");
         return null;
     }
 
+    /**
+     * Verifica si los síntomas del paciente cumplen con los requisitos de la regla.
+     */
     protected function cumpleCondiciones(array $condiciones, array $sintomasPaciente): bool
     {
         return empty(array_diff($condiciones, $sintomasPaciente));

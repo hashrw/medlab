@@ -77,6 +77,10 @@ Route::middleware(['auth'])->group(function () {
         'organos' => OrganoController::class, // Rutas para organos
         'estadisticas' => EstadisticaController::class,
     ]);
+
+    Route::get('/diagnosticos/inferir/{pacienteId}', [DiagnosticoController::class, 'inferirDesdeSistema'])
+     ->name('diagnosticos.inferir');
+
 });
 
 /* Ejemplo: Estas 7 rutas son las que se crean, por ejemplo, con la ruta de tipo recurso de citas. Lo mismo con el resto de controladores de tipo recurso

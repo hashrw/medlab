@@ -17,6 +17,7 @@ use App\Http\Requests\Diagnostico\UpdateDiagnosticoRequest;
 use App\Models\Comienzo;
 use App\Models\Estado;
 use App\Models\Infeccion;
+use App\Services\InferenciaDiagnosticoService;
 use Carbon\Carbon;
 
 class DiagnosticoController extends Controller
@@ -64,7 +65,7 @@ class DiagnosticoController extends Controller
             $diasDesdeTrasplante = $tmp->dias_desde_trasplante;
         }
 
-        return view('diagnosticos.create',compact(['sintomas'=> $sintomas,'comienzos' => $comienzos, 'estados' => $estados, 'infeccions' => $infeccions, 'diasDesdeTrasplante']));
+        return view('diagnosticos.create', compact(['sintomas' => $sintomas, 'comienzos' => $comienzos, 'estados' => $estados, 'infeccions' => $infeccions, 'diasDesdeTrasplante']));
 
     }
 
@@ -182,5 +183,38 @@ class DiagnosticoController extends Controller
 
         // Redirigir a la vista de edición del diagnóstico
         return redirect()->route('diagnosticos.edit', $diagnostico->id);
+    }
+
+    public function inferirDesdeSistema($pacienteId, InferenciaDiagnosticoService $inferenciaService)
+    {
+        $paciente = Paciente::find($pacienteId);
+
+        if (!$paciente) {
+            return redirect()->back()->with('warning', 'Paciente no encontrado.');
+        }
+
+        //debuggear cuando se llama a esta función
+        $diagnostico = $inferenciaService->ejecutar($paciente);
+
+        if ($diagnostico) {
+            return redirect()->route('diagnosticos.show', $diagnostico->id)
+                ->with('success', 'Diagnóstico inferido correctamente.');
+        } else {
+            return redirect()->back()->with('warning', 'No se ha podido inferir ningún diagnóstico para este paciente.');
+        }
+    }
+
+    public function inferidos()
+    {
+        $this->authorize('viewAny', Diagnostico::class);
+
+        $diagnosticos = Diagnostico::whereHas('sintomas', function ($query) {
+            $query->wherePivot('origen', 'Inferido');
+        })->paginate(25);
+
+        return view('diagnosticos.index', [
+            'diagnosticos' => $diagnosticos,
+            'soloInferidos' => true // Flag para distinguir en la vista
+        ]);
     }
 }

@@ -1,9 +1,5 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Síntomas') }}
-        </h2>
-    </x-slot>
+    
 
     <div class="py-3">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
@@ -11,14 +7,14 @@
 
                 @if(Auth::user()->es_sintoma)
                     <div class="p-6 bg-blue-800 text-white flex justify-between items-center">
-                        <h3 class="text-lg font-semibold">Lista de Síntomas</h3>
+                        <h3 class="text-lg font-semibold">Síntomatología común EICH</h3>
                         <a href="{{ route('sintomas.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                            + Crear síntoma
+                            + Crear nuevo registro
                         </a>
                     </div>
                 @else
                     <div class="p-6 bg-blue-800 text-white">
-                        <h3 class="text-lg font-semibold">Lista de Síntomas</h3>
+                        <h3 class="text-lg font-semibold">Síntomatología común EICH</h3>
                     </div>
                 @endif
 

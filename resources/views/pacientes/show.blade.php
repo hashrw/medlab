@@ -68,6 +68,23 @@
                             </div>
                         </div>
                     </div>
+                    <!-- Diagnóstico por inferencia del sistema -->
+                    <div class="py-8" class="bg-white shadow rounded-lg p-6 border border-gray-200">
+                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Diagnóstico Automático</h4>
+
+                        <p class="text-sm text-gray-600 mb-4">
+                            Puedes solicitar al sistema que evalúe los síntomas actuales del paciente y genere un
+                            diagnóstico basado en las reglas clínicas definidas.
+                        </p>
+
+                        <div class="flex items-center justify-end">
+                            <a href="{{ route('diagnosticos.inferir', $paciente->id) }}"
+                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
+                                Inferir Diagnóstico
+                            </a>
+                        </div>
+                    </div>
+
 
                 </div>
             </div>

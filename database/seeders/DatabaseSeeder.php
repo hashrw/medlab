@@ -15,7 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             InfeccionSeeder::class,ComienzoCronicaSeeder::class,EstadoSeeder::class,EspecialidadSeeder::class, MedicamentoSeeder::class, UserSeeder::class, MedicoSeeder::class, OrganoSeeder::class, SintomaSeeder::class,EnfermedadSeeder::class, TratamientoSeeder::class,
-            PacienteSeeder::class,DiagnosticoSeeder::class
+            PacienteSeeder::class,DiagnosticoSeeder::class, ReglaDecisionSeeder::class,
         ]);  
     }
 }
