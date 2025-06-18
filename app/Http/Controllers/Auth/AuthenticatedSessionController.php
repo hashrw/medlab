@@ -27,8 +27,15 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
         $request->session()->regenerate();
-        if(in_array(Auth::user()->tipo_usuario_id, [1,2])){
-            return redirect()->route('dashboard');
+        $user = Auth::user();
+
+
+        if ($user->tipo_usuario_id == 1) {
+            return redirect()->route('dashboard.medico');
+        }
+
+        if ($user->tipo_usuario_id == 2) {
+            return redirect()->route('dashboard.paciente');
         }
         return redirect()->intended(RouteServiceProvider::HOME);
     }

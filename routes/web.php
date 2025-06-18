@@ -46,6 +46,15 @@ Route::middleware('auth')->group(function () {
 
 
 Route::middleware(['auth'])->group(function () {
+
+    Route::get('/dashboard/medico', function () {
+        return view('dashboard.medico');
+    })->middleware(['auth'])->name('dashboard.medico');
+
+    Route::get('/dashboard/paciente', function () {
+        return view('dashboard.paciente');
+    })->middleware(['auth'])->name('dashboard.paciente');
+
     /* Rutas propias */
     // Pongo las rutas de citas antes de las de recurso para que no matchee antes un show de citas, por ejemplo
     // Fíjate en que a estas rutas les añado un middleware de tipo can para que primero autorice al usuario a realizar la acción llamando a los métodos attach_medicamento y detach_medicamento de CitaPolicy.
@@ -56,14 +65,14 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/citas/{cita}/detach-medicamento/{medicamento}', [CitaController::class, 'detach_medicamento'])
         ->name('citas.detachMedicamento')
         ->middleware('can:detach_medicamento,cita');
-    
-        Route::post('/diagnosticos/{diagnostico}/attach-sintoma', [DiagnosticoController::class, 'attach_sintoma'])
+
+    Route::post('/diagnosticos/{diagnostico}/attach-sintoma', [DiagnosticoController::class, 'attach_sintoma'])
         ->name('diagnosticos.attachSintoma')
         ->middleware('can:attach_sintoma,diagnostico');
     Route::delete('/diagnosticos/{diagnostico}/detach-sintoma/{sintoma}', [DiagnosticoController::class, 'detach_sintoma'])
         ->name('diagnosticos.detachSintoma')
         ->middleware('can:detach_sintoma,diagnostico');
-    
+
     Route::resources([
         'citas' => CitaController::class,
         'especialidads' => EspecialidadController::class,
@@ -79,7 +88,7 @@ Route::middleware(['auth'])->group(function () {
     ]);
 
     Route::get('/diagnosticos/inferir/{pacienteId}', [DiagnosticoController::class, 'inferirDesdeSistema'])
-     ->name('diagnosticos.inferir');
+        ->name('diagnosticos.inferir');
 
 });
 
@@ -93,4 +102,4 @@ Route::put('/citas/{cita}', [CitaController::class, 'update'])->name('citas.upda
 Route::delete('/citas/{cita}', [CitaController::class, 'destroy'])->name('citas.destroy');
 */
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

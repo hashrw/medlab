@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard Médico') }}
+            {{ __('Dashboard Genérico') }}
         </h2>
     </x-slot>
 
@@ -13,7 +13,7 @@
                     <div class="flex">
                         <!-- Sidebar -->
                         <aside class="bg-blue-800 text-white w-64 p-4">
-                            <h2 class="text-xl font-bold mb-4">Panel Médico</h2>
+                            <h2 class="text-xl font-bold mb-4">Panel de usuario</h2>
                             <ul class="space-y-2">
                                 <li>
                                     <a href="{{ route('pacientes.index') }}" class="block p-2 hover:bg-blue-700 rounded">
@@ -44,7 +44,7 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                                 <!-- Tarjeta de Pacientes -->
                                 <div class="bg-white p-6 rounded-lg shadow-md">
-                                    <h2 class="text-xl font-bold mb-4">Pacientes</h2>
+                                    <h2 class="text-xl font-bold mb-4">XXXXXXX</h2>
                                      <!--<p class="text-gray-700">Total de pacientes: <span class="font-bold">120</span></p>-->
                                     <a href="{{ route('pacientes.index') }}" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                         Ver todos
@@ -53,7 +53,7 @@
 
                                 <!-- Tarjeta de Diagnósticos -->
                                 <div class="bg-white p-6 rounded-lg shadow-md">
-                                    <h2 class="text-xl font-bold mb-4">Diagnósticos</h2>
+                                    <h2 class="text-xl font-bold mb-4">XXXXXXX</h2>
                                     <!--<p class="text-gray-700">Diagnósticos realizados: <span class="font-bold">45</span></p> -->
                                     <a href="{{ route('diagnosticos.index') }}" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                         Ver todos
@@ -62,7 +62,7 @@
 
                                 <!-- Tarjeta de Tratamientos -->
                                 <div class="bg-white p-6 rounded-lg shadow-md">
-                                    <h2 class="text-xl font-bold mb-4">Tratamientos</h2>
+                                    <h2 class="text-xl font-bold mb-4">XXXXXXX</h2>
                                      <!--<p class="text-gray-700">Tratamientos activos: <span class="font-bold">30</span></p>-->
                                     <a href="{{ route('tratamientos.index') }}" class="mt-4 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                         Ver todos
@@ -71,7 +71,7 @@
 
                                 <!-- Tarjeta de Estadísticas -->
                                 <div class="bg-white p-6 rounded-lg shadow-md">
-                                    <h2 class="text-xl font-bold mb-4">Registro de medicamentos</h2>
+                                    <h2 class="text-xl font-bold mb-4">XXXXXXX</h2>
                                      <!--<div class="space-y-2">
                                         <p class="text-gray-700">Pacientes atendidos: <span class="font-bold">120</span></p>
                                         <p class="text-gray-700">Diagnósticos comunes: <span class="font-bold">Gripe (25 casos)</span></p>

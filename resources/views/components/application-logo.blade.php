@@ -1,1 +1,5 @@
-<img src="https://www.informatica.us.es/docs/imagen-etsii/logo-ETSII-US-Vertical-Color.png" {{ $attributes }}>
+<img 
+    src="{{ asset('images/logo-maker-project.png') }}" 
+    alt="Logo de la Clínica"
+    {{ $attributes->merge(['class' => 'h-auto max-h-12 w-auto']) }}
+>
