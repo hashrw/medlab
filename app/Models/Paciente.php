@@ -38,6 +38,13 @@ class Paciente extends Model
 
     }
 
+    public function organos()
+    {
+        return $this->belongsToMany(Organo::class, 'organo_paciente')
+            ->withPivot('score_nih', 'fecha_evaluacion', 'comentario', 'sintomas_asociados')
+            ->withTimestamps();
+    }
+
     public function sintomas()
     {
         return $this->belongsToMany(Sintoma::class, 'paciente_sintoma')
@@ -87,7 +94,7 @@ class Paciente extends Model
              if($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->exists()){
                  $medicamentos_actuales->merge($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->get());
              }
-             
+
          }
          return $medicamentos_actuales;
      }*/

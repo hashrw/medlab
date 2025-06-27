@@ -91,16 +91,13 @@
         </div>
     </div>
 
-    <!--INFERIDOS -->
+    <!--Diagnósticos inferidos -->
     <div class="py-3">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-lg rounded-lg overflow-hidden">
                 <div class="p-6 bg-blue-900 text-white flex justify-between items-center">
                     <h3 class="text-lg font-semibold">Diagnósticos inferidos por el sistema</h3>
-                    <a href="{{ route('diagnosticos.index') }}"
-                        class="bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">
-                        ← Volver al listado general
-                    </a>
+                    
                 </div>
 
                 <div class="overflow-x-auto p-4">

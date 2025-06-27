@@ -11,8 +11,17 @@ class Organo extends Model
 
     protected $fillable = ['nombre'];
 
-    public function sintomas(){
+    public function sintomas()
+    {
         return $this->belongsTo(Sintoma::class);
     }
+
+    public function pacientes()
+    {
+        return $this->belongsToMany(Paciente::class, 'organo_paciente')
+            ->withPivot('score', 'fecha_evaluacion', 'comentario', 'sintomas_asociados')
+            ->withTimestamps();
+    }
+
 
 }

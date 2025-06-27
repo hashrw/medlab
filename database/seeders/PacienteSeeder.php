@@ -38,7 +38,7 @@ class PacienteSeeder extends Seeder
             ]);
 
             // Relación fija con síntomas 1, 3, 5, 7, 9
-            $sintomasFijos = [1, 3, 5, 7, 9];
+            $sintomasFijos = [2, 4, 6, 7];
             foreach ($sintomasFijos as $sintomaId) {
                 DB::table('paciente_sintoma')->insert([
                     'paciente_id' => $pacienteId,
