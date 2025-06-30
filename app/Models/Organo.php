@@ -19,9 +19,10 @@ class Organo extends Model
     public function pacientes()
     {
         return $this->belongsToMany(Paciente::class, 'organo_paciente')
-            ->withPivot('score', 'fecha_evaluacion', 'comentario', 'sintomas_asociados')
+            ->withPivot('score_nih', 'fecha_evaluacion', 'comentario', 'sintomas_asociados')
             ->withTimestamps();
     }
+
 
 
 }
