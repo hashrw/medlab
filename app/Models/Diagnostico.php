@@ -14,27 +14,15 @@ class Diagnostico extends Model
 
     protected $fillable = [
         //'medico_id', // Relación con Médico
-        'dias_desde_trasplante',
+
         'tipo_enfermedad',
-        'f_electromiografia',
-        'f_eval_injerto',
-        'f_medulograma',
-        'f_espirometria',
-        'f_esplenectomia',
-        'hipoalbuminemia',
+        'origen',
         'observaciones',
+        'regla_decision_id',
         'estado_id',
         'comienzo_id',
         'infeccion_id'
-        
-    ];
 
-    protected $casts = [
-        'f_electromiografia' => 'datetime:Y-m-d H:i',
-        'f_eval_injerto' => 'datetime:Y-m-d H:i',
-        'f_esplenectomia' => 'datetime:Y-m-d H:i',
-        'f_medulograma' => 'datetime:Y-m-d H:i',
-        'f_espirometria' => 'datetime:Y-m-d H:i'
     ];
 
     protected $guarded = ['cie10']; // Protege el campo cie10 contra ediciones
@@ -62,9 +50,9 @@ class Diagnostico extends Model
         return $this->belongsToMany(Enfermedad::class)->using(DiagnosticoEnfermedad::class)->withPivot('grado_eich', 'escala_karnofsky');
     }
 
-    
 
-    public function estado():  BelongsTo
+
+    public function estado(): BelongsTo
     {
         return $this->belongsTo(Estado::class);
     }

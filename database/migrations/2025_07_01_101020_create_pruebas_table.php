@@ -12,7 +12,6 @@ return new class extends Migration {
     {
         Schema::create('pruebas', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id')->constrained()->onDelete('cascade');
             $table->string('nombre'); // Ej: espirometría, electromiografía, hipoalbuminemia,f_medulograma,f_espirometria,f_esplenectomia,f_eval_injerto etc... =>
             $table->string('tipo_prueba');
             $table->date('fecha')->nullable();

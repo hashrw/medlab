@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('enfermedads', function (Blueprint $table) {
             $table->id();
            // $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
-            //Información del trasplante
+            //FICHA Trasplante
             $table->integer('dias_desde_trasplante')->nullable();
             $table->string('tipo_trasplante')->nullable();
             //tipo_trasplante:['alogénico emparentado','alogénico no emparentado','autólogo ','singénico']

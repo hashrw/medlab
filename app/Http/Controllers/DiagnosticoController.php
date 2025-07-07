@@ -58,13 +58,6 @@ class DiagnosticoController extends Controller
         $comienzos = Comienzo::all();
         $infeccions = Infeccion::all();
 
-        $diasDesdeTrasplante = null;
-        if (old('f_trasplante')) {
-            $tmp = new Diagnostico();
-            $tmp->f_trasplante = old('f_trasplante');
-            $diasDesdeTrasplante = $tmp->dias_desde_trasplante;
-        }
-
         return view('diagnosticos.create', compact(['sintomas' => $sintomas, 'comienzos' => $comienzos, 'estados' => $estados, 'infeccions' => $infeccions, 'diasDesdeTrasplante']));
 
     }
@@ -79,7 +72,7 @@ class DiagnosticoController extends Controller
         session()->flash('success', 'diagnostico creado correctamente.');
         return redirect()->route('diagnosticos.index');*/
 
-        // Validar los datos usando el Request
+        /* Validar los datos usando el Request
         $validatedData = $request->validated();
         //Calcular días desde trasplante si se proporcionó fecha
         if ($request->filled('f_trasplante')) {
@@ -89,7 +82,7 @@ class DiagnosticoController extends Controller
         // Crear el diagnóstico
         $diagnostico = Diagnostico::create($validatedData);
 
-        // Asociar síntomas al diagnóstico (si se proporcionan)
+          Asociar síntomas al diagnóstico (si se proporcionan)
         if ($request->has('sintomas')) {
             foreach ($request->sintomas as $sintomaId => $sintomaData) {
                 $diagnostico->sintomas()->attach($sintomaId, [
@@ -97,7 +90,7 @@ class DiagnosticoController extends Controller
                     'score_nih' => $sintomaData['score_nih'],
                 ]);
             }
-        }
+        }*/
 
         // Redirigir con un mensaje de éxito
         return redirect()->route('diagnosticos.index')->with('success', 'Diagnóstico creado correctamente.');
