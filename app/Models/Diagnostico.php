@@ -16,7 +16,6 @@ class Diagnostico extends Model
         //'medico_id', // Relación con Médico
         'dias_desde_trasplante',
         'tipo_enfermedad',
-        'f_trasplante',
         'f_electromiografia',
         'f_eval_injerto',
         'f_medulograma',
@@ -31,7 +30,6 @@ class Diagnostico extends Model
     ];
 
     protected $casts = [
-        'f_trasplante' => 'datetime:Y-m-d H:i',
         'f_electromiografia' => 'datetime:Y-m-d H:i',
         'f_eval_injerto' => 'datetime:Y-m-d H:i',
         'f_esplenectomia' => 'datetime:Y-m-d H:i',
@@ -64,14 +62,7 @@ class Diagnostico extends Model
         return $this->belongsToMany(Enfermedad::class)->using(DiagnosticoEnfermedad::class)->withPivot('grado_eich', 'escala_karnofsky');
     }
 
-    public function getDiasDesdeTrasplanteAttribute(): ?int
-    {
-        if (!$this->f_trasplante) {
-            return null;
-        }
-
-        return Carbon::parse($this->f_trasplante)->diffInDays(now());
-    }
+    
 
     public function estado():  BelongsTo
     {

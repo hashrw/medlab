@@ -6,7 +6,6 @@ use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-
 class OrganoPacienteSeeder extends Seeder
 {
     /**
@@ -17,7 +16,7 @@ class OrganoPacienteSeeder extends Seeder
         DB::table('organo_paciente')->insert([
             [
                 'paciente_id' => 1,
-                'organo_id' => 1, // GI
+                'organo_id' => 1, // Tracto GI
                 'score_nih' => 'Score_3_1000-1500ml/day',
                 'fecha_evaluacion' => '2025-06-20',
                 'sintomas_asociados' => json_encode([2, 4, 6, 7]),
@@ -33,6 +32,8 @@ class OrganoPacienteSeeder extends Seeder
                 'comentario' => 'Bilirrubina moderadamente elevada.',
 
             ],
+
+            
         ]);
     }
 }

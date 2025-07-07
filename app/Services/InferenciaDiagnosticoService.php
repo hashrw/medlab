@@ -13,10 +13,13 @@ class InferenciaDiagnosticoService
 {
     public function ejecutar(Paciente $paciente): ?Diagnostico
     {
+        //sintomas activos paciente
         $sintomasActivos = $paciente->sintomas()->pluck('sintomas.id')->map(fn($id) => (int) $id)->toArray();
         dump('🧠 Síntomas activos:', $sintomasActivos);
 
+        //me cojo todas las reglas
         $reglas = ReglaDecision::all();
+        //organos asociados a paciente y (síntoma¿?)
         $organosPaciente = $paciente->organos->keyBy('nombre');
         dump('🧠 Órganos detectados:', $organosPaciente->keys()->toArray());
 

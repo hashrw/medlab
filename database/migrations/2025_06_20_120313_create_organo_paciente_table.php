@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->foreignId('organo_id')->constrained()->onDelete('cascade');
             $table->string('score_nih');
             $table->date('fecha_evaluacion');
+            $table->string(column: 'estado_injerto')->nullable(); //['Estable', 'Pobre']
             $table->json('sintomas_asociados')->nullable(); //FK con sintomas o ¿?
             $table->text('comentario')->nullable();
             $table->timestamps();
