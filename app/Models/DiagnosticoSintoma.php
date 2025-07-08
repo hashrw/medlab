@@ -10,10 +10,9 @@ class DiagnosticoSintoma extends Pivot
 {
     use HasFactory;
 
-    protected $table = 'diagnostico_sintoma'; 
+    protected $table = 'diagnostico_sintoma';
 
     protected $casts = [
-        'fecha_diagnostico' => 'datetime:Y-m-d',
-
+        'fecha_diagnostico' => 'datetime:Y-m-d'
     ];
 }

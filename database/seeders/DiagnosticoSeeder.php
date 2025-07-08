@@ -59,12 +59,5 @@ class DiagnosticoSeeder extends Seeder
             ],
         ]);
 
-        // Relación con paciente
-        DB::table('diagnostico_paciente')->insert([
-            [
-                'paciente_id' => 1,
-                'diagnostico_id' => $diagnosticoId,
-            ],
-        ]);
     }
 }

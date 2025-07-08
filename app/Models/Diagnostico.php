@@ -32,12 +32,6 @@ class Diagnostico extends Model
         return $this->belongsTo(Enfermedad::class);
     }
 
-    // Relación con el modelo Paciente
-    public function pacientes(): BelongsToMany
-    {
-        return $this->belongsToMany(Paciente::class)->using(DiagnosticoPaciente::class)->withPivot('diagnostico_id', 'paciente_id');
-    }
-
     // Relación con el modelo Sintoma (muchos a muchos)
     public function sintomas(): BelongsToMany
     {

@@ -13,7 +13,7 @@ class InferenciaDiagnosticoService
 {
     public function ejecutar(Paciente $paciente): ?Diagnostico
     {
-        //sintomas activos paciente
+        //sintomas activos no confirmados x paciente: Reservar la posibilidad futura de reglas basadas en síntomas no confirmados
         $sintomasActivos = $paciente->sintomas()->pluck('sintomas.id')->map(fn($id) => (int) $id)->toArray();
         dump('🧠 Síntomas activos:', $sintomasActivos);
 

@@ -171,10 +171,10 @@ class DiagnosticoController extends Controller
      */
     public function detach_Sintoma(Diagnostico $diagnostico, Sintoma $sintoma): RedirectResponse
     {
-        // Desvincular el síntoma del diagnóstico
+        //Desvincular el síntoma del diagnóstico
         $diagnostico->sintomas()->detach($sintoma->id);
 
-        // Redirigir a la vista de edición del diagnóstico
+        //Redirigir a la vista de edición del diagnóstico
         return redirect()->route('diagnosticos.edit', $diagnostico->id);
     }
 
