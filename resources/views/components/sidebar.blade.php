@@ -23,7 +23,7 @@
                 </li>
                 <li>
                     <a href="{{ route('tratamientos.index') }}" class="block px-4 py-2 rounded hover:bg-blue-50 {{ request()->routeIs('tratamientos.*') ? 'bg-blue-50 text-blue-600' : '' }}">
-                        <i class="fas fa-pills mr-2"></i> Tratamientos
+                        <i class="fas fa-pills mr-2"></i> Tratamiento
                     </a>
                 </li>
                 <li>

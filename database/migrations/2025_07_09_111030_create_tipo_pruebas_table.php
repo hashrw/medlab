@@ -10,12 +10,9 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('pruebas', function (Blueprint $table) {
+        Schema::create('tipo_pruebas', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre'); // Ej: espirometría, electromiografía, hipoalbuminemia,f_medulograma,f_espirometria,f_esplenectomia,f_eval_injerto etc... =>
-            $table->date('fecha')->nullable();
-            $table->text('resultado')->nullable();
-            $table->text('comentario')->nullable();
+            $table->string('nombre');
             $table->timestamps();
         });
     }
@@ -25,6 +22,6 @@ return new class extends Migration {
      */
     public function down(): void
     {
-        Schema::dropIfExists('pruebas');
+        Schema::dropIfExists('tipo_pruebas');
     }
 };

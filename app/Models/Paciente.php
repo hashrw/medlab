@@ -11,8 +11,9 @@ class Paciente extends Model
     protected $fillable = ['nuhsa', 'fecha_nacimiento', 'peso', 'altura', 'sexo', 'user_id'];
 
     protected $casts = [
-        'fecha_nacimiento' => 'dateTime:Y-m-d',
+        'fecha_nacimiento' => 'date'
     ];
+
 
     protected $guarded = ['nuhsa']; // Protege el campo cie10 contra ediciones
 

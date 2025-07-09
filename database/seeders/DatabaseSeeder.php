@@ -28,8 +28,13 @@ class DatabaseSeeder extends Seeder
             SintomaSeeder::class,
             PacienteSeeder::class,
             ReglaDecisionSeeder::class,
+            OrigenDiagnosticoSeeder::class,
             DiagnosticoSeeder::class,
             OrganoPacienteSeeder::class,
+            TipoPruebaSeeder::class,
+            PruebaSeeder::class,
+
+
         ]);
     }
 }

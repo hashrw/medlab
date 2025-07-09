@@ -33,7 +33,7 @@ class PruebaController extends Controller
     {
         $prueba = new Prueba($request->validated());
         $prueba->save();
-        session()->flash('success', 'registro creado correctamente.');
+        session()->flash('success', 'Registro creado correctamente.');
         return redirect()->route('pruebas.index');
     }
 

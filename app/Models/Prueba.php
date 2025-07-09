@@ -9,9 +9,13 @@ class Prueba extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nombre','tipo_prueba','fecha','resultado','comentario'];
+    protected $fillable = ['nombre','tipo_prueba_id','fecha','resultado','comentario'];
 
     protected $casts = ['fecha' => 'datetime:Y-m-d'];
+
+     public function tipo_prueba(){
+        return $this->belongsTo(Prueba::class);
+    }
 
 
 }

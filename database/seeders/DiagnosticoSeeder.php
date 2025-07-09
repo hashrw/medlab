@@ -13,7 +13,7 @@ class DiagnosticoSeeder extends Seeder
         DB::table('diagnosticos')->insert([
             [
                 'tipo_enfermedad' => 'aguda',
-                'origen' => 'inferido', // 'manual' si fue ingresado por un médico
+                'origen_id' => 2, // 'manual' si fue ingresado por un médico
                 'observaciones' => 'No aplica',
                 'regla_decision_id' => 1, // Debe existir una regla con ID 1 o ajustarlo
                 'estado_id' => 3,

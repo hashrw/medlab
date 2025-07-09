@@ -9,6 +9,7 @@ use App\Http\Controllers\MedicoController;
 use App\Http\Controllers\OrganoController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PacienteController;
+use App\Http\Controllers\PruebaController;
 use App\Http\Controllers\SintomaController;
 use App\Http\Controllers\TratamientoController;
 use App\Http\Controllers\EstadisticaController;
@@ -59,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
     // Pongo las rutas de citas antes de las de recurso para que no matchee antes un show de citas, por ejemplo
     // Fíjate en que a estas rutas les añado un middleware de tipo can para que primero autorice al usuario a realizar la acción llamando a los métodos attach_medicamento y detach_medicamento de CitaPolicy.
     // Podríamos haberlo hecho directamente dentro de los métodos en el controlador con $this->authorize('attach_medicamento', $cita); y $this->authorize('detach_medicamento', $cita);, respectivamente
+
     Route::post('/citas/{cita}/attach-medicamento', [CitaController::class, 'attach_medicamento'])
         ->name('citas.attachMedicamento')
         ->middleware('can:attach_medicamento,cita');
@@ -85,6 +87,7 @@ Route::middleware(['auth'])->group(function () {
         'tratamientos' => TratamientoController::class, // Rutas para tratamientos (RF-16, RF-17, RF-18, RF-25)
         'organos' => OrganoController::class, // Rutas para organos
         'estadisticas' => EstadisticaController::class,
+        'pruebas' => PruebaController::class,
     ]);
 
     Route::get('/diagnosticos/inferir/{pacienteId}', [DiagnosticoController::class, 'inferirDesdeSistema'])

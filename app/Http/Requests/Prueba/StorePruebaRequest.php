@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests\Cita;
+namespace App\Http\Requests\Prueba;
 
 use App\Models\Prueba;
 use Illuminate\Foundation\Http\FormRequest;
