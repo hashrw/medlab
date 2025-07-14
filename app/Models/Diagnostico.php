@@ -44,10 +44,13 @@ class Diagnostico extends Model
         return $this->belongsToMany(Enfermedad::class)->using(DiagnosticoEnfermedad::class)->withPivot('grado_eich', 'escala_karnofsky');
     }
 
-
-
     public function estado(): BelongsTo
     {
         return $this->belongsTo(Estado::class);
+    }
+
+    public function pacientes(): BelongsToMany
+    {
+        return $this->belongsToMany(Paciente::class, 'diagnostico_paciente')->withTimestamps();
     }
 }

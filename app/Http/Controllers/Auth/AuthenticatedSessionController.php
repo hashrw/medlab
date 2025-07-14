@@ -30,14 +30,17 @@ class AuthenticatedSessionController extends Controller
         $user = Auth::user();
 
 
-        if ($user->tipo_usuario_id == 1) {
+        if ($user->es_medico && $user->medico()) {
             return redirect()->route('dashboard.medico');
         }
 
-        if ($user->tipo_usuario_id == 2) {
+        if ($user->es_paciente && $user->paciente()) {
             return redirect()->route('dashboard.paciente');
         }
-        return redirect()->intended(RouteServiceProvider::HOME);
+
+        //return redirect()->intended(RouteServiceProvider::HOME);
+        return redirect()->route('login')->with('warning', 'No se ha identificado el tipo de usuario.');
+
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Paciente extends Model
 {
@@ -46,6 +47,11 @@ class Paciente extends Model
             ->withPivot('fecha_observacion', 'activo', 'fuente')
             ->wherePivot('activo', true)
             ->withTimestamps();
+    }
+
+    public function diagnosticos(): BelongsToMany
+    {
+        return $this->belongsToMany(Diagnostico::class, 'diagnostico_paciente')->withTimestamps();
     }
 
 

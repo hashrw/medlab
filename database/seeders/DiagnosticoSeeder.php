@@ -25,6 +25,13 @@ class DiagnosticoSeeder extends Seeder
         // Obtener el ID del diagnóstico recién insertado
         $diagnosticoId = DB::table('diagnosticos')->orderBy('id', 'desc')->first()->id;
 
+        DB::table('diagnostico_paciente')->insert([
+            'diagnostico_id' => $diagnosticoId,
+            'paciente_id' => 1,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
         // Relación con enfermedades
         DB::table('diagnostico_enfermedad')->insert([
             [

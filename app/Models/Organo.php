@@ -13,7 +13,7 @@ class Organo extends Model
 
     public function sintomas()
     {
-        return $this->belongsTo(Sintoma::class);
+        return $this->hasMany(Sintoma::class);
     }
 
     public function pacientes()
@@ -22,7 +22,5 @@ class Organo extends Model
             ->withPivot('score_nih', 'fecha_evaluacion', 'comentario', 'sintomas_asociados')
             ->withTimestamps();
     }
-
-
 
 }
