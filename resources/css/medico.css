@@ -95,8 +95,15 @@
 
 .sidebar-text {
     color: var(--secondary-color);
-    font-weight: 500;
+    transition: color 0.2s ease;
 }
+
+.sidebar-link:hover .sidebar-text,
+.sidebar-link.active .sidebar-text {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
 
 .sidebar-link.active .sidebar-text {
     color: var(--primary-hover);

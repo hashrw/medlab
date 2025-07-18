@@ -17,11 +17,14 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Estilos propios -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/medico.css') }}">
+    @stack('styles')
+
 </head>
 
 <!-- En x-medico-layout -->
+
 <body class="font-sans antialiased bg-gray-50">
     <div class="min-h-screen flex flex-col">
         <!-- Header -->
@@ -65,4 +68,5 @@
         </div>
     </div>
 </body>
+
 </html>

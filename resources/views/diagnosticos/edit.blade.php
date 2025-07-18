@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-medico-layout>
     <x-slot name="header">
         <div class="p-6 bg-blue-800 text-white flex justify-between items-center">
             <h3 class="text-lg font-semibold">Editar Diagnóstico</h3>
@@ -210,4 +210,4 @@
             </div>
         </div>
     @endif
-</x-app-layout>
+</x-medico-layout>

@@ -50,8 +50,8 @@
                 <li>
                     <a href="{{ route('pruebas.index') }}"
                         class="sidebar-link {{ request()->routeIs('pruebas.*') ? 'active' : '' }}">
-                        <i class="fas fa-vials sidebar-icon"></i>
-                        <span class="sidebar-text">Módulo de Pruebas</span>
+                        <i class="fas fa-vials text-blue-500"></i>
+                        <span class="sidebar-text text-blue-500">Módulo de Pruebas</span>
                     </a>
                 </li>
             </ul>

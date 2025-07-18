@@ -57,8 +57,15 @@ class DiagnosticoController extends Controller
         $estados = Estado::all();
         $comienzos = Comienzo::all();
         $infeccions = Infeccion::all();
+        //diasDesdeTrasplante alamcenar en Enfermedad (Ficha de Trasplante)
 
-        return view('diagnosticos.create', compact(['sintomas' => $sintomas, 'comienzos' => $comienzos, 'estados' => $estados, 'infeccions' => $infeccions, 'diasDesdeTrasplante']));
+        //return view('diagnosticos.create', compact(['sintomas' => $sintomas, 'comienzos' => $comienzos, 'estados' => $estados, 'infeccions' => $infeccions, 'diasDesdeTrasplante']));
+        return view('diagnosticos.create', compact(
+            'sintomas',
+            'comienzos',
+            'estados',
+            'infeccions',
+        ));
 
     }
 
