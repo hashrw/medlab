@@ -33,6 +33,8 @@ class StoreDiagnosticoRequest extends FormRequest
             'origen' => 'nullable|string',
             'tipo_enfermedad' => 'nullable|string|max:255',
             'observaciones' => 'nullable|string',
+            'grado_eich' => 'nullable|string',
+            'escala_karnofsky' => 'nullable|string',
             'sintomas' => 'nullable|array',
             'sintomas.*.fecha_diagnostico' => 'nullable|date',
             'sintomas.*.score_nih' => 'nullable|integer',

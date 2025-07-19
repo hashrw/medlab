@@ -1,19 +1,19 @@
 <?php
 
-namespace App\Http\Requests\Enfermedad;
+namespace App\Http\Requests\Trasplante;
 
-use App\Models\Enfermedad;
+use App\Models\Trasplante;
 use Illuminate\Foundation\Http\FormRequest;
 
-class UpdateEnfermedadRequest extends FormRequest
+class StoreTrasplanteRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
-        $enfermedad = Enfermedad::find($this->route('enfermedad'))->first();
-        return $enfermedad && $this->user()->can('update', $enfermedad);
+        return $this->user()->can('create', Trasplante::class);
+
     }
 
     /**
@@ -24,10 +24,10 @@ class UpdateEnfermedadRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tipo_trasplante'=> 'string',
-            'nombre_enfermedad'=> 'string',
-            'fecha_trasplante'=> 'date',
-            'origen_trasplante'=> 'string',
+            'tipo_trasplante'=> 'required|string',
+            'nombre_enfermedad'=> 'required|string',
+            'fecha_trasplante'=> 'required|date',
+            'origen_trasplante'=> 'required|string',
             'tipo_acondicionamiento'=> 'string',
             'seropositividad_donante' => 'string',
             'seropositividad_receptor' => 'string',

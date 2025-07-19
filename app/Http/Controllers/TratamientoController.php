@@ -31,9 +31,9 @@ class TratamientoController extends Controller
     {
         $this->authorize('create', Tratamiento::class);
         $pacientes = Paciente::all();
-        $medicos = Medico::all();
+        //$medicos = Medico::all();
 
-        return view('tratamientos/create',['pacientes'=>$pacientes,['medicos'=>$medicos]]);
+        return view('tratamientos/create', ['pacientes' => $pacientes]);
     }
 
     /**
@@ -52,8 +52,9 @@ class TratamientoController extends Controller
      */
     public function show(Tratamiento $tratamiento)
     {
+        $pacientes = Paciente::all();
         $this->authorize('view', $tratamiento);
-        return view('tratamientos/show', ['tratamiento' => $tratamiento]);
+        return view('tratamientos/show', ['tratamiento' => $tratamiento, 'pacientes' => $pacientes]);
     }
 
     /**
@@ -83,7 +84,7 @@ class TratamientoController extends Controller
     public function destroy(Tratamiento $tratamiento)
     {
         $this->authorize('delete', $tratamiento);
-        if($tratamiento->delete())
+        if ($tratamiento->delete())
             session()->flash('success', 'Registro borrado correctamente.');
         else
             session()->flash('warning', 'No pudo borrarse el registro.');
@@ -93,7 +94,7 @@ class TratamientoController extends Controller
     //attach_medicamento
     public function attach_medicamento(Request $request, Tratamiento $tratamiento)
     {
-        
+
         $this->validateWithBag('attach', $request, [
             'medicamento_id' => 'required|exists:medicos,id',
             'fecha_ini_linea' => 'required|date',
@@ -105,7 +106,7 @@ class TratamientoController extends Controller
             'duracion_total' => 'required|numeric|min:0',
 
         ]);
-        
+
         $tratamiento->medicamentos()->attach($request->medicamento_id, [
             'fecha_ini_linea' => $request->fecha_ini_linea,
             'fecha_fin_linea' => $request->fecha_fin_linea,
@@ -124,5 +125,5 @@ class TratamientoController extends Controller
         $tratamiento->medicamentos()->detach($medicamento->id);
         return redirect()->route('tratamientos.edit', $tratamiento->id);
     }
-    
+
 }

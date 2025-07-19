@@ -24,15 +24,12 @@
                     {{ __('Información del Paciente') }}
                 </div>
                 <div class="p-6 bg-white border-b border-gray-200">
-
                     {{-- {{ dd($paciente) }} --}}
-
                     <div x-data="{ open: false }">
                         <!-- Botón para abrir el modal -->
                         <button @click="open = true" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                             {{ __('Ver Datos Clínicos') }}
                         </button>
-
                         <!-- Modal -->
                         <div x-show="open"
                             class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
@@ -47,7 +44,6 @@
                                         </svg>
                                     </button>
                                 </div>
-
                                 <!-- Contenido del modal -->
                                 <div class="space-y-4">
                                     <div>
@@ -55,10 +51,7 @@
                                         <x-text-input readonly disabled class="block mt-1 w-full"
                                             :value="$paciente->edad . ' años'" />
                                     </div>
-
-
                                 </div>
-
                                 <!-- Botón para cerrar -->
                                 <div class="mt-6 flex justify-end">
                                     <x-danger-button @click="open = false">
@@ -84,8 +77,6 @@
                             </a>
                         </div>
                     </div>
-
-
                 </div>
             </div>
         </div>

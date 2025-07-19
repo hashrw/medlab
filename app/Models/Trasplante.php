@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 
 
-class Enfermedad extends Model
+class Trasplante extends Model
 {
     use HasFactory;
 
@@ -25,20 +25,11 @@ class Enfermedad extends Model
         'fecha_trasplante' => 'date:Y-m-d',
     ];
 
-    public function pacientes()
+       //RELACION CON pACIENTE
+    public function paciente()
     {
-        return $this->belongsToMany(Paciente::class)->using(PacienteEnfermedad::class)->withPivot('paciente_id', 'enfermedad_id');
+        return $this->belongsTo(Paciente::class);
     }
-
-    public function diagnosticos()
-    {
-        return $this->belongsToMany(Diagnostico::class)->using(DiagnosticoEnfermedad::class)->withPivot('grado_eich', 'escala_karnofsky');
-
-    }
-
-    /*public function diagnosticos(){
-       return $this->hasMany(Diagnostico::class);
-   }*/
 
 
     public function getDiasDesdeTrasplanteAttribute(): ?int

@@ -18,7 +18,9 @@ class DiagnosticoSeeder extends Seeder
                 'regla_decision_id' => 1, // Debe existir una regla con ID 1 o ajustarlo
                 'estado_id' => 3,
                 'comienzo_id' => 2,
-                'infeccion_id' => 1
+                'infeccion_id' => 1,
+                'escala_karnofsky' => 'ECOG 2',
+                'grado_eich' => 'Grado 1'
             ],
         ]);
 
@@ -30,22 +32,6 @@ class DiagnosticoSeeder extends Seeder
             'paciente_id' => 1,
             'created_at' => now(),
             'updated_at' => now(),
-        ]);
-
-        // Relación con enfermedades
-        DB::table('diagnostico_enfermedad')->insert([
-            [
-                'enfermedad_id' => 1,
-                'diagnostico_id' => $diagnosticoId,
-                'grado_eich' => 'Grado 1',
-                'escala_karnofsky' => 'ECOG 2',
-            ],
-            [
-                'enfermedad_id' => 2,
-                'diagnostico_id' => $diagnosticoId,
-                'grado_eich' => 'Grado 2',
-                'escala_karnofsky' => 'ECOG 3',
-            ],
         ]);
 
         // Relación con síntomas

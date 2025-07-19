@@ -33,6 +33,8 @@ class UpdateDiagnosticoRequest extends FormRequest
 
             'origen' => 'nullable|string',
             'tipo_enfermedad' => 'nullable|string|max:255',
+            'grado_eich' => 'nullable|string',
+            'escala_karnofsky' => 'nullable|string',
             'observaciones' => 'nullable|string',
             'sintomas' => 'nullable|array',
             'sintomas.*.fecha_diagnostico' => 'nullable|date',

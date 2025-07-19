@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('enfermedads', function (Blueprint $table) {
+        Schema::create('trasplantes', function (Blueprint $table) {
             $table->id();
            // $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
             //FICHA Trasplante
@@ -38,6 +38,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('enfermedads');
+        Schema::dropIfExists('trasplantes');
     }
 };

@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-medico-layout>
     <x-slot name="header">
         <nav class="font-semibold text-xl text-gray-800 leading-tight" aria-label="Breadcrumb">
             <ol class="list-none p-0 inline-flex">
@@ -269,4 +269,4 @@
             </div>
         </div>
     @endif
-</x-app-layout>
+</x-medico-layout>

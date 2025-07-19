@@ -24,9 +24,11 @@ class Paciente extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function enfermedades()
+    //RELACION CON TRASPLANTE
+
+    public function paciente()
     {
-        return $this->belongsToMany(Enfermedad::class)->using(PacienteEnfermedad::class)->withPivot('paciente_id', 'enfermedad_id');
+        return $this->belongsTo(Paciente::class);
     }
 
     public function tratamientos()

@@ -23,13 +23,10 @@ class PacienteSeeder extends Seeder
                 'altura' => $faker->numberBetween(150, 200),
                 'sexo' => $faker->randomElement(['M', 'F']),
                 'user_id' => $userId,
+                // Relación con trasplante (trasplante_id)
+
             ]);
 
-            // Relación con enfermedad
-            DB::table('paciente_enfermedad')->insert([
-                'paciente_id' => $pacienteId,
-                'enfermedad_id' => 1,
-            ]);
 
             // Relación con tratamiento
             DB::table('paciente_tratamiento')->insert([

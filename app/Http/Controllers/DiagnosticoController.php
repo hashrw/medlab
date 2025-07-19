@@ -47,7 +47,7 @@ class DiagnosticoController extends Controller
         $pacientes = Paciente::all();
 
         // Lista de enfermedades
-        $enfermedades = Enfermedad::all();
+        //$enfermedades = Enfermedad::all();
 
         // Lista de síntomas
         $sintomas = Sintoma::all();
@@ -74,32 +74,28 @@ class DiagnosticoController extends Controller
      */
     public function store(StoreDiagnosticoRequest $request)
     {
-        /*$diagnostico = new Diagnostico($request->validated());
-        $diagnostico->save();
-        session()->flash('success', 'diagnostico creado correctamente.');
-        return redirect()->route('diagnosticos.index');*/
+        $this->authorize('create', Diagnostico::class);
 
-        /* Validar los datos usando el Request
-        $validatedData = $request->validated();
-        //Calcular días desde trasplante si se proporcionó fecha
-        if ($request->filled('f_trasplante')) {
-            $validatedData['dias_desde_trasplante'] = Carbon::parse($request->f_trasplante)->diffInDays(now());
-        }
+        $validated = $request->validated();
 
-        // Crear el diagnóstico
-        $diagnostico = Diagnostico::create($validatedData);
+        // Crear diagnóstico sin el campo cie10 (si existe en $validated)
+        $diagnostico = Diagnostico::create(collect($validated)->except(['sintomas', 'pacientes'])->toArray());
 
-          Asociar síntomas al diagnóstico (si se proporcionan)
+        // Asociar síntomas si vienen en el request
         if ($request->has('sintomas')) {
-            foreach ($request->sintomas as $sintomaId => $sintomaData) {
+            foreach ($request->sintomas as $sintomaId => $datos) {
                 $diagnostico->sintomas()->attach($sintomaId, [
-                    'fecha_diagnostico' => $sintomaData['fecha_diagnostico'],
-                    'score_nih' => $sintomaData['score_nih'],
+                    'fecha_diagnostico' => $datos['fecha_diagnostico'] ?? now(),
+                    'score_nih' => $datos['score_nih'] ?? null,
                 ]);
             }
-        }*/
+        }
 
-        // Redirigir con un mensaje de éxito
+        // Asociar pacientes si vienen en el request (puede ser uno o varios)
+        if ($request->has('pacientes')) {
+            $diagnostico->pacientes()->attach($request->pacientes);
+        }
+
         return redirect()->route('diagnosticos.index')->with('success', 'Diagnóstico creado correctamente.');
     }
 

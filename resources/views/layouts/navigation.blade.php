@@ -25,9 +25,6 @@
                         <!--{{ <x-nav-link :href="route('citas.index')" :active="request()->routeIs('citas.index') or request()->routeIs('citas.create') or request()->routeIs('citas.edit') or request()->routeIs('citas.show')">
                                 {{ __('Mis citas') }} }}
                             </x-nav-link>
-                        <x-nav-link :href="route('enfermedads.index')" :active="request()->routeIs('enfermedads.index') or request()->routeIs('enfermedads.create') or request()->routeIs('enfermedads.edit') or request()->routeIs('enfermedads.show')">
-                            {{ __('EICH') }}
-                        </x-nav-link>
                         <x-nav-link :href="route('diagnosticos.index')" :active="request()->routeIs('diagnosticos.index') or request()->routeIs('diagnosticos.create') or request()->routeIs('diagnosticos.edit') or request()->routeIs('diagnosticos.show')">
                             {{ __('Diagnósticos') }}
                         </x-nav-link>
