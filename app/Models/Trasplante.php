@@ -18,29 +18,26 @@ class Trasplante extends Model
         'identidad_hla',
         'tipo_acondicionamiento',
         'seropositividad_donante',
-        'seropositividad_receptor'
+        'seropositividad_receptor',
+        'paciente_id',
     ];
 
     protected $casts = [
         'fecha_trasplante' => 'date:Y-m-d',
     ];
 
-       //RELACION CON pACIENTE
     public function paciente()
     {
         return $this->belongsTo(Paciente::class);
     }
 
-
     public function getDiasDesdeTrasplanteAttribute(): ?int
     {
-        if (!$this->f_trasplante) {
+        if (!$this->fecha_trasplante) {
             return null;
         }
 
-        return Carbon::parse($this->f_trasplante)->diffInDays(now());
+        return Carbon::parse($this->fecha_trasplante)->diffInDays(now());
     }
-
-
 
 }

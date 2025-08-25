@@ -14,18 +14,19 @@ class Diagnostico extends Model
 
     protected $fillable = [
         //'medico_id', // Relación con Médico
+        'fecha_diagnostico',
         'tipo_enfermedad',
         'origen',
+        'estado_injerto', //estable,pobre
+        'dias_desde_trasplante',
+        'observaciones',
         'grado_eich',
         'escala_karnofsky',
-        'observaciones',
         'regla_decision_id',
         'estado_id',
         'comienzo_id',
         'infeccion_id'
     ];
-
-    protected $guarded = ['cie10']; // Protege el campo cie10 contra ediciones
 
     public function estado(): BelongsTo
     {

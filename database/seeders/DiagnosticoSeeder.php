@@ -12,15 +12,18 @@ class DiagnosticoSeeder extends Seeder
         // Insertar en la tabla 'diagnosticos'
         DB::table('diagnosticos')->insert([
             [
+                'fecha_diagnostico' => '2022-01-01',
                 'tipo_enfermedad' => 'aguda',
                 'origen_id' => 2, // 'manual' si fue ingresado por un médico
-                'observaciones' => 'No aplica',
+                'dias_desde_trasplante' => 984,
+                'estado_injerto' => 'Estable', //quizá añadir en una otra tabla como con la especialidad del medico.
                 'regla_decision_id' => 1, // Debe existir una regla con ID 1 o ajustarlo
                 'estado_id' => 3,
                 'comienzo_id' => 2,
                 'infeccion_id' => 1,
                 'escala_karnofsky' => 'ECOG 2',
-                'grado_eich' => 'Grado 1'
+                'grado_eich' => 'Grado 1',
+                'observaciones' => 'No aplica',
             ],
         ]);
 
@@ -41,14 +44,12 @@ class DiagnosticoSeeder extends Seeder
                 'score_nih' => 3.5,
                 'sintoma_id' => 1,
                 'diagnostico_id' => $diagnosticoId,
-                'origen' => 'Inferido',
             ],
             [
                 'fecha_diagnostico' => '2022-01-01',
                 'score_nih' => 2.0,
                 'sintoma_id' => 2,
                 'diagnostico_id' => $diagnosticoId,
-                'origen' => 'Inferido',
             ],
         ]);
 

@@ -24,13 +24,15 @@ class UpdateTrasplanteRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tipo_trasplante'=> 'string',
-            'nombre_enfermedad'=> 'string',
-            'fecha_trasplante'=> 'date',
-            'origen_trasplante'=> 'string',
-            'tipo_acondicionamiento'=> 'string',
+            'tipo_trasplante' => 'string',
+            'fecha_trasplante' => 'date',
+            'origen_trasplante' => 'string',
+            'identidad_hla' => 'required|string',
+            'tipo_acondicionamiento' => 'string',
             'seropositividad_donante' => 'string',
             'seropositividad_receptor' => 'string',
+            'paciente_id' => 'required|exists:pacientes,id',
+
         ];
     }
 }

@@ -18,7 +18,6 @@ class CreatePacienteSintomaTable extends Migration
             $table->string('fuente')->nullable()->nullable(); // ej: "paciente", "observación médica", "monitorización"
 
             $table->timestamps();
-
             $table->unique(['paciente_id', 'sintoma_id']); // evita duplicados activos por paciente
         });
     }

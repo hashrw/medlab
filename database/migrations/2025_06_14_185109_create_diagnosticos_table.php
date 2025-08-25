@@ -16,8 +16,11 @@ return new class extends Migration {
     {
         Schema::create('diagnosticos', function (Blueprint $table) {
             $table->id();
+            $table->date('fecha_diagnostico')->nullable();
             $table->string('tipo_enfermedad')->nullable(); //aguda o crónica
-            $table->enum('origen', ['manual', 'inferido'])->nullable();
+            $table->enum('origen', allowed: ['manual', 'inferido'])->nullable();
+            $table->string('estado_injerto')->nullable();
+            $table->integer('dias_desde_trasplante')->nullable();
             $table->string('observaciones')->nullable();
             $table->string('grado_eich')->nullable(); //grado específico a tipo trasplante//(grado 1, grado 2, grado 3 y grado 4 y grados EICH crónica: 'Leve', 'Moderada', 'Grave']
             $table->string('escala_karnofsky')->nullable(); //estado fase crónica general // ['ECOG 1', 'ECOG 2', 'ECOG 3', 'ECOG 4']
@@ -26,7 +29,7 @@ return new class extends Migration {
         });
     }
 
-    /**
+    /*
      * Reverse the migrations.
      */
     public function down(): void

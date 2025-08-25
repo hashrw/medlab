@@ -87,6 +87,8 @@ class DiagnosticoController extends Controller
                 $diagnostico->sintomas()->attach($sintomaId, [
                     'fecha_diagnostico' => $datos['fecha_diagnostico'] ?? now(),
                     'score_nih' => $datos['score_nih'] ?? null,
+                    'origen' => $datos['origen'] ?? 'manual', // <-- trazabilidad origen diagnostico
+
                 ]);
             }
         }

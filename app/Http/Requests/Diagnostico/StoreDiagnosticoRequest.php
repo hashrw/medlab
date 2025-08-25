@@ -38,6 +38,7 @@ class StoreDiagnosticoRequest extends FormRequest
             'sintomas' => 'nullable|array',
             'sintomas.*.fecha_diagnostico' => 'nullable|date',
             'sintomas.*.score_nih' => 'nullable|integer',
+            'sintomas.*.origen' => 'nullable|in:manual,inferido',
             'estado_id' => 'required|exists:estados,id',
             'comienzo_id' => 'required|exists:comienzos,id',
             'infeccion_id' => 'required|exists:infeccions,id',

@@ -31,6 +31,12 @@ class Paciente extends Model
         return $this->belongsTo(Paciente::class);
     }
 
+    public function trasplantes()
+    {
+        return $this->hasMany(Trasplante::class);
+    }
+
+
     public function tratamientos()
     {
         return $this->belongsToMany(Tratamiento::class)->using(PacienteTratamiento::class)->withPivot('paciente_id', 'tratamiento_id');
@@ -73,7 +79,6 @@ class Paciente extends Model
     protected static function boot()
     {
         parent::boot();
-
         static::saving(function ($paciente) {
             if (now()->diffInYears($paciente->fecha_nacimiento) < 5) {
                 throw new \Exception('La fecha de nacimiento no puede ser inferior a 5 años.');

@@ -6,7 +6,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
-class EnfermedadSeeder extends Seeder
+class TrasplanteSeeder extends Seeder
 {
     public function run(): void
     {
@@ -42,8 +42,7 @@ class EnfermedadSeeder extends Seeder
 
         // Crear 20 registros de enfermedades
         for ($i = 0; $i < 20; $i++) {
-            DB::table('enfermedads')->insert([
-                'dias_desde_trasplante' => rand(30, 730), // Entre 1 mes y 2 años
+            DB::table('trasplantes')->insert([
                 'tipo_trasplante' => $tiposTrasplante[array_rand($tiposTrasplante)],
                 'fecha_trasplante' => Carbon::now()->subDays(rand(30, 730))->format('Y-m-d'), // Fecha aleatoria en los últimos 2 años
                 'origen_trasplante' => $origenesTrasplante[array_rand($origenesTrasplante)],
@@ -53,6 +52,7 @@ class EnfermedadSeeder extends Seeder
                 'seropositividad_receptor' => $seropositividades[array_rand($seropositividades)],
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now(),
+                'paciente_id' => 1,
             ]);
         }
     }

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -13,9 +12,7 @@ return new class extends Migration
     {
         Schema::create('trasplantes', function (Blueprint $table) {
             $table->id();
-           // $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
-            //FICHA Trasplante
-            $table->integer('dias_desde_trasplante')->nullable();
+            // $table->foreignId('paciente_id')->constrained('pacientes')->onDelete('cascade');
             $table->string('tipo_trasplante')->nullable();
             //tipo_trasplante:['alogénico emparentado','alogénico no emparentado','autólogo ','singénico']
             $table->date('fecha_trasplante')->nullable();
@@ -26,8 +23,7 @@ return new class extends Migration
             $table->string('tipo_acondicionamiento')->nullable(); //de intensidad reducida o mieloablativo
             $table->string('seropositividad_donante')->nullable();
             $table->string('seropositividad_receptor')->nullable();
-            
-            //histórico de diagnósticos
+            $table->foreignId('paciente_id')->constrained()->onDelete('cascade')->nullable();
 
             $table->timestamps();
         });

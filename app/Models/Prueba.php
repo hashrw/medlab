@@ -17,5 +17,4 @@ class Prueba extends Model
         return $this->belongsTo(Prueba::class);
     }
 
-
 }
