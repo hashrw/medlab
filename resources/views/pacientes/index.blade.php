@@ -38,19 +38,20 @@
                                     <td class="py-3 px-4">{{ $paciente->altura }} cm</td>
                                     <td class="py-3 px-4">{{ ucfirst($paciente->sexo) }}</td>
                                     <td class="py-3 px-4 text-center">
-                                        <!-- Botón Ficha de Trasplante -->
-                                        <div class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110">
-                                            <a href="{{ route('trasplantes.show', $paciente->id) }}"
-                                                title="Ficha de Trasplante">
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
-                                                    viewBox="0 0 24 24" stroke="currentColor">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m-4-6h.01M12 4a8 8 0 100 16 8 8 0 000-16z" />
-                                                </svg>
-                                            </a>
-                                        </div>
-                                        
+
                                         <div class="flex item-center justify-end">
+                                            <!-- Botón Ficha de Trasplante -->
+                                            <div class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110">
+                                                <a href="{{ route('trasplantes.show', $paciente->id) }}"
+                                                    title="Ficha de Trasplante">
+                                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
+                                                        viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M9 17v-2a2 2 0 012-2h2a2 2 0 012 2v2m-4-6h.01M12 4a8 8 0 100 16 8 8 0 000-16z" />
+                                                    </svg>
+                                                </a>
+                                            </div>
                                             <!-- Ver -->
                                             <div class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110">
                                                 <a href="{{ route('pacientes.show', $paciente->id) }}">

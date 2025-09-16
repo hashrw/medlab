@@ -79,7 +79,7 @@ Route::resources([
     'medicos' => MedicoController::class, // Rutas para médicos (RF-01, RF-02, RF-23)
     'pacientes' => PacienteController::class, // Rutas para pacientes (RF-03, RF-04, RF-05, RF-22)
     'medicamentos' => MedicamentoController::class, // Rutas para medicamentos (RF-19, RF-20, RF-21, RF-26)
-    'trasplantes' => TrasplanteController::class, // Rutas para enfermedades (RF-06, RF-07, RF-08, RF-09)
+    'trasplantes' => TrasplanteController::class, // Rutas para ficha trasplantes (RF-06, RF-07, RF-08, RF-09)
     'sintomas' => SintomaController::class, // Rutas para síntomas (RF-10, RF-11, RF-12, RF-24)
     'diagnosticos' => DiagnosticoController::class, // Rutas para diagnósticos (RF-13, RF-14, RF-15)
     'tratamientos' => TratamientoController::class, // Rutas para tratamientos (RF-16, RF-17, RF-18, RF-25)

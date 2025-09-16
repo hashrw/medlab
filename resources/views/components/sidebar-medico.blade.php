@@ -41,10 +41,10 @@
                     </a>
                 </li>
                 <li>
-                    <a href="{{ route('citas.index') }}"
+                    <a href="{{ route('trasplantes.index') }}"
                         class="sidebar-link {{ request()->routeIs('citas.*') ? 'active' : '' }}">
                         <i class="fas fa-calendar-check sidebar-icon"></i>
-                        <span class="sidebar-text">Módulo de Citas</span>
+                        <span class="sidebar-text">Módulo de Trasplantes</span>
                     </a>
                 </li>
                 <li>
