@@ -5,11 +5,11 @@
         </h2>
     </x-slot>
 
-    <div class="py-3">
+    <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-lg rounded-lg overflow-hidden">
                 <div class="p-6 bg-blue-800 text-white flex justify-between items-center">
-                    <h3 class="text-lg font-semibold">Ficha de trasplante</h3>
+                    <h3 class="text-lg font-semibold">Registros</h3>
                     <a href="{{ route('trasplantes.create') }}"
                         class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                         + Nuevo Registro

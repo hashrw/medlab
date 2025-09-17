@@ -10,23 +10,25 @@
                     </svg>
                 </li>
                 <li>
-                    <a href="#" class="text-gray-500" aria-current="page">Crear nuevo registro</a>
+                    <span class="text-gray-500" aria-current="page">Crear nuevo registro</span>
                 </li>
             </ol>
         </nav>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-3">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <!--<div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                    Información de la enfermedad
-                </div> -->
-                <div class="p-6 bg-white border-b border-gray-200">
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                <div class="p-6 bg-blue-800 text-white">
+                    <h3 class="text-lg font-semibold">Información del trasplante</h3>
+                </div>
+
+                <div class="p-6 bg-white border-t border-gray-200">
                     <!-- Errores de validación en servidor -->
                     <x-input-error class="mb-4" :messages="$errors->all()" />
-                    <form method="POST" action="{{ route('enfermedads.store') }}">
+                    <form method="POST" action="{{ route('trasplantes.store') }}">
                         @csrf
+                        
                         <div class="mt-4">
                             <x-input-label for="tipo_trasplante" :value="__('Tipo de trasplante')" />
                             <x-text-input id="tipo_trasplante" class="block mt-1 w-full" type="text"
@@ -75,15 +77,15 @@
                                 name="seropositividad_receptor" :value="old('seropositividad_receptor')" required />
                         </div>
 
-                        <div class="flex items-center justify-end mt-4">
-                            <x-danger-button type="button">
-                                <a href="{{ route('enfermedads.index') }}">
-                                    {{ __('Cancelar') }}
-                                </a>
-                            </x-danger-button>
-                            <x-primary-button class="ml-4">
+                        <div class="flex items-center justify-end mt-6">
+                            <a href="{{ route('trasplantes.index') }}"
+                               class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                                {{ __('Cancelar') }}
+                            </a>
+                            <button type="submit"
+                                    class="ml-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                                 {{ __('Guardar') }}
-                            </x-primary-button>
+                            </button>
                         </div>
                     </form>
                 </div>

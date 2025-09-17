@@ -10,6 +10,7 @@ use App\Http\Requests\Tratamiento\UpdateTratamientoRequest as TratamientoUpdateT
 use App\Models\Tratamiento;
 use App\Models\Medicamento;
 use App\Models\Paciente;
+use Illuminate\Support\Facades\Auth;
 
 
 class TratamientoController extends Controller
@@ -19,9 +20,36 @@ class TratamientoController extends Controller
      */
     public function index()
     {
-        $this->authorize('viewAny', Tratamiento::class);
+        /*$this->authorize('viewAny', Tratamiento::class);
         $tratamientos = Tratamiento::paginate(25);
-        return view('/tratamientos/index', ['tratamientos' => $tratamientos]);
+        if (Auth::user()->es_medico)
+            $tratamientos = Auth::user()->medico->tratamientos()->orderBy('fecha_asignacion', 'desc')->paginate(25);
+        elseif (Auth::user()->es_paciente)
+            $tratamientos = Auth::user()->paciente->tratamientos()->orderBy('fecha_asignacion', 'desc')->paginate(25);
+        return view('/tratamientos/index', ['tratamientos' => $tratamientos]);*/
+
+        $this->authorize('viewAny', Tratamiento::class);
+
+        $u = Auth::user(); //cachear el user
+        $with = ['paciente.user', 'medico.user', 'lineasTratamiento']; //eager loading
+
+        if ($u?->es_medico && $u->medico) {
+            $tratamientos = $u->medico->tratamientos()
+                ->with($with)
+                ->orderBy('fecha_asignacion', 'desc')
+                ->paginate(25);
+        } elseif ($u?->es_paciente && $u->paciente) {
+            $tratamientos = $u->paciente->tratamientos()
+                ->with($with)
+                ->orderBy('fecha_asignacion', 'desc')
+                ->paginate(25);
+        } else {
+            $tratamientos = Tratamiento::with($with)
+                ->orderBy('fecha_asignacion', 'desc')
+                ->paginate(25);
+        }
+
+        return view('tratamientos.index', ['tratamientos' => $tratamientos]);
     }
 
     /**
@@ -29,11 +57,26 @@ class TratamientoController extends Controller
      */
     public function create()
     {
-        $this->authorize('create', Tratamiento::class);
+        /*$this->authorize('create', Tratamiento::class);
         $pacientes = Paciente::all();
-        //$medicos = Medico::all();
+        $medicos = Medico::all();
+        if (Auth::user()->es_medico)
+            return view('tratamientos/create', ['medico' => Auth::user()->medico, 'pacientes' => $pacientes]);
+        elseif (Auth::user()->es_paciente)
+            return view('tratamientos/create', ['paciente' => Auth::user()->paciente, 'medicos' => $medicos]);
+        return view('tratamientos/create', ['pacientes' => $pacientes, 'medicos' => $medicos]);*/
 
-        return view('tratamientos/create', ['pacientes' => $pacientes]);
+        $this->authorize('create', Tratamiento::class);
+
+        if (Auth::user()->es_medico) {
+            $pacientes = Paciente::all();
+            return view('tratamientos.create', ['medico' => Auth::user()->medico, 'pacientes' => $pacientes]);
+        } elseif (Auth::user()->es_paciente) {
+            $medicos = Medico::all();
+            return view('tratamientos.create', ['paciente' => Auth::user()->paciente, 'medicos' => $medicos]);
+        }
+
+        return view('tratamientos.create', ['pacientes' => Paciente::all(), 'medicos' => Medico::all()]);
     }
 
     /**
@@ -41,9 +84,23 @@ class TratamientoController extends Controller
      */
     public function store(StoreTratamientoRequest $request)
     {
-        $tratamiento = new Tratamiento($request->validated());
+        /*$tratamiento = new Tratamiento($request->validated());
         $tratamiento->save();
         session()->flash('success', 'tratamiento creado correctamente.');
+        return redirect()->route('tratamientos.index');*/
+
+        $u = Auth::user();
+        if ($u->es_medico && empty($data['medico_id'])) {
+            $data['medico_id'] = $u->medico->id;
+        }
+        if ($u->es_paciente && empty($data['paciente_id'])) {
+            $data['paciente_id'] = $u->paciente->id;
+        }
+
+        // create() en vez de new+save
+        $tratamiento = Tratamiento::create($data);
+
+        session()->flash('success', 'Tratamiento creado correctamente.');
         return redirect()->route('tratamientos.index');
     }
 
@@ -72,8 +129,9 @@ class TratamientoController extends Controller
     public function update(UpdateTratamientoRequest $request, Tratamiento $tratamiento)
     {
         $this->authorize('update', $tratamiento);
-        $tratamiento->fill($request->validated());
-        $tratamiento->save();
+
+        $tratamiento->update($request->validated()); // RECOMENDABLE (más limpio que fill+save)
+
         session()->flash('success', 'Registro modificado correctamente.');
         return redirect()->route('tratamientos.index');
     }

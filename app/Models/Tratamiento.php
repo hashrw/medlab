@@ -9,9 +9,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Tratamiento extends Model
 {
     use HasFactory;
-    
-    
-    protected $fillable = ['tratamiento','fecha_asignacion','descripcion','duracion_trat'];
+
+    protected $fillable = ['tratamiento', 'fecha_asignacion', 'descripcion', 'duracion_trat'];
 
     protected $casts = [
         'fecha_asignacion' => 'date:Y-m-d',
@@ -20,10 +19,10 @@ class Tratamiento extends Model
     // Relación con el modelo LineaTratamiento
     public function lineasTratamiento()
     {
-        return $this->belongsToMany(Medicamento::class)->using(MedicamentoTratamiento::class)->withPivot('fecha_ini_linea','duracion_linea','duracion_total','fecha_fin_linea','fecha_resp_linea','observaciones','tomas');
+        return $this->belongsToMany(Medicamento::class)->using(MedicamentoTratamiento::class)->withPivot('fecha_ini_linea', 'duracion_linea', 'duracion_total', 'fecha_fin_linea', 'fecha_resp_linea', 'observaciones', 'tomas');
 
     }
-    
+
     // Accesor para calcular la duración total del tratamiento
     public function getDuracionTotalAttribute()
     {
@@ -37,8 +36,19 @@ class Tratamiento extends Model
         return 0;
     }
 
-    public function pacientes(){
-        return $this->belongsToMany(Paciente::class)->using(PacienteTratamiento::class)->withPivot('paciente_id','tratamiento_id');
+    public function paciente()
+    {
+        return $this->belongsTo(Paciente::class);
     }
+
     
+    public function medico()
+    {
+        return $this->belongsTo(Medico::class);
+    }
+
+    /*public function pacientes(){
+        return $this->belongsToMany(Paciente::class)->using(PacienteTratamiento::class)->withPivot('paciente_id','tratamiento_id');
+    }*/
+
 }

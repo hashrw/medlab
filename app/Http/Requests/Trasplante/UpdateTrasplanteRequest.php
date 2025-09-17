@@ -31,7 +31,7 @@ class UpdateTrasplanteRequest extends FormRequest
             'tipo_acondicionamiento' => 'string',
             'seropositividad_donante' => 'string',
             'seropositividad_receptor' => 'string',
-            'paciente_id' => 'required|exists:pacientes,id',
+            'paciente_id' => 'exists:pacientes,id',
 
         ];
     }

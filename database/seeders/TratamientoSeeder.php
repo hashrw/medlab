@@ -12,7 +12,7 @@ class TratamientoSeeder extends Seeder
      */
     public function run(): void
     {
-        //  public function run()
+        // public function run()
         /* $table->string('tratamiento');
         $table->date('fecha_asignacion');
         $table->text('descripcion')->nullable();
@@ -27,6 +27,7 @@ class TratamientoSeeder extends Seeder
                 'descripcion' => "No aplica",
                 'duracion_trat' => 1,
                 'medico_id' => 1,
+                'paciente_id' => 1,
                 ],
         ]);
     }

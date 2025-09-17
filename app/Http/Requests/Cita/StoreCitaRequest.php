@@ -29,6 +29,7 @@ class StoreCitaRequest extends FormRequest
                 'medico_id' => 'required|exists:medicos,id',
                 'paciente_id' => ['required', 'exists:pacientes,id', Rule::in($this->user()->paciente->id)]
             ];
+            
         return [
             'fecha_hora' => 'required|date|after:yesterday',
             'medico_id' => 'required|exists:medicos,id',

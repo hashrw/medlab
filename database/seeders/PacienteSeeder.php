@@ -28,11 +28,11 @@ class PacienteSeeder extends Seeder
             ]);
 
 
-            // Relación con tratamiento
+            /* Relación con tratamiento
             DB::table('paciente_tratamiento')->insert([
                 'paciente_id' => $pacienteId,
                 'tratamiento_id' => 1,
-            ]);
+            ]);*/
 
             // Relación fija con síntomas 1, 3, 5, 7, 9
             $sintomasFijos = [2, 4, 6, 7];
