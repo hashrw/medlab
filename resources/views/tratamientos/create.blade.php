@@ -5,7 +5,8 @@
                 <li class="flex items-center">
                     <a href="{{ route('tratamientos.index') }}">Tratamientos</a>
                     <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                        <path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/>
+                        <path
+                            d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z" />
                     </svg>
                 </li>
                 <li>
@@ -15,7 +16,7 @@
         </nav>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
@@ -26,70 +27,61 @@
                     <x-input-error class="mb-4" :messages="$errors->all()" />
                     <form method="POST" action="{{ route('tratamientos.store') }}">
                         @csrf
-                        <div class="mt-4">
-                            <x-input-label for="tratamiento" :value="__('Tratamiento')" />
-                            <x-text-input id="tratamiento" class="block mt-1 w-full"
-                                          type="text"
-                                          name="tratamiento"
-                                          :value="old('tratamiento')"
-                                          required />
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {{-- Columna Izquierda --}}
+                            <div class="space-y-4">
+                                <div>
+                                    <x-input-label for="tratamiento" :value="__('Nombre del tratamiento')" />
+                                    <x-text-input id="tratamiento" class="block mt-1 w-full" type="text"
+                                        name="tratamiento" :value="old('tratamiento')" required />
+                                </div>
+
+                                <div>
+                                    <x-input-label for="fecha_asignacion" :value="__('Fecha de asignación')" />
+                                    <x-text-input id="fecha_asignacion" class="block mt-1 w-full" type="date"
+                                        name="fecha_asignacion" :value="old('fecha_asignacion')" required />
+                                </div>
+
+                                <div>
+                                    <x-input-label for="paciente_id" :value="__('Paciente')" />
+                                    @isset($paciente)
+                                        <x-text-input id="paciente_id" class="block mt-1 w-full" type="hidden"
+                                            name="paciente_id" :value="$paciente->id" required />
+                                        <x-text-input class="block mt-1 w-full" type="text" disabled
+                                            value="{{ $paciente->user->name }} ({{ $paciente->nuhsa }})" />
+                                    @else
+                                        <x-select id="paciente_id" name="paciente_id" class="w-full" required>
+                                            <option value="">{{ __('Elige un paciente') }}</option>
+                                            @foreach ($pacientes as $paciente)
+                                                <option value="{{ $paciente->id }}" @if (old('paciente_id') == $paciente->id)
+                                                selected @endif>
+                                                    {{ $paciente->user->name }} ({{ $paciente->nuhsa }})
+                                                </option>
+                                            @endforeach
+                                        </x-select>
+                                    @endisset
+                                </div>
+                            </div>
+
+                            {{-- Columna Derecha --}}
+                            <div class="space-y-4">
+                                <div>
+                                    <x-input-label for="descripcion" :value="__('Descripción')" />
+                                    <x-text-area id="descripcion" name="descripcion"
+                                        class="w-full h-40 resize-none border-gray-300 rounded-md shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                                        required>{{ old('descripcion') }}</x-text-area>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="mt-4">
-                            <x-input-label for="fecha_asignacion" :value="__('Fecha de asignación')" />
-                            <x-text-input id="fecha_asignacion" class="block mt-1 w-full"
-                                          type="date"
-                                          name="fecha_asignacion"
-                                          :value="old('fecha_asignacion')"
-                                          required />
-                        </div>
-
-                        <div class="mt-4">
-                            <x-input-label for="descripcion" :value="__('Descripción')" />
-                            <x-text-area id="descripcion" class="block mt-1 w-full"
-                                         name="descripcion"
-                                         required>{{ old('descripcion') }}</x-text-area>
-                        </div>
-
-                        <div class="mt-4">
-                            <x-input-label for="duracion_trat" :value="__('Duración del tratamiento (días)')" />
-                            <x-text-input id="duracion_trat" class="block mt-1 w-full"
-                                          type="number"
-                                          name="duracion_trat"
-                                          :value="old('duracion_trat')"
-                                          required />
-                        </div>
-
-                        <div class="mt-4">
-                            <x-input-label for="paciente_id" :value="__('Paciente')" />
-                            @isset($paciente)
-                                <x-text-input id="paciente_id" class="block mt-1 w-full"
-                                              type="hidden"
-                                              name="paciente_id"
-                                              :value="$paciente->id"
-                                              required />
-                                <x-text-input class="block mt-1 w-full"
-                                              type="text"
-                                              disabled
-                                              value="{{$paciente->user->name}} ({{$paciente->nuhsa}})"
-                                />
-                            @else
-                                <x-select id="paciente_id" name="paciente_id" required>
-                                    <option value="">{{__('Elige un paciente')}}</option>
-                                    @foreach ($pacientes as $paciente)
-                                        <option value="{{$paciente->id}}" @if (old('paciente_id') == $paciente->id) selected @endif>{{$paciente->user->name}} ({{$paciente->nuhsa}})</option>
-                                    @endforeach
-                                </x-select>
-                            @endisset
-                        </div>
-
-                        <div class="flex items-center justify-end mt-4">
+                        <div class="flex items-center justify-end mt-6 gap-4">
                             <x-danger-button type="button">
                                 <a href="{{ route('tratamientos.index') }}">
                                     {{ __('Cancelar') }}
                                 </a>
                             </x-danger-button>
-                            <x-primary-button class="ml-4">
+                            <x-primary-button>
                                 {{ __('Guardar') }}
                             </x-primary-button>
                         </div>

@@ -25,20 +25,12 @@ class StoreTratamientoRequest extends FormRequest
      */
     public function rules(): array
     {
-        if($this->user()->es_paciente)
-             return [
-            'tratamiento' => 'required|string',
-            'fecha_asignacion' => 'required|date',
-            'descripcion' => 'text',
-            'duracion_trat' => 'required|numeric', 
-            'medico_id' => ['required', 'exists:pacientes,id', Rule::in($this->user()->paciente->id)]
-        ];
         return [
             'tratamiento' => 'required|string',
             'fecha_asignacion' => 'required|date',
-            'descripcion' => 'text',
-            'duracion_trat' => 'required|numeric', 
-            'medico_id' => 'required|exists:medicos,id',
+            'descripcion' => 'nullable|string|max:2000',
+            'duracion_trat' => 'required|numeric',
+            'paciente_id' => 'required|exists:pacientes,id',
         ];
     }
 }

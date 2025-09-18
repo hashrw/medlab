@@ -49,11 +49,11 @@
                                 <textarea id="descripcion" name="descripcion" rows="3" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm">{{ $tratamiento->descripcion }}</textarea>
                             </div>
 
-                            <!-- Duración del Tratamiento -->
+                           {{--   <!-- Duración del Tratamiento -->
                             <div class="mb-4">
                                 <x-input-label for="duracion_trat" :value="__('Duración del Tratamiento (días)')"/>
                                 <x-text-input id="duracion_trat" name="duracion_trat" type="number" value="{{ $tratamiento->duracion_trat }}" class="block mt-1 w-full"/>
-                            </div>
+                            </div>--}}
 
                             <!-- Médico -->
                             <div class="mb-4">

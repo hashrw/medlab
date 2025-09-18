@@ -14,13 +14,13 @@ return new class extends Migration
         Schema::create('tratamientos', function (Blueprint $table) {
             $table->id();
             
-            $table->string('tratamiento');
-            $table->date('fecha_asignacion');
+            $table->string('tratamiento')->nullable();;
+            $table->date('fecha_asignacion')->nullable();
             $table->text('descripcion')->nullable();
             //se calcula a partir de la fecha de inicio de la 1ª línea de tratamiento y la fecha de fin de la última línea de tratamiento asignada.
-            $table->integer('duracion_trat');
+            //$table->integer('duracion_trat')->nullable();
             $table->foreignId('medico_id')->constrained()->onDelete('cascade');
-            $table->foreignId('paciente_id')->constrained()->onDelete('cascade');
+            $table->foreignId('paciente_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

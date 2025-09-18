@@ -45,11 +45,10 @@
                     </div>
 
                     <!-- Duración del Tratamiento -->
-                    <div class="mt-4">
-                        <x-input-label for="duracion_trat" :value="__('Duración del Tratamiento (días)')" />
-                        <x-text-input id="duracion_trat" class="block mt-1 w-full" type="number" disabled
-                            :value="$tratamiento->duracion_trat" />
-                    </div>
+                    <x-input-label for="duracion_total" :value="__('Duración total real (días)')" />
+                    <x-text-input id="duracion_total" class="block mt-1 w-full" type="number" disabled
+                        :value="$tratamiento->duracion_total" />
+
 
                     <!-- Paciente -->
                     <div class="mt-4">

@@ -3,15 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\Medico;
-use Illuminate\Http\Request;
-use App\Http\Requests\Tratamiento\UpdateTratamientoRequest;
-use App\Http\Requests\Tratamiento\StoreTratamientoRequest;
-use App\Http\Requests\Tratamiento\UpdateTratamientoRequest as TratamientoUpdateTratamientoRequest;
 use App\Models\Tratamiento;
 use App\Models\Medicamento;
 use App\Models\Paciente;
 use Illuminate\Support\Facades\Auth;
-
+use Illuminate\Http\Request;
+use App\Http\Requests\Tratamiento\StoreTratamientoRequest;
+use App\Http\Requests\Tratamiento\UpdateTratamientoRequest;
 
 class TratamientoController extends Controller
 {
@@ -20,36 +18,28 @@ class TratamientoController extends Controller
      */
     public function index()
     {
-        /*$this->authorize('viewAny', Tratamiento::class);
-        $tratamientos = Tratamiento::paginate(25);
-        if (Auth::user()->es_medico)
-            $tratamientos = Auth::user()->medico->tratamientos()->orderBy('fecha_asignacion', 'desc')->paginate(25);
-        elseif (Auth::user()->es_paciente)
-            $tratamientos = Auth::user()->paciente->tratamientos()->orderBy('fecha_asignacion', 'desc')->paginate(25);
-        return view('/tratamientos/index', ['tratamientos' => $tratamientos]);*/
-
         $this->authorize('viewAny', Tratamiento::class);
 
-        $u = Auth::user(); //cachear el user
-        $with = ['paciente.user', 'medico.user', 'lineasTratamiento']; //eager loading
+        $user = Auth::user();
+        $with = ['paciente.user', 'medico.user', 'lineasTratamiento'];
 
-        if ($u?->es_medico && $u->medico) {
-            $tratamientos = $u->medico->tratamientos()
+        if ($user->es_medico) {
+            $tratamientos = $user->medico->tratamientos()
                 ->with($with)
-                ->orderBy('fecha_asignacion', 'desc')
+                ->latest('fecha_asignacion')
                 ->paginate(25);
-        } elseif ($u?->es_paciente && $u->paciente) {
-            $tratamientos = $u->paciente->tratamientos()
+        } elseif ($user->es_paciente) {
+            $tratamientos = $user->paciente->tratamientos()
                 ->with($with)
-                ->orderBy('fecha_asignacion', 'desc')
+                ->latest('fecha_asignacion')
                 ->paginate(25);
         } else {
             $tratamientos = Tratamiento::with($with)
-                ->orderBy('fecha_asignacion', 'desc')
+                ->latest('fecha_asignacion')
                 ->paginate(25);
         }
 
-        return view('tratamientos.index', ['tratamientos' => $tratamientos]);
+        return view('tratamientos.index', compact('tratamientos'));
     }
 
     /**
@@ -57,26 +47,22 @@ class TratamientoController extends Controller
      */
     public function create()
     {
-        /*$this->authorize('create', Tratamiento::class);
-        $pacientes = Paciente::all();
-        $medicos = Medico::all();
-        if (Auth::user()->es_medico)
-            return view('tratamientos/create', ['medico' => Auth::user()->medico, 'pacientes' => $pacientes]);
-        elseif (Auth::user()->es_paciente)
-            return view('tratamientos/create', ['paciente' => Auth::user()->paciente, 'medicos' => $medicos]);
-        return view('tratamientos/create', ['pacientes' => $pacientes, 'medicos' => $medicos]);*/
-
         $this->authorize('create', Tratamiento::class);
 
         if (Auth::user()->es_medico) {
             $pacientes = Paciente::all();
             return view('tratamientos.create', ['medico' => Auth::user()->medico, 'pacientes' => $pacientes]);
-        } elseif (Auth::user()->es_paciente) {
+        }
+
+        if (Auth::user()->es_paciente) {
             $medicos = Medico::all();
             return view('tratamientos.create', ['paciente' => Auth::user()->paciente, 'medicos' => $medicos]);
         }
 
-        return view('tratamientos.create', ['pacientes' => Paciente::all(), 'medicos' => Medico::all()]);
+        return view('tratamientos.create', [
+            'pacientes' => Paciente::all(),
+            'medicos' => Medico::all(),
+        ]);
     }
 
     /**
@@ -84,21 +70,18 @@ class TratamientoController extends Controller
      */
     public function store(StoreTratamientoRequest $request)
     {
-        /*$tratamiento = new Tratamiento($request->validated());
-        $tratamiento->save();
-        session()->flash('success', 'tratamiento creado correctamente.');
-        return redirect()->route('tratamientos.index');*/
+        $data = $request->validated();
+        $user = Auth::user();
 
-        $u = Auth::user();
-        if ($u->es_medico && empty($data['medico_id'])) {
-            $data['medico_id'] = $u->medico->id;
+        // Forzar asignación por rol (no confiar en el input)
+        if ($user->es_medico) {
+            $data['medico_id'] = $user->medico->id;
         }
-        if ($u->es_paciente && empty($data['paciente_id'])) {
-            $data['paciente_id'] = $u->paciente->id;
+        if ($user->es_paciente) {
+            $data['paciente_id'] = $user->paciente->id;
         }
 
-        // create() en vez de new+save
-        $tratamiento = Tratamiento::create($data);
+        Tratamiento::create($data);
 
         session()->flash('success', 'Tratamiento creado correctamente.');
         return redirect()->route('tratamientos.index');
@@ -109,9 +92,10 @@ class TratamientoController extends Controller
      */
     public function show(Tratamiento $tratamiento)
     {
-        $pacientes = Paciente::all();
         $this->authorize('view', $tratamiento);
-        return view('tratamientos/show', ['tratamiento' => $tratamiento, 'pacientes' => $pacientes]);
+        $pacientes = Paciente::all();
+
+        return view('tratamientos.show', compact('tratamiento', 'pacientes'));
     }
 
     /**
@@ -120,7 +104,7 @@ class TratamientoController extends Controller
     public function edit(Tratamiento $tratamiento)
     {
         $this->authorize('update', $tratamiento);
-        return view('tratamientos/edit', ['tratamiento' => $tratamiento]);
+        return view('tratamientos.edit', compact('tratamiento'));
     }
 
     /**
@@ -130,7 +114,17 @@ class TratamientoController extends Controller
     {
         $this->authorize('update', $tratamiento);
 
-        $tratamiento->update($request->validated()); // RECOMENDABLE (más limpio que fill+save)
+        // No permitir sobreescribir medico_id/paciente_id si el usuario es médico/paciente
+        $data = $request->validated();
+        $user = Auth::user();
+        if ($user->es_medico) {
+            $data['medico_id'] = $tratamiento->medico_id; // mantener el existente
+        }
+        if ($user->es_paciente) {
+            $data['paciente_id'] = $tratamiento->paciente_id; // mantener el existente
+        }
+
+        $tratamiento->update($data);
 
         session()->flash('success', 'Registro modificado correctamente.');
         return redirect()->route('tratamientos.index');
@@ -142,45 +136,51 @@ class TratamientoController extends Controller
     public function destroy(Tratamiento $tratamiento)
     {
         $this->authorize('delete', $tratamiento);
-        if ($tratamiento->delete())
+
+        if ($tratamiento->delete()) {
             session()->flash('success', 'Registro borrado correctamente.');
-        else
+        } else {
             session()->flash('warning', 'No pudo borrarse el registro.');
+        }
+
         return redirect()->route('tratamientos.index');
     }
 
-    //attach_medicamento
+    /**
+     * Adjuntar linea de tratamiento al tratamiento creando una línea de tratamiento (pivot model).
+     */
     public function attach_medicamento(Request $request, Tratamiento $tratamiento)
     {
+        $this->authorize('update', $tratamiento);
 
         $this->validateWithBag('attach', $request, [
-            'medicamento_id' => 'required|exists:medicos,id',
+            'medicamento_id' => 'required|exists:medicamentos,id',
             'fecha_ini_linea' => 'required|date',
             'fecha_fin_linea' => 'required|date|after:fecha_ini_linea',
             'fecha_resp_linea' => 'required|date|after:fecha_ini_linea',
             'observaciones' => 'nullable|string',
             'tomas' => 'required|numeric|min:0',
             'duracion_linea' => 'required|numeric|min:0',
-            'duracion_total' => 'required|numeric|min:0',
-
+            // ❌ duracion_total NO se recibe (se deriva a nivel Tratamiento)
         ]);
 
-        $tratamiento->medicamentos()->attach($request->medicamento_id, [
+        $tratamiento->lineasTratamiento()->attach($request->medicamento_id, [
             'fecha_ini_linea' => $request->fecha_ini_linea,
             'fecha_fin_linea' => $request->fecha_fin_linea,
             'fecha_resp_linea' => $request->fecha_resp_linea,
             'observaciones' => $request->observaciones,
-            'tomas' => $request->tomas_dia,
+            'tomas' => $request->tomas,
             'duracion_linea' => $request->duracion_linea,
-            'duracion_total' => $request->duracion_total
-
+            // 'duracion_total'  => ❌ nunca
         ]);
+
         return redirect()->route('tratamientos.edit', $tratamiento->id);
     }
 
-    public function detach_medicamento(tratamiento $tratamiento, Medicamento $medicamento)
+    public function detach_medicamento(Tratamiento $tratamiento, Medicamento $medicamento)
     {
-        $tratamiento->medicamentos()->detach($medicamento->id);
+        $this->authorize('update', $tratamiento);
+        $tratamiento->lineasTratamiento()->detach($medicamento->id);
         return redirect()->route('tratamientos.edit', $tratamiento->id);
     }
 

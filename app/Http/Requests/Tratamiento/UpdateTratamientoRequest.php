@@ -23,20 +23,23 @@ class UpdateTratamientoRequest extends FormRequest
      */
     public function rules(): array
     {
-        if ($this->user()->es_paciente)
+        if ($this->user()->es_paciente) {
             return [
                 'tratamiento' => 'required|string',
                 'fecha_asignacion' => 'required|date',
-                'descripcion' => 'text',
+                'descripcion' => 'nullable|string|max:2000',
                 'duracion_trat' => 'required|numeric',
-                'medico_id' => ['required', 'exists:pacientes,id', Rule::in($this->user()->paciente->id)]
+                // 'medico_id' eliminado porque se deduce en backend
             ];
+        }
+
         return [
             'tratamiento' => 'required|string',
             'fecha_asignacion' => 'required|date',
-            'descripcion' => 'text',
+            'descripcion' => 'nullable|string|max:2000',
             'duracion_trat' => 'required|numeric',
-            'medico_id' => 'required|exists:medicos,id',
+            // 'medico_id' eliminado también para médicos/admins
         ];
+
     }
 }

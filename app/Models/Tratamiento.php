@@ -5,12 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 class Tratamiento extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['tratamiento', 'fecha_asignacion', 'descripcion', 'duracion_trat'];
+    protected $fillable = ['tratamiento', 'fecha_asignacion', 'descripcion', 'paciente_id', 'medico_id'];
 
     protected $casts = [
         'fecha_asignacion' => 'date:Y-m-d',
@@ -24,16 +25,27 @@ class Tratamiento extends Model
     }
 
     // Accesor para calcular la duración total del tratamiento
-    public function getDuracionTotalAttribute()
+    public function getDuracionTotalAttribute(): int
     {
-        $primeraLinea = $this->lineasTratamiento->sortBy('fecha_ini_linea')->first();
-        $ultimaLinea = $this->lineasTratamiento->sortByDesc('fecha_fin_linea')->first();
-
-        if ($primeraLinea && $ultimaLinea) {
-            return $ultimaLinea->fecha_fin_linea->diffInDays($primeraLinea->fecha_ini_linea);
+        if ($this->relationLoaded('lineasTratamiento')) {
+            $lineas = $this->lineasTratamiento;
+        } else {
+            $lineas = $this->lineasTratamiento()->get();
         }
 
-        return 0;
+        if ($lineas->isEmpty())
+            return 0;
+
+        $primera = $lineas->sortBy(fn($m) => $m->pivot->fecha_ini_linea)->first();
+        $ultima = $lineas->sortByDesc(fn($m) => $m->pivot->fecha_fin_linea)->first();
+
+        if (!$primera || !$ultima)
+            return 0;
+
+        $ini = Carbon::parse($primera->pivot->fecha_ini_linea);
+        $fin = Carbon::parse($ultima->pivot->fecha_fin_linea);
+
+        return $fin->diffInDays($ini);
     }
 
     public function paciente()
@@ -41,7 +53,7 @@ class Tratamiento extends Model
         return $this->belongsTo(Paciente::class);
     }
 
-    
+
     public function medico()
     {
         return $this->belongsTo(Medico::class);

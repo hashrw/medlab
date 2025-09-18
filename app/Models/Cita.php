@@ -21,7 +21,7 @@ class Cita extends Model
         return $this->belongsTo(Paciente::class);
     }
 
-    public function medicamentos(){
+    /*public function medicamentos(){
         return $this->belongsToMany(Medicamento::class)->using(CitaMedicamento::class)->withPivot('tomas_dia', 'comentarios', 'inicio', 'fin');
-    }
+    }*/
 }

@@ -61,7 +61,7 @@ class TratamientoPolicy
      */
     public function delete(User $user, Tratamiento $tratamiento): bool
     {
-        return $user->es_administrador;
+        return $user->es_administrador || $user->es_medico;
     }
 
     /**
