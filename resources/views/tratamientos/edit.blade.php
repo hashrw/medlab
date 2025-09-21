@@ -16,7 +16,9 @@
         </nav>
     </x-slot>
 
-    <div class="py-12">
+    <!--wrapper con scroll interno -->
+    <div class="edit-scroll h-[calc(100vh-6rem)] overflow-y-auto pr-3">
+    <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
@@ -28,7 +30,6 @@
                     <form method="POST" action="{{ route('tratamientos.update', $tratamiento->id) }}">
                         @csrf
                         @method('put')
-
                         <!-- Campos del Tratamiento -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <!-- Tratamiento (Nombre) -->
@@ -85,7 +86,7 @@
                             <x-danger-button type="button">
                                 <a href="{{ route('tratamientos.index') }}">{{ __('Cancelar') }}</a>
                             </x-danger-button>
-                            <x-primary-button class="ml-4">
+                            <x-primary-button type="submit" class="ml-4">
                                 {{ __('Guardar') }}
                             </x-primary-button>
                         </div>
@@ -234,4 +235,5 @@
             </div>
         </div>
     @endif
+    </div> <!-- END: wrapper con scroll interno -->
 </x-medico-layout>

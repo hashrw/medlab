@@ -29,6 +29,12 @@ class TratamientoPolicy
      */
     public function viewAny(User $user): bool
     {
+        /*dd([
+            'user_id' => $user->id,
+            'es_admin' => $user->es_administrador,
+            'es_medico' => $user->es_medico,
+            'es_paciente' => $user->es_paciente,
+        ]);*/
         return $user->es_administrador || $user->es_medico;
     }
 
@@ -53,7 +59,19 @@ class TratamientoPolicy
      */
     public function update(User $user, Tratamiento $tratamiento): bool
     {
-        return $user->es_administrador || $this->esTratamientoPropioDeMedico($user, $tratamiento);
+        /*dd([
+            'user_id' => $user->id,
+            'es_admin' => $user->es_administrador,
+            'es_medico' => $user->es_medico,
+            'es_paciente' => $user->es_paciente,
+            'tratamiento_id' => $tratamiento->id,
+            'tratamiento_medico_id' => $tratamiento->medico_id,
+            'tratamiento_paciente_id' => $tratamiento->paciente_id,
+            'clase_usuario' => get_class($user),
+        ]);*/
+
+        return $user->es_administrador || $user->es_medico;
+        //$this->esTratamientoPropioDeMedico($user, $tratamiento);
     }
 
     /**

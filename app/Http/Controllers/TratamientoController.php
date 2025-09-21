@@ -104,7 +104,17 @@ class TratamientoController extends Controller
     public function edit(Tratamiento $tratamiento)
     {
         $this->authorize('update', $tratamiento);
-        return view('tratamientos.edit', compact('tratamiento'));
+
+        $medicos = Medico::with('user')->get();
+        $pacientes = Paciente::with('user')->get();
+        $medicamentos = Medicamento::all();
+
+        return view('tratamientos.edit', compact(
+            'tratamiento',
+            'medicos',
+            'pacientes',
+            'medicamentos'
+        ));
     }
 
     /**

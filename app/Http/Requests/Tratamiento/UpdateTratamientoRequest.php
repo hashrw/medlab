@@ -13,7 +13,10 @@ class UpdateTratamientoRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        $tratamiento = $this->route('tratamiento'); // Binding {tratamiento} de la ruta
+        return $tratamiento
+            ? $this->user()->can('update', $tratamiento)
+            : false;
     }
 
     /**
@@ -37,7 +40,7 @@ class UpdateTratamientoRequest extends FormRequest
             'tratamiento' => 'required|string',
             'fecha_asignacion' => 'required|date',
             'descripcion' => 'nullable|string|max:2000',
-            'duracion_trat' => 'required|numeric',
+            'duracion_trat' => 'numeric',
             // 'medico_id' eliminado también para médicos/admins
         ];
 

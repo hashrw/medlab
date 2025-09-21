@@ -59,12 +59,12 @@ Route::get('/dashboard/paciente', function () {
 // Fíjate en que a estas rutas les añado un middleware de tipo can para que primero autorice al usuario a realizar la acción llamando a los métodos attach_medicamento y detach_medicamento de CitaPolicy.
 // Podríamos haberlo hecho directamente dentro de los métodos en el controlador con $this->authorize('attach_medicamento', $cita); y $this->authorize('detach_medicamento', $cita);, respectivamente
 
-Route::post('/citas/{cita}/attach-medicamento', [CitaController::class, 'attach_medicamento'])
-    ->name('citas.attachMedicamento')
-    ->middleware('can:attach_medicamento,cita');
-Route::delete('/citas/{cita}/detach-medicamento/{medicamento}', [CitaController::class, 'detach_medicamento'])
-    ->name('citas.detachMedicamento')
-    ->middleware('can:detach_medicamento,cita');
+Route::post('/tratamientos/{tratamiento}/attach-linea', [TratamientoController::class, 'attach_linea'])
+    ->name('tratamientos.attachLinea')
+    ->middleware('can:attach_linea,tratamiento');
+Route::delete('/tratamientos/{tratamiento}/detach-linea/{medicamento}', [TratamientoController::class, 'detach_linea'])
+    ->name('tratamientos.detachLinea')
+    ->middleware('can:detach_linea,tratamiento');
 
 Route::post('/diagnosticos/{diagnostico}/attach-sintoma', [DiagnosticoController::class, 'attach_sintoma'])
     ->name('diagnosticos.attachSintoma')
@@ -86,6 +86,7 @@ Route::resources([
     'organos' => OrganoController::class, // Rutas para organos
     'estadisticas' => EstadisticaController::class,
     'pruebas' => PruebaController::class,
+    'reglas' => ReglaController::class
 ]);
 
 Route::get('/diagnosticos/inferir/{pacienteId}', [DiagnosticoController::class, 'inferirDesdeSistema'])

@@ -29,7 +29,7 @@ class StoreTratamientoRequest extends FormRequest
             'tratamiento' => 'required|string',
             'fecha_asignacion' => 'required|date',
             'descripcion' => 'nullable|string|max:2000',
-            'duracion_trat' => 'required|numeric',
+            'duracion_trat' => 'numeric',
             'paciente_id' => 'required|exists:pacientes,id',
         ];
     }

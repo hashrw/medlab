@@ -54,7 +54,7 @@
                     <div class="mt-4">
                         <x-input-label for="paciente_id" :value="__('Paciente')" />
                         <x-text-input class="block mt-1 w-full" type="text" disabled
-                            :value="optional($tratamiento->pacientes->first()?->user)->name ?? 'Sin paciente asociado'" />
+                            :value="optional($tratamiento->paciente?->first()?->user)->name ?? 'Sin paciente asociado'" />
 
                     </div>
 

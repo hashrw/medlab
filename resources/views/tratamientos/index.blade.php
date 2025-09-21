@@ -13,7 +13,7 @@
                         </form>
                     </div>
                 @else
-                    <div class="p-6 bg-blue-800 text-white">
+                    <div class="p-1 bg-blue-800 text-white">
                         <h3 class="text-lg font-semibold">Listado de tratamientos</h3>
                     </div>
                 @endif
