@@ -15,7 +15,6 @@ class DiagnosticoSeeder extends Seeder
                 'fecha_diagnostico' => '2022-01-01',
                 'tipo_enfermedad' => 'aguda',
                 'origen_id' => 2, // 'manual' si fue ingresado por un médico
-                'dias_desde_trasplante' => 984,
                 'estado_injerto' => 'Estable', //quizá añadir en una otra tabla como con la especialidad del medico.
                 'regla_decision_id' => 1, // Debe existir una regla con ID 1 o ajustarlo
                 'estado_id' => 3,

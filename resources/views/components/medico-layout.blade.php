@@ -32,7 +32,9 @@
 
         <!-- Main layout content -->
         <div class="flex-grow flex justify-center">
-            <div class="w-full max-w-[1440px] px-6 py-4 flex">
+            {{-- 🔽 CAMBIO: antes era "w-full max-w-[1440px] px-6 py-4 flex"
+                 ahora centramos y dejamos márgenes ajustables con mx-auto y max-w --}}
+            <div class="w-full max-w-[1200px] flex mx-auto px-6 lg:px-12 py-6">
                 <!-- Sidebar -->
                 <aside class="w-[240px] shrink-0">
                     @include('components.sidebar-medico')

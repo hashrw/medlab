@@ -18,7 +18,6 @@ class Diagnostico extends Model
         'tipo_enfermedad',
         'origen',
         'estado_injerto', //estable,pobre
-        'dias_desde_trasplante',
         'observaciones',
         'grado_eich',
         'escala_karnofsky',
@@ -53,4 +52,10 @@ class Diagnostico extends Model
     {
         return $this->belongsToMany(Paciente::class, 'diagnostico_paciente')->withTimestamps();
     }
+
+    public function regla()
+    {
+        return $this->belongsTo(ReglaDecision::class, 'regla_decision_id');
+    }
+
 }

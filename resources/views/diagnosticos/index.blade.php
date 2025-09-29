@@ -1,4 +1,4 @@
-<x-medico-layout>
+<x-medico-layout> 
     <div class="py-1">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white shadow-lg rounded-lg overflow-hidden">
@@ -20,7 +20,9 @@
                                 <th class="py-3 px-4 border-b">Enfermedad</th>
                                 <th class="py-3 px-4 border-b">Estado</th>
                                 <th class="py-3 px-4 border-b">Fecha de trasplante</th>
-
+                                <th class="py-3 px-4 border-b">Origen</th>
+                                <th class="py-3 px-4 border-b">Recomendación</th>
+                                <th class="py-3 px-4 border-b">Acciones</th>
                             </tr>
                         </thead>
                         <tbody class="text-gray-700 text-sm">
@@ -30,11 +32,22 @@
                                     <td class="py-3 px-4">{{ $diagnostico->tipo_enfermedad }}</td>
                                     <td class="py-3 px-6 text-left whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <span
-                                                class="font-medium">{{$diagnostico->estado ? $diagnostico->estado->estado : __('Sin registro')}}</span>
+                                            <span class="font-medium">
+                                                {{ $diagnostico->estado->estado ?? __('Sin registro') }}
+                                            </span>
                                         </div>
                                     </td>
                                     <td class="py-3 px-4">{{ $diagnostico->f_trasplante }}</td>
+                                    <td class="py-3 px-4">
+                                        {{ $diagnostico->origen ?? 'Manual' }}
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        @if($diagnostico->regla && $diagnostico->regla->tipo_recomendacion)
+                                            {{ $diagnostico->regla->tipo_recomendacion }}
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td class="py-3 px-6 text-center">
                                         <div class="flex item-center justify-end">
                                             <div class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110">
@@ -50,7 +63,6 @@
                                                 </a>
                                             </div>
 
-                                            <!-- Botones de Acciones -->
                                             <div class="w-4 mr-2 transform hover:text-blue-500 hover:scale-110">
                                                 <a href="{{ route('diagnosticos.edit', $diagnostico->id) }}">
                                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none"
@@ -83,57 +95,6 @@
                             @endforeach
                         </tbody>
                     </table>
-                    <div class="p-4">
-                        {{ $diagnosticos->links() }}
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!--Diagnósticos inferidos -->
-    <div class="py-3">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-                <div class="p-6 bg-blue-900 text-white flex justify-between items-center">
-                    <h3 class="text-lg font-semibold">Diagnósticos inferidos por el sistema</h3>
-                    
-                </div>
-
-                <div class="overflow-x-auto p-4">
-                    <table class="min-w-full bg-white border border-gray-300 rounded-lg">
-                        <thead class="bg-blue-100 text-gray-900">
-                            <tr class="text-sm leading-normal text-left">
-                                <th class="py-3 px-4 border-b">ID</th>
-                                <th class="py-3 px-4 border-b">Tipo</th>
-                                <th class="py-3 px-4 border-b">Estado</th>
-                                <th class="py-3 px-4 border-b">Fecha Trasplante</th>
-                                <th class="py-3 px-4 border-b">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-gray-700 text-sm">
-                            @forelse ($diagnosticos as $diagnostico)
-                                <tr class="border-b hover:bg-gray-50">
-                                    <td class="py-3 px-4">{{ $diagnostico->id }}</td>
-                                    <td class="py-3 px-4">{{ $diagnostico->tipo_enfermedad }}</td>
-                                    <td class="py-3 px-4">
-                                        {{ $diagnostico->estado->estado ?? 'Sin registro' }}
-                                    </td>
-                                    <td class="py-3 px-4">{{ $diagnostico->f_trasplante }}</td>
-                                    <td class="py-3 px-4">
-                                        <a href="{{ route('diagnosticos.show', $diagnostico->id) }}"
-                                            class="text-blue-600 hover:underline">Ver</a>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="py-3 px-4 text-center text-gray-500">No se encontraron
-                                        diagnósticos inferidos.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-
                     <div class="p-4">
                         {{ $diagnosticos->links() }}
                     </div>

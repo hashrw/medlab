@@ -12,9 +12,10 @@ return new class extends Migration {
     {
         Schema::create('regla_decisions', function (Blueprint $table) {
             $table->id();
-            $table->string('nombre_regla');
-            $table->json('condiciones');
-            $table->json('diagnostico');
+            $table->string('nombre')->nullable();
+            $table->json('condiciones')->nullable();
+            $table->json('diagnostico')->nullable();
+            $table->string('tipo_recomendacion')->nullable();
             $table->timestamps();
         });
     }

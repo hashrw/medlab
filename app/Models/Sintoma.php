@@ -32,6 +32,12 @@ class Sintoma extends Model
             ->withTimestamps();
     }
 
+    public function aliases()
+    {
+        return $this->hasMany(SintomaAlias::class);
+    }
+
+
 
 }
 

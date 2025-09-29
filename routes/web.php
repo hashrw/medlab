@@ -89,8 +89,10 @@ Route::resources([
     'reglas' => ReglaController::class
 ]);
 
-Route::get('/diagnosticos/inferir/{pacienteId}', [DiagnosticoController::class, 'inferirDesdeSistema'])
+// Ruta para inferir diagnóstico desde el sistema
+Route::post('/diagnosticos/inferir/{pacienteId}', [DiagnosticoController::class, 'inferirDesdeSistema'])
     ->name('diagnosticos.inferir');
+
 
 
 

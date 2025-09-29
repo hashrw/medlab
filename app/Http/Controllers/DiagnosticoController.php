@@ -17,6 +17,7 @@ use App\Http\Requests\Diagnostico\UpdateDiagnosticoRequest;
 use App\Models\Comienzo;
 use App\Models\Estado;
 use App\Models\Infeccion;
+use App\Models\ReglaDecision;
 use App\Services\InferenciaDiagnosticoService;
 use Carbon\Carbon;
 
@@ -25,9 +26,13 @@ class DiagnosticoController extends Controller
     public function index()
     {
         $this->authorize('viewAny', Diagnostico::class);
-        $diagnosticos = Diagnostico::paginate(25);
-        return view('/diagnosticos/index', ['diagnosticos' => $diagnosticos]);
+
+        // Eager loading: cargamos la relación 'regla' y 'estado'
+        $diagnosticos = Diagnostico::with(['regla', 'estado'])->paginate(25);
+
+        return view('diagnosticos.index', ['diagnosticos' => $diagnosticos]);
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -65,6 +70,7 @@ class DiagnosticoController extends Controller
             'comienzos',
             'estados',
             'infeccions',
+             'pacientes',
         ));
 
     }
@@ -107,8 +113,16 @@ class DiagnosticoController extends Controller
     public function show(Diagnostico $diagnostico)
     {
         $this->authorize('view', $diagnostico);
-        //$sintomas = $diagnostico->sintomas;
-        return view('diagnosticos/show', ['diagnostico' => $diagnostico]);
+
+        // Cargar la regla de decisión (si existe)
+        $regla = $diagnostico->regla_decision_id
+            ? ReglaDecision::find($diagnostico->regla_decision_id)
+            : null;
+
+        return view('diagnosticos.show', [
+            'diagnostico' => $diagnostico,
+            'regla' => $regla,
+        ]);
     }
 
     /**
@@ -191,28 +205,39 @@ class DiagnosticoController extends Controller
             return redirect()->back()->with('warning', 'Paciente no encontrado.');
         }
 
-        //debuggear cuando se llama a esta función
         $diagnostico = $inferenciaService->ejecutar($paciente);
 
         if ($diagnostico) {
+            $regla = $diagnostico->regla_decision_id
+                ? ReglaDecision::find($diagnostico->regla_decision_id)
+                : null;
+
+            $mensaje = 'Diagnóstico inferido correctamente.';
+            if ($regla && $regla->tipo_recomendacion) {
+                $mensaje .= ' Recomendación: ' . $regla->tipo_recomendacion . '.';
+            }
+
             return redirect()->route('diagnosticos.show', $diagnostico->id)
-                ->with('success', 'Diagnóstico inferido correctamente.');
-        } else {
-            return redirect()->back()->with('warning', 'No se ha podido inferir ningún diagnóstico para este paciente.');
+                ->with('success', $mensaje);
         }
+
+        return redirect()->back()->with('warning', 'No se ha podido inferir ningún diagnóstico para este paciente.');
     }
 
     public function inferidos()
     {
         $this->authorize('viewAny', Diagnostico::class);
 
-        $diagnosticos = Diagnostico::whereHas('sintomas', function ($query) {
-            $query->wherePivot('origen', 'Inferido');
-        })->paginate(25);
+        $diagnosticos = Diagnostico::with(['regla', 'estado'])
+            ->whereHas('sintomas', function ($query) {
+                $query->wherePivot('origen', 'Inferido');
+            })
+            ->paginate(25);
 
         return view('diagnosticos.index', [
             'diagnosticos' => $diagnosticos,
             'soloInferidos' => true // Flag para distinguir en la vista
         ]);
     }
+
 }

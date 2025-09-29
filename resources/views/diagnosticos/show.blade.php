@@ -22,6 +22,13 @@
                 <x-show-field label="Comienzo Crónica" :value="$diagnostico->comienzo_cronica" />
                 <x-show-field label="Estado del Injerto" :value="$diagnostico->estado_injerto" />
                 <x-show-field label="Tipo de Infección" :value="$diagnostico->tipo_infeccion" />
+
+                @if($regla)
+                    <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded">
+                        <h5 class="text-md font-semibold text-gray-700 mb-2">Recomendación clínica</h5>
+                        <p class="text-sm text-gray-800">{{ $regla->tipo_recomendacion }}</p>
+                    </div>
+                @endif
             </div>
 
             <!-- Fechas Clínicas -->

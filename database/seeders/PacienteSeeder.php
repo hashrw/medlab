@@ -15,6 +15,9 @@ class PacienteSeeder extends Seeder
         // Obtener los IDs de los usuarios que son pacientes
         $userIds = DB::table('users')->where('tipo_usuario_id', 2)->pluck('id')->toArray();
 
+        // Obtener IDs de síntomas disponibles en la BD
+        $todosSintomas = DB::table('sintomas')->pluck('id')->toArray();
+
         foreach ($userIds as $index => $userId) {
             $pacienteId = DB::table('pacientes')->insertGetId([
                 'nuhsa' => 'AN' . $faker->unique()->numerify('##########'),
@@ -23,25 +26,17 @@ class PacienteSeeder extends Seeder
                 'altura' => $faker->numberBetween(150, 200),
                 'sexo' => $faker->randomElement(['M', 'F']),
                 'user_id' => $userId,
-                // Relación con trasplante (trasplante_id)
-
             ]);
 
+            // Seleccionar entre 3 y 6 síntomas aleatorios para cada paciente
+            $sintomasAleatorios = $faker->randomElements($todosSintomas, rand(3, 6));
 
-            /* Relación con tratamiento
-            DB::table('paciente_tratamiento')->insert([
-                'paciente_id' => $pacienteId,
-                'tratamiento_id' => 1,
-            ]);*/
-
-            // Relación fija con síntomas 1, 3, 5, 7, 9
-            $sintomasFijos = [2, 4, 6, 7];
-            foreach ($sintomasFijos as $sintomaId) {
+            foreach ($sintomasAleatorios as $sintomaId) {
                 DB::table('paciente_sintoma')->insert([
                     'paciente_id' => $pacienteId,
                     'sintoma_id' => $sintomaId,
                     'fecha_observacion' => $faker->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
-                    'activo' => true,
+                    'activo' => $faker->boolean(80), // 80% activos
                     'fuente' => $faker->randomElement(['paciente', 'observación médica', 'monitorización']),
                     'created_at' => now(),
                     'updated_at' => now(),
