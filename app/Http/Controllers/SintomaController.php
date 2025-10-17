@@ -13,11 +13,19 @@ class SintomaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $this->authorize('viewAny', Sintoma::class);
         $sintomas = Sintoma::paginate(25);
-        return view('/sintomas/index', ['sintomas' => $sintomas]);
+        $organos = Organo::orderBy('nombre')->get();
+        $query = Sintoma::with('organo')->orderBy('sintoma');
+
+        if($request->filled('organo')){
+            $query->where('organo_id',$request->organo);
+
+        }
+        $sintomas = $query->get();
+        return view('/sintomas/index', compact('organos', 'sintomas'));
     }
 
     /**
@@ -38,7 +46,7 @@ class SintomaController extends Controller
     {
         $sintoma = new Sintoma($request->validated());
         $sintoma->save();
-        session()->flash('success', 'sintoma creado correctamente.');
+        session()->flash('success', 'Registro añadido correctamente.');
         return redirect()->route('sintomas.index');
     }
 

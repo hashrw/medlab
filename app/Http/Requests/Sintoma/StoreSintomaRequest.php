@@ -27,7 +27,7 @@ class StoreSintomaRequest extends FormRequest
         return [
             'sintoma' => 'required|string',
             'manif_clinica' => 'string',
-            'organo' => 'required|string',
+            'organo_id' => 'required|string',
         ];
 
     }

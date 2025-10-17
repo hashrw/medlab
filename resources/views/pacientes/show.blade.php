@@ -71,10 +71,14 @@
                         </p>
 
                         <div class="flex items-center justify-end">
-                            <a href="{{ route('diagnosticos.inferir', $paciente->id) }}"
-                                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
-                                Inferir Diagnóstico
-                            </a>
+                            <form method="POST" action="{{ route('diagnosticos.inferir', $paciente->id) }}">
+                                @csrf
+                                <button type="submit"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
+                                    Inferir Diagnóstico
+                                </button>
+                            </form>
+
                         </div>
                     </div>
                 </div>

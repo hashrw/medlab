@@ -26,7 +26,7 @@ class UpdateSintomaRequest extends FormRequest
         return [
             'sintoma' => 'string',
             'manif_clinica' => 'string',
-            'organo' => 'string',
+            'organo_id' => 'string',
         ];
     }
 }

@@ -10,11 +10,15 @@ class PruebaController extends Controller
 {
     /**
      * Display a listing of the resource.
-     */public function index()
+     */
+    public function index()
     {
         $this->authorize('viewAny', Prueba::class);
-        $pruebas = Prueba::paginate(25);
-        return view('/pruebas/index', ['pruebas' => $pruebas]);
+
+        // Cargamos las pruebas con su tipo asociado
+        $pruebas = Prueba::with('tipo_prueba')->paginate(25);
+
+        return view('pruebas.index', compact('pruebas'));
     }
 
     /**
@@ -73,7 +77,7 @@ class PruebaController extends Controller
     public function destroy(Prueba $prueba)
     {
         $this->authorize('delete', $prueba);
-        if($prueba->delete())
+        if ($prueba->delete())
             session()->flash('success', 'Registro borrado correctamente.');
         else
             session()->flash('warning', 'No pudo borrarse el registro.');

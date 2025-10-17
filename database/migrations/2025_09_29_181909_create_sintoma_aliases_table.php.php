@@ -11,20 +11,20 @@ return new class extends Migration
         Schema::create('sintoma_aliases', function (Blueprint $table) {
             $table->id();
 
-            // 🔹 Relación con síntoma principal
+            // Relación con síntoma principal
             $table->foreignId('sintoma_id')
                   ->constrained('sintomas')
                   ->onDelete('cascade');
 
-            // 🔹 Texto del alias
+            // Texto del alias
             $table->string('alias');
 
-            // 🔹 Nota opcional para contexto (ej. “leve/moderado/severo”)
+            // Nota opcional para contexto (ej. “leve/moderado/severo”)
             $table->string('nota')->nullable();
 
             $table->timestamps();
 
-            // 🔹 Evita duplicados de alias para el mismo síntoma
+            // Evita duplicados de alias para el mismo síntoma
             $table->unique(['sintoma_id', 'alias'], 'ux_alias_por_sintoma');
         });
     }

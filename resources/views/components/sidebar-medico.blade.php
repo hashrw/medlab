@@ -55,7 +55,13 @@
                             <span>Módulo de Pruebas</span>
                         </a>
                     </li>
-                    
+                    <li>
+                        <a href="{{ route('sintomas.index') }}"
+                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('sintomas.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
+                            <i class="fas fa-vials w-5 mr-2"></i>
+                            <span>Módulo de Síntomas</span>
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>
