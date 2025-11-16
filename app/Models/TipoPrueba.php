@@ -9,7 +9,9 @@ class TipoPrueba extends Model
 {
     protected $fillable = ['nombre'];
 
-    public function medicos(){
-        return $this->hasMany(Prueba::class);
+    public function pruebas()
+    {
+        return $this->hasMany(Prueba::class, 'tipo_prueba_id');
     }
+
 }

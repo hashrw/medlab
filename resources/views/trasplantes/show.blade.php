@@ -1,57 +1,186 @@
 <x-medico-layout>
     <x-slot name="header">
-        <nav class="font-semibold text-xl text-gray-800 leading-tight" aria-label="Breadcrumb">
-            <ol class="list-none p-0 inline-flex">
-                <li class="flex items-center">
-                    <a href="{{ route('trasplantes.index') }}">Trasplantes</a>
-                    <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                        <path d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/>
-                    </svg>
-                </li>
-                <li>
-                    <span class="text-gray-500" aria-current="page">Consultar datos</span>
-                </li>
-            </ol>
-        </nav>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Ficha del Trasplante
+        </h2>
     </x-slot>
 
     <div class="py-3">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white shadow-lg rounded-lg overflow-hidden">
-                <div class="p-6 bg-blue-800 text-white">
-                    <h3 class="text-lg font-semibold">Ficha de paciente</h3>
-                </div>
+        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
 
-                <div class="p-6 bg-white border-t border-gray-200">
-                    @php
-                        $campos = [
-                            'tipo_trasplante' => 'Tipo de trasplante',
-                            'nombre_enfermedad' => 'Nombre de la enfermedad',
-                            'fecha_trasplante' => 'Fecha de trasplante',
-                            'origen_trasplante' => 'Origen del trasplante',
-                            'identidad_hla' => 'Identidad HLA',
-                            'tipo_acondicionamiento' => 'Tipo de acondicionamiento',
-                            'seropositividad_donante' => 'Seropositividad del donante',
-                            'seropositividad_receptor' => 'Seropositividad del receptor',
-                        ];
-                    @endphp
+            <div class="bg-white shadow-xl rounded-lg overflow-hidden">
 
-                    @foreach ($campos as $campo => $label)
-                        <div class="mt-4">
-                            <x-input-label for="{{ $campo }}" :value="__($label)" />
-                            <x-text-input id="{{ $campo }}" class="block mt-1 w-full" type="text" name="{{ $campo }}"
-                                :value="$trasplante->$campo" disabled />
-                        </div>
-                    @endforeach
+                {{-- CABECERA --}}
+                <div class="p-6 bg-blue-800 text-white flex justify-between items-start">
 
-                    <div class="flex items-center justify-end mt-6">
-                        <a href="{{ route('trasplantes.index') }}"
-                           class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
-                            {{ __('Volver') }}
-                        </a>
+                    <div>
+                        <h3 class="text-2xl font-bold flex items-center gap-2">
+                            <i class="fas fa-dna"></i>
+                            {{ $trasplante->tipo_trasplante }}
+                        </h3>
+
+                        <p class="text-blue-100 mt-1">
+                            <i class="fas fa-calendar-alt mr-1"></i>
+                            Fecha del trasplante:
+                            <span class="font-semibold">
+                                {{ $trasplante->fecha_trasplante->format('d/m/Y') }}
+                            </span>
+                        </p>
+
+                        <p class="text-blue-100 mt-1 flex items-center gap-2">
+                            <i class="fas fa-shield-virus"></i>
+                            Compatibilidad HLA:
+                            <span class="font-semibold">{{ $trasplante->identidad_hla }}</span>
+                        </p>
+
                     </div>
+
+                    {{-- Acciones --}}
+                    <div class="flex space-x-4 text-lg">
+
+                        <a href="{{ route('trasplantes.index') }}" class="hover:text-gray-200" title="Volver">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+
+                        <a href="{{ route('trasplantes.edit', $trasplante->id) }}" class="hover:text-yellow-300"
+                            title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+
+                        <form method="POST" action="{{ route('trasplantes.destroy', $trasplante->id) }}"
+                            onsubmit="return confirm('¿Eliminar este trasplante?')">
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit" class="hover:text-red-300" title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+
+                    </div>
+
                 </div>
+
+                {{-- CONTENIDO --}}
+                <div class="p-8 space-y-10 text-gray-800">
+
+                    {{-- SECCIÓN PACIENTE --}}
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
+                            Paciente
+                        </h4>
+
+                        <div class="flex items-center gap-4">
+
+                            {{-- Foto / Inicial --}}
+                            @if($trasplante->paciente && $trasplante->paciente->avatar)
+                                <img src="{{ asset('storage/' . $trasplante->paciente->avatar) }}"
+                                    class="w-14 h-14 rounded-full object-cover">
+                            @else
+                                <div class="w-14 h-14 rounded-full bg-blue-200 flex items-center
+                                                    justify-center text-blue-800 font-bold text-xl">
+                                    {{ strtoupper(substr($trasplante->paciente->nombre, 0, 1)) }}
+                                </div>
+                            @endif
+
+                            <div>
+                                <a href="{{ route('pacientes.show', $trasplante->paciente_id) }}"
+                                    class="text-blue-700 text-lg font-semibold hover:text-blue-900">
+                                    {{ $trasplante->paciente->nombre }}
+                                </a>
+
+                                <p class="text-gray-600">
+                                    NUHSA: {{ $trasplante->paciente->nuhsa }}
+                                </p>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    {{-- SECCIÓN DATOS PRINCIPALES --}}
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
+                            Datos principales del trasplante
+                        </h4>
+
+                        <p><strong>Tipo:</strong> {{ $trasplante->tipo_trasplante }}</p>
+                        <p><strong>Fecha:</strong> {{ $trasplante->fecha_trasplante->format('d/m/Y') }}</p>
+                        <p><strong>Origen del injerto:</strong> {{ $trasplante->origen_trasplante }}</p>
+                        <p><strong>Compatibilidad HLA:</strong> {{ $trasplante->identidad_hla }}</p>
+                    </div>
+
+                    {{-- SECCIÓN ACONDICIONAMIENTO --}}
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
+                            Acondicionamiento
+                        </h4>
+
+                        <p><strong>Tipo de acondicionamiento:</strong> {{ $trasplante->tipo_acondicionamiento }}</p>
+                    </div>
+
+                    {{-- SECCIÓN SEROLOGÍA --}}
+                    {{-- 3. SEROLOGÍAS --}}
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-700 mb-2 border-b pb-1">
+                            Seropositividad
+                        </h4>
+
+                        <div class="flex space-x-4">
+
+                            {{-- Donante --}}
+                            <div>
+                                <p class="font-semibold">Donante:</p>
+                                <span class="px-3 py-1 rounded-full text-sm
+                                    {{ $trasplante->seropositividad_donante == 'Negativo'
+    ? 'bg-green-100 text-green-700'
+    : 'bg-red-100 text-red-700' }}">
+                                    {{ $trasplante->seropositividad_donante }}
+                                </span>
+                            </div>
+
+                            {{-- Receptor --}}
+                            <div>
+                                <p class="font-semibold">Receptor:</p>
+                                <span class="px-3 py-1 rounded-full text-sm
+                                    {{ $trasplante->seropositividad_receptor == 'Negativo'
+    ? 'bg-green-100 text-green-700'
+    : 'bg-red-100 text-red-700' }}">
+                                    {{ $trasplante->seropositividad_receptor }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- ACCIONES CLÍNICAS --}}
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
+                            Acciones clínicas
+                        </h4>
+
+                        <div class="flex flex-wrap gap-4">
+
+                            <a href="{{ route('pruebas.index') }}?paciente_id={{ $trasplante->paciente_id }}"
+                                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                Ver pruebas clínicas →
+                            </a>
+
+                            <a href="{{ route('diagnosticos.index') }}?paciente_id={{ $trasplante->paciente_id }}"
+                                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                Ver diagnósticos →
+                            </a>
+
+                            <a href="{{ route('sintomas.index') }}?paciente_id={{ $trasplante->paciente_id }}"
+                                class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                Ver síntomas →
+                            </a>
+
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
+
         </div>
     </div>
 </x-medico-layout>

@@ -1,88 +1,192 @@
 <x-medico-layout>
     <x-slot name="header">
-        <nav class="font-semibold text-xl text-gray-800 leading-tight" aria-label="Breadcrumb">
-            <ol class="list-none p-0 inline-flex">
-                <li class="flex items-center">
-                    <a href="{{ route('pacientes.index') }}">{{ __('Pacientes') }}</a>
-                    <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                        <path
-                            d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z" />
-                    </svg>
-                </li>
-                <li>
-                    <a href="#" class="text-gray-500" aria-current="page">{{ __('Datos Clínicos de') }}
-                        {{ $paciente->user->name }}</a>
-                </li>
-            </ol>
-        </nav>
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Ficha Clínica del Paciente
+        </h2>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                    {{ __('Información del Paciente') }}
-                </div>
-                <div class="p-6 bg-white border-b border-gray-200">
-                    {{-- {{ dd($paciente) }} --}}
-                    <div x-data="{ open: false }">
-                        <!-- Botón para abrir el modal -->
-                        <button @click="open = true" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
-                            {{ __('Ver Datos Clínicos') }}
-                        </button>
-                        <!-- Modal -->
-                        <div x-show="open"
-                            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-                            <div class="bg-white rounded-lg shadow-lg w-11/12 md:w-1/2 lg:w-1/3 p-6">
-                                <!-- Encabezado del modal -->
-                                <div class="flex justify-between items-center mb-4">
-                                    <h2 class="text-xl font-bold">Datos Clínicos de {{ $paciente->user->name }}</h2>
-                                    <button @click="open = false" class="text-gray-500 hover:text-gray-700">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M6 18L18 6M6 6l12 12"></path>
-                                        </svg>
-                                    </button>
-                                </div>
-                                <!-- Contenido del modal -->
-                                <div class="space-y-4">
-                                    <div>
-                                        <x-input-label :value="__('Edad')" />
-                                        <x-text-input readonly disabled class="block mt-1 w-full"
-                                            :value="$paciente->edad . ' años'" />
-                                    </div>
-                                </div>
-                                <!-- Botón para cerrar -->
-                                <div class="mt-6 flex justify-end">
-                                    <x-danger-button @click="open = false">
-                                        {{ __('Cerrar') }}
-                                    </x-danger-button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Diagnóstico por inferencia del sistema -->
-                    <div class="py-8" class="bg-white shadow rounded-lg p-6 border border-gray-200">
-                        <h4 class="text-lg font-semibold text-gray-800 mb-4">Diagnóstico Automático</h4>
+    <div class="py-3">
+        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
 
-                        <p class="text-sm text-gray-600 mb-4">
-                            Puedes solicitar al sistema que evalúe los síntomas actuales del paciente y genere un
-                            diagnóstico basado en las reglas clínicas definidas.
+            <div class="bg-white shadow-xl rounded-lg overflow-hidden">
+
+                {{-- ENCABEZADO --}}
+                <div class="p-6 bg-blue-800 text-white flex justify-between items-start">
+
+                    <div>
+                        <h3 class="text-2xl font-bold">{{ $paciente->nombre }}</h3>
+
+                        <p class="text-blue-100 mt-1">
+                            NUHSA: <span class="font-semibold">{{ $paciente->nuhsa }}</span>
                         </p>
 
-                        <div class="flex items-center justify-end">
-                            <form method="POST" action="{{ route('diagnosticos.inferir', $paciente->id) }}">
-                                @csrf
-                                <button type="submit"
-                                    class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded shadow">
-                                    Inferir Diagnóstico
-                                </button>
-                            </form>
+                        <p class="text-blue-100 mt-1">
+                            Sexo: <span class="font-semibold">{{ $paciente->sexo }}</span>
+                        </p>
+
+                        <p class="text-blue-100 mt-1">
+                            Edad:
+                            <span class="font-semibold">
+                                {{ \Carbon\Carbon::parse($paciente->fecha_nacimiento)->age }} años
+                            </span>
+                        </p>
+                    </div>
+
+                    <div class="flex space-x-4 text-lg">
+                        <a href="{{ route('pacientes.index') }}" class="hover:text-gray-200" title="Volver">
+                            <i class="fas fa-arrow-left"></i>
+                        </a>
+
+                        <a href="{{ route('pacientes.edit', $paciente->id) }}"
+                           class="hover:text-yellow-300" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </a>
+
+                        <form method="POST"
+                              action="{{ route('pacientes.destroy', $paciente->id) }}"
+                              onsubmit="return confirm('¿Eliminar este paciente?')">
+
+                            @csrf
+                            @method('DELETE')
+
+                            <button type="submit" class="hover:text-red-300" title="Eliminar">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
+                {{-- CONTENIDO --}}
+                <div class="p-8 space-y-10 text-gray-800">
+
+                    {{-- SECCIÓN 1: DATOS GENERALES --}}
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
+                            Datos Personales
+                        </h4>
+
+                        <p><strong>Fecha de nacimiento:</strong>
+                            {{ \Carbon\Carbon::parse($paciente->fecha_nacimiento)->format('d/m/Y') }}
+                        </p>
+
+                        <p><strong>Nº Historia / NUHSA:</strong> {{ $paciente->nuhsa }}</p>
+
+                        <p><strong>Sexo:</strong> {{ $paciente->sexo }}</p>
+                    </div>
+
+
+                    {{-- SECCIÓN 2: DATOS SOMATOMÉTRICOS --}}
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
+                            Datos Somatométricos
+                        </h4>
+
+                        @php
+                            $imc = null;
+                            if ($paciente->peso && $paciente->altura) {
+                                $imc = round($paciente->peso / (($paciente->altura / 100) ** 2), 1);
+                            }
+                        @endphp
+
+                        <p><strong>Peso:</strong> {{ $paciente->peso }} kg</p>
+                        <p><strong>Altura:</strong> {{ $paciente->altura }} cm</p>
+
+                        <p>
+                            <strong>IMC:</strong>
+
+                            @if($imc)
+                                <span class="
+                                    px-3 py-1 rounded-full text-sm
+                                    @if($imc < 25) bg-green-100 text-green-700
+                                    @elseif($imc < 30) bg-yellow-100 text-yellow-700
+                                    @else bg-red-100 text-red-700
+                                    @endif
+                                ">
+                                    {{ $imc }}
+                                </span>
+                            @else
+                                <span class="text-gray-500">No disponible</span>
+                            @endif
+                        </p>
+                    </div>
+
+
+                    {{-- SECCIÓN 3: INFORMACIÓN CLÍNICA RELACIONADA --}}
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
+                            Información Clínica Asociada
+                        </h4>
+
+                        <ul class="list-disc ml-6 space-y-2">
+
+                            <li>
+                                <a href="{{ route('trasplantes.index') }}?paciente_id={{ $paciente->id }}"
+                                   class="text-blue-600 hover:text-blue-800 font-semibold">
+                                    Ver trasplantes del paciente →
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="{{ route('diagnosticos.index') }}?paciente_id={{ $paciente->id }}"
+                                   class="text-blue-600 hover:text-blue-800 font-semibold">
+                                    Ver diagnósticos →
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="{{ route('pruebas.index') }}?paciente_id={{ $paciente->id }}"
+                                   class="text-blue-600 hover:text-blue-800 font-semibold">
+                                    Ver pruebas clínicas →
+                                </a>
+                            </li>
+
+                            <li>
+                                <a href="{{ route('sintomas.index') }}?paciente_id={{ $paciente->id }}"
+                                   class="text-blue-600 hover:text-blue-800 font-semibold">
+                                    Ver síntomas →
+                                </a>
+                            </li>
+
+                        </ul>
+                    </div>
+
+
+                    {{-- SECCIÓN 4: BOTONES DE ACCIÓN CLÍNICA --}}
+                    <div>
+                        <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
+                            Acciones Clínicas Rápidas
+                        </h4>
+
+                        <div class="flex flex-wrap gap-4">
+
+                            <a href="{{ route('diagnosticos.create') }}?paciente_id={{ $paciente->id }}"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                                + Registrar diagnóstico
+                            </a>
+
+                            <a href="{{ route('trasplantes.create') }}?paciente_id={{ $paciente->id }}"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                                + Registrar trasplante
+                            </a>
+
+                            <a href="{{ route('pruebas.create') }}?paciente_id={{ $paciente->id }}"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                                + Registrar prueba clínica
+                            </a>
+
+                            <a href="#"
+                                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                                + Registrar síntoma
+                            </a>
 
                         </div>
                     </div>
+
                 </div>
+
             </div>
+
         </div>
     </div>
 </x-medico-layout>

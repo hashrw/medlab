@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Prueba\StorePruebaRequest;
 use App\Http\Requests\Prueba\UpdatePruebaRequest;
 use App\Models\Prueba;
+use App\Models\TipoPrueba;
 use Illuminate\Http\Request;
 
 class PruebaController extends Controller
@@ -11,15 +12,23 @@ class PruebaController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $this->authorize('viewAny', Prueba::class);
+        $query = Prueba::with('tipo_prueba');
 
-        // Cargamos las pruebas con su tipo asociado
-        $pruebas = Prueba::with('tipo_prueba')->paginate(25);
+        // FILTRO POR TIPO
+        if ($request->filled('tipo')) {
+            $query->where('tipo_prueba_id', $request->tipo);
+        }
 
-        return view('pruebas.index', compact('pruebas'));
+        $pruebas = $query->orderBy('fecha', 'desc')->paginate(10);
+
+        $tipos = TipoPrueba::all();
+
+        return view('pruebas.index', compact('pruebas', 'tipos'));
     }
+
+
 
     /**
      * Show the form for creating a new resource.

@@ -86,6 +86,35 @@ class Paciente extends Model
         });
     }
 
+    public function getICMCategoriaAttribute()
+    {
+
+        $imc = $this->imc;
+
+        if (!$imc) {
+            return null;
+        }
+
+        if ($imc < 18.5) {
+            return 'Bajo Peso';
+        }
+
+        if ($imc < 25) {
+            return 'Normal';
+        }
+
+        if ($imc < 30) {
+            return 'Sobrepeso';
+        }
+
+        if ($imc < 35) {
+            return 'Obesidad II';
+        }
+        if ($imc < 40) {
+            return 'Obesidad III';
+        }
+    }
+
     /* public function citas(){
          return $this->hasMany(Cita::class);
      }

@@ -54,6 +54,11 @@ Route::get('/dashboard/paciente', function () {
     return view('dashboard.paciente');
 })->middleware(['auth'])->name('dashboard.paciente');
 
+
+Route::get('/pacientes/{paciente}/historia-clinica', 
+    [PacienteController::class, 'historiaClinica'])
+    ->name('pacientes.historiaClinica');
+
 /* Rutas propias */
 // Pongo las rutas de citas antes de las de recurso para que no matchee antes un show de citas, por ejemplo
 // Fíjate en que a estas rutas les añado un middleware de tipo can para que primero autorice al usuario a realizar la acción llamando a los métodos attach_medicamento y detach_medicamento de CitaPolicy.
@@ -86,7 +91,8 @@ Route::resources([
     'organos' => OrganoController::class, // Rutas para organos
     'estadisticas' => EstadisticaController::class,
     'pruebas' => PruebaController::class,
-    'reglas' => ReglaController::class
+    'reglas' => ReglaController::class,
+
 ]);
 
 // Ruta para inferir diagnóstico desde el sistema

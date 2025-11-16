@@ -10,10 +10,30 @@ use App\Http\Requests\Trasplante\UpdateTrasplanteRequest;
 
 class trasplanteController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $this->authorize('viewAny', Trasplante::class);
-        $trasplantes = Trasplante::paginate(25);
+        
+        $trasplante = Trasplante::query();
+        if ($request->filled('tipo')) {
+            $trasplante->where('tipo_trasplante', $request->tipo);
+
+        }
+
+        if ($request->filled('hla')) {
+            $trasplante->where('identidad_hla', $request->hla);
+        }
+
+        if ($request->filled('serologia')) {
+            $trasplante->where(function ($q) use ($request) {
+                $q->where('seropositividad_donante', $request->serologia)
+                    ->orWhere('seropositividad_receptor', $request->serologia);
+            });
+        }
+
+        if ($request->filled('year')) {
+            $trasplante->whereYear('fecha_trasplante', $request->year);
+        }
+        $trasplantes = $trasplante->paginate(12)->appends($request->query());
         return view('/trasplantes/index', ['trasplantes' => $trasplantes]);
     }
 

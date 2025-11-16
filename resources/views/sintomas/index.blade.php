@@ -3,7 +3,7 @@
         <div class="p-4 bg-blue-600 text-white flex justify-between items-center rounded-md shadow-sm">
             <h3 class="text-lg font-semibold tracking-wide">Listado de Síntomas Normalizados</h3>
             <a href="{{ route('sintomas.create') }}"
-               class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow transition">
+                class="bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded-md shadow transition">
                 + Nuevo Síntoma
             </a>
         </div>
@@ -17,13 +17,11 @@
                 <div class="p-4 border-b border-gray-100 bg-gray-50 rounded-t-lg">
                     <form method="GET" action="{{ route('sintomas.index') }}" class="flex items-center gap-3">
                         <label for="organo" class="font-semibold text-gray-700">Filtrar por órgano:</label>
-                        <select name="organo" id="organo"
-                                onchange="this.form.submit()"
-                                class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                        <select name="organo" id="organo" onchange="this.form.submit()"
+                            class="border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
                             <option value="">Todos</option>
                             @foreach ($organos as $organo)
-                                <option value="{{ $organo->id }}"
-                                    {{ request('organo') == $organo->id ? 'selected' : '' }}>
+                                <option value="{{ $organo->id }}" {{ request('organo') == $organo->id ? 'selected' : '' }}>
                                     {{ $organo->nombre }}
                                 </option>
                             @endforeach
@@ -68,20 +66,35 @@
                                                         <td class="py-2 px-3 border-b">{{ $sintoma->id }}</td>
                                                         <td class="py-2 px-3 border-b">{{ $sintoma->sintoma }}</td>
                                                         <td class="py-2 px-3 border-b">{{ $sintoma->manif_clinica }}</td>
-                                                        <td class="py-2 px-3 border-b text-center">
+                                                        <td class="py-3 px-4 text-center">
                                                             <div class="flex justify-center space-x-3">
-                                                                <a href="{{ route('sintomas.edit', $sintoma->id) }}"
-                                                                   class="text-blue-600 hover:text-blue-800 font-medium">Editar</a>
-                                                                <form action="{{ route('sintomas.destroy', $sintoma->id) }}"
-                                                                      method="POST" class="inline">
-                                                                    @csrf
-                                                                    @method('DELETE')
-                                                                    <button type="submit"
-                                                                            class="text-red-500 hover:text-red-700 font-medium"
-                                                                            onclick="return confirm('¿Eliminar este síntoma?');">
-                                                                        Eliminar
-                                                                    </button>
-                                                                </form>
+
+                                                                <a href="{{ route('sintomas.show', $sintoma->id) }}"
+                                                                    class="text-blue-600 hover:text-blue-800" title="Ver">
+                                                                    <i class="fas fa-eye"></i>
+                                                                </a>
+
+                                                                @if(Auth::user()->es_medico)
+                                                                    <a href="{{ route('sintomas.edit', $sintoma->id) }}"
+                                                                        class="text-yellow-600 hover:text-yellow-700" title="Editar">
+                                                                        <i class="fas fa-edit"></i>
+                                                                    </a>
+
+                                                                    <form id="delete-form-{{ $sintoma->id }}" method="POST"
+                                                                        action="{{ route('sintomas.destroy', $sintoma->id) }}"
+                                                                        onsubmit="return confirm('¿Eliminar este registro?')">
+
+                                                                        @csrf
+                                                                        @method('DELETE')
+
+                                                                        <button type="submit" class="text-red-600 hover:text-red-800"
+                                                                            title="Eliminar">
+                                                                            <i class="fas fa-trash-alt"></i>
+                                                                        </button>
+
+                                                                    </form>
+                                                                @endif
+
                                                             </div>
                                                         </td>
                                                     </tr>
