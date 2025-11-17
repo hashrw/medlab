@@ -12,7 +12,7 @@ class trasplanteController extends Controller
 {
     public function index(Request $request)
     {
-        
+
         $trasplante = Trasplante::query();
         if ($request->filled('tipo')) {
             $trasplante->where('tipo_trasplante', $request->tipo);
@@ -73,8 +73,12 @@ class trasplanteController extends Controller
      */
     public function edit(Trasplante $trasplante)
     {
-        $this->authorize('update', $trasplante);
-        return view('trasplantes/edit', ['trasplante' => $trasplante]);
+        $pacientes = Paciente::orderBy('nuhsa')->get();
+
+        return view('trasplantes.edit', [
+            'trasplante' => $trasplante,
+            'pacientes' => $pacientes,
+        ]);
     }
 
     /**

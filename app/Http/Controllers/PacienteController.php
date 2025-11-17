@@ -5,22 +5,19 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Paciente\StorePacienteRequest;
 use App\Http\Requests\Paciente\UpdatePacienteRequest;
 use App\Models\Paciente;
-use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 
 class PacienteController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        $query = Paciente::query();
+        $query = Paciente::query()->with('usuarioAcceso');
 
-        // FILTRO POR NOMBRE
+        // FILTRO POR NOMBRE (basado en User.name)
         if ($request->filled('nombre')) {
-            $query->where('nombre', 'like', '%' . $request->nombre . '%');
+            $query->whereHas('usuarioAcceso', function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->nombre . '%');
+            });
         }
 
         // FILTRO POR SEXO
@@ -28,7 +25,7 @@ class PacienteController extends Controller
             $query->where('sexo', $request->sexo);
         }
 
-        // FILTRO POR RANGO DE EDAD
+        // FILTRO POR EDAD
         if ($request->filled('edad_min') || $request->filled('edad_max')) {
             $query->where(function ($q) use ($request) {
                 if ($request->filled('edad_min')) {
@@ -48,7 +45,7 @@ class PacienteController extends Controller
                     break;
 
                 case 'sobrepeso':
-                    $query->whereRaw('(peso / POWER(altura/100, 2)) >= 25 AND (peso / POWER(altura/100, 2)) < 30');
+                    $query->whereRaw('(peso / POWER(altura/100, 2)) BETWEEN 25 AND 29.9');
                     break;
 
                 case 'obesidad':
@@ -58,90 +55,73 @@ class PacienteController extends Controller
         }
 
         $pacientes = $query->paginate(15)->appends($request->query());
+
         return view('pacientes.index', compact('pacientes'));
     }
 
 
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $this->authorize('create', Paciente::class);
-        return view('pacientes/create');
+        return view('pacientes.create');
     }
 
-    private function createUser(Request $request)
-    {
-        $user = new User($request->validated());
-        $user->save();
-        return $user;
-    }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StorePacienteRequest $request)
     {
         $this->authorize('create', Paciente::class);
-        // TODO: La creación de user y paciente debería hacerse transaccionalmente. ¿Demasiado avanzado?
-        $user = $this->createUser($request);
-        $paciente = new Paciente($request->validated());
-        $paciente->user_id = $user->id;
-        $paciente->save();
-        session()->flash('success', 'Paciente creado correctamente. Si nos da tiempo haremos este mensaje internacionalizable y parametrizable');
+
+        Paciente::create($request->validated());
+
+        session()->flash('success', 'Paciente creado correctamente.');
+
         return redirect()->route('pacientes.index');
     }
 
-    /**
-     * Display the specified resource.
-     */
+
     public function show(Paciente $paciente)
     {
         $this->authorize('view', $paciente);
 
-        // Cargar las relaciones necesarias
-        //$paciente->load('user', 'enfermedads', 'tratamientos');
+        $paciente->load([
+            'usuarioAcceso',
+            'trasplantes',
+            'tratamientos',
+            'sintomas',
+            'organos'
+        ]);
 
-        return view('pacientes/show', ['paciente' => $paciente]);
+        return view('pacientes.show', compact('paciente'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
+
     public function edit(Paciente $paciente)
     {
         $this->authorize('update', $paciente);
-        return view('pacientes/edit', ['paciente' => $paciente]);
+        return view('pacientes.edit', compact('paciente'));
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
+
     public function update(UpdatePacienteRequest $request, Paciente $paciente)
     {
-        // TODO: La edición de user y paciente debería hacerse transaccionalmente. ¿Demasiado avanzado?
-        $user = $paciente->user;
-        $user->fill($request->validated());
-        $user->save();
-        $paciente->fill($request->validated());
-        $paciente->save();
-        session()->flash('success', 'Paciente modificado correctamente. Si nos da tiempo haremos este mensaje internacionalizable y parametrizable');
-        if ($request->user()->es_administrador)
-            return redirect()->route('pacientes.index');
-        return redirect()->route('citas.index');
+        $this->authorize('update', $paciente);
+
+        $paciente->update($request->validated());
+
+        session()->flash('success', 'Paciente modificado correctamente.');
+
+        return redirect()->route('pacientes.index');
     }
 
-    /**
-     * Remove the specified resource from storage.
-     */
+
     public function destroy(Paciente $paciente)
     {
         $this->authorize('delete', $paciente);
-        if ($paciente->delete() && $paciente->user->delete())
-            session()->flash('success', 'Paciente borrado correctamente. Si nos da tiempo haremos este mensaje internacionalizable y parametrizable');
-        else
-            session()->flash('warning', 'El paciente no pudo borrarse. Es probable que se deba a que tenga asociada información como citas que dependen de él.');
+
+        $paciente->delete();
+
+        session()->flash('success', 'Paciente borrado correctamente.');
+
         return redirect()->route('pacientes.index');
     }
 }

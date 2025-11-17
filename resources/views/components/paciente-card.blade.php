@@ -10,22 +10,22 @@
 
         <div class="flex space-x-3 text-gray-600">
 
-            <a href="{{ route('pacientes.show', $paciente->id) }}"
-               class="hover:text-blue-600" title="Ver ficha">
+            <a href="{{ route('pacientes.show', $paciente->id) }}" class="text-blue-600 hover:text-blue-800"
+                title="Ver">
                 <i class="fas fa-eye"></i>
             </a>
 
-            <a href="{{ route('pacientes.edit', $paciente->id) }}"
-               class="hover:text-yellow-600" title="Editar">
+            <a href="{{ route('pacientes.edit', $paciente->id) }}" class="text-yellow-600 hover:text-yellow-700"
+                title="Editar">
                 <i class="fas fa-edit"></i>
             </a>
 
             <form method="POST" action="{{ route('pacientes.destroy', $paciente->id) }}"
-                  onsubmit="return confirm('¿Eliminar este paciente?')">
+                onsubmit="return confirm('¿Eliminar este paciente?')">
                 @csrf
                 @method('DELETE')
 
-                <button type="submit" class="hover:text-red-600" title="Eliminar">
+                <button type="submit" class="text-red-600 hover:text-red-800">
                     <i class="fas fa-trash-alt"></i>
                 </button>
             </form>
@@ -70,12 +70,12 @@
                 <span class="font-semibold">IMC:</span>
 
                 <span class="
-                    px-2 py-1 rounded-full text-xs
-                    @if($paciente->imc_categoria == 'Normal') bg-green-100 text-green-700
-                    @elseif($paciente->imc_categoria == 'Sobrepeso') bg-yellow-100 text-yellow-700
-                    @elseif(str_starts_with($paciente->imc_categoria, 'Obesidad')) bg-red-100 text-red-700
-                    @endif
-                ">
+                                px-2 py-1 rounded-full text-xs
+                                @if($paciente->imc_categoria == 'Normal') bg-green-100 text-green-700
+                                @elseif($paciente->imc_categoria == 'Sobrepeso') bg-yellow-100 text-yellow-700
+                                @elseif(str_starts_with($paciente->imc_categoria, 'Obesidad')) bg-red-100 text-red-700
+                                @endif
+                            ">
                     {{ $paciente->imc }} — {{ $paciente->imc_categoria }}
                 </span>
             </p>
@@ -89,7 +89,7 @@
         {{-- Ver ficha completa --}}
         <div class="pt-2">
             <a href="{{ route('pacientes.show', $paciente->id) }}"
-               class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
                 Ver ficha completa →
             </a>
         </div>

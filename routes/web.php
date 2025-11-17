@@ -55,8 +55,10 @@ Route::get('/dashboard/paciente', function () {
 })->middleware(['auth'])->name('dashboard.paciente');
 
 
-Route::get('/pacientes/{paciente}/historia-clinica', 
-    [PacienteController::class, 'historiaClinica'])
+Route::get(
+    '/pacientes/{paciente}/historia-clinica',
+    [PacienteController::class, 'historiaClinica']
+)
     ->name('pacientes.historiaClinica');
 
 /* Rutas propias */

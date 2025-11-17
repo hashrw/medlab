@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -12,11 +11,6 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'name',
         'email',
@@ -24,66 +18,66 @@ class User extends Authenticatable
         'telefono',
         'password',
         'tipo_usuario_id',
+        'paciente_id',          // vinculación opcional a paciente clínico
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
         'remember_token',
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array<string, string>
-     */
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
 
-    protected $guarded = ['email']; // Protege el tipo de usuario y el email contra ediciones
+    protected $guarded = ['email'];
 
+    /*--------------------------------------------------------------
+     | RELACIÓN: Usuario → Paciente clínico
+     --------------------------------------------------------------*/
+    public function paciente()
+    {
+        return $this->belongsTo(Paciente::class, 'paciente_id');
+    }
+
+    /*--------------------------------------------------------------
+     | RELACIÓN: Médico
+     --------------------------------------------------------------*/
     public function medico()
     {
         return $this->hasOne(Medico::class);
     }
 
-    public function paciente()
+    /*--------------------------------------------------------------
+     | ROLES (NO SE TOCAN)
+     --------------------------------------------------------------*/
+    public function getTipoUsuarioIdAttribute()
     {
-        return $this->hasOne(Paciente::class);
+        return $this->attributes['tipo_usuario_id'];
     }
 
-    public function getTipoUsuarioIdAttribute(){
-        if ($this->medico()->exists()){
-            return 1;
-        }
-        elseif($this->paciente()->exists()){
-            return 2;
-        }
-        else{
-            return 3;
-        }
+    public function getTipoUsuarioAttribute()
+    {
+        return [
+            1 => __('Médico'),
+            2 => __('Paciente'),
+            3 => __('Administrador'),
+        ][$this->tipo_usuario_id] ?? 'Desconocido';
     }
 
-    public function getTipoUsuarioAttribute(){
-        $tipos_usuario = [1 => trans('Médico'), 2 => trans('Paciente'), 3 => trans('Administrador')];
-        return $tipos_usuario[$this->tipo_usuario_id];
-    }
-
-   public function getEsPacienteAttribute(){
+    public function getEsPacienteAttribute()
+    {
         return $this->tipo_usuario_id == 2;
     }
 
-    public function getEsMedicoAttribute(){
+    public function getEsMedicoAttribute()
+    {
         return $this->tipo_usuario_id == 1;
     }
 
-    public function getEsAdministradorAttribute(){
+    public function getEsAdministradorAttribute()
+    {
         return $this->tipo_usuario_id == 3;
     }
 }

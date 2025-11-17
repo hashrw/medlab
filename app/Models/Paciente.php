@@ -9,39 +9,50 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Paciente extends Model
 {
-    protected $fillable = ['nuhsa', 'fecha_nacimiento', 'peso', 'altura', 'sexo', 'user_id'];
+    use HasFactory;
 
-    protected $casts = [
-        'fecha_nacimiento' => 'date'
+    protected $fillable = [
+        'nuhsa',
+        'fecha_nacimiento',
+        'peso',
+        'altura',
+        'sexo'
     ];
 
+    protected $casts = [
+        'fecha_nacimiento' => 'date',
+    ];
 
-    protected $guarded = ['nuhsa']; // Protege el campo cie10 contra ediciones
-
-
-    public function user()
+    /*--------------------------------------------------------------
+     | RELACIÓN CON USER
+     | User.paciente_id → pacientes.id
+     --------------------------------------------------------------*/
+    public function usuarioAcceso()
     {
-        return $this->belongsTo(User::class);
+        return $this->hasOne(User::class, 'paciente_id');
     }
 
-    //RELACION CON TRASPLANTE
-
-    public function paciente()
-    {
-        return $this->belongsTo(Paciente::class);
-    }
-
+    /*--------------------------------------------------------------
+     | TRASPLANTES
+     --------------------------------------------------------------*/
     public function trasplantes()
     {
         return $this->hasMany(Trasplante::class);
     }
 
-
+    /*--------------------------------------------------------------
+     | TRATAMIENTOS (M:N)
+     --------------------------------------------------------------*/
     public function tratamientos()
     {
-        return $this->belongsToMany(Tratamiento::class)->using(PacienteTratamiento::class)->withPivot('paciente_id', 'tratamiento_id');
+        return $this->belongsToMany(Tratamiento::class)
+            ->using(PacienteTratamiento::class)
+            ->withPivot('paciente_id', 'tratamiento_id');
     }
 
+    /*--------------------------------------------------------------
+     | ÓRGANOS
+     --------------------------------------------------------------*/
     public function organos()
     {
         return $this->belongsToMany(Organo::class, 'organo_paciente')
@@ -49,6 +60,9 @@ class Paciente extends Model
             ->withTimestamps();
     }
 
+    /*--------------------------------------------------------------
+     | SÍNTOMAS
+     --------------------------------------------------------------*/
     public function sintomas()
     {
         return $this->belongsToMany(Sintoma::class, 'paciente_sintoma')
@@ -57,83 +71,61 @@ class Paciente extends Model
             ->withTimestamps();
     }
 
+    /*--------------------------------------------------------------
+     | DIAGNÓSTICOS
+     --------------------------------------------------------------*/
     public function diagnosticos(): BelongsToMany
     {
-        return $this->belongsToMany(Diagnostico::class, 'diagnostico_paciente')->withTimestamps();
+        return $this->belongsToMany(Diagnostico::class, 'diagnostico_paciente')
+            ->withTimestamps();
     }
 
-
-    //helper última ficha trasplante paciente
-    public function getFichaTrasplanteActual()
-    {
-        return $this->enfermedades()->orderByDesc('fecha_trasplante')->first();
-    }
-
-    // Accesor para calcular la edad
+    /*--------------------------------------------------------------
+     | ACCESOR: Edad
+     --------------------------------------------------------------*/
     public function getEdadAttribute()
     {
-        return now()->diffInYears($this->fecha_nacimiento);
+        return $this->fecha_nacimiento
+            ? now()->diffInYears($this->fecha_nacimiento)
+            : null;
     }
 
-    // Validación de la fecha de nacimiento
-    protected static function boot()
-    {
-        parent::boot();
-        static::saving(function ($paciente) {
-            if (now()->diffInYears($paciente->fecha_nacimiento) < 5) {
-                throw new \Exception('La fecha de nacimiento no puede ser inferior a 5 años.');
-            }
-        });
-    }
-
+    /*--------------------------------------------------------------
+     | ACCESOR: Categoría IMC
+     --------------------------------------------------------------*/
     public function getICMCategoriaAttribute()
     {
-
         $imc = $this->imc;
 
         if (!$imc) {
             return null;
         }
 
-        if ($imc < 18.5) {
-            return 'Bajo Peso';
-        }
-
-        if ($imc < 25) {
-            return 'Normal';
-        }
-
-        if ($imc < 30) {
-            return 'Sobrepeso';
-        }
-
-        if ($imc < 35) {
-            return 'Obesidad II';
-        }
-        if ($imc < 40) {
-            return 'Obesidad III';
-        }
+        return match (true) {
+            $imc < 18.5 => 'Bajo Peso',
+            $imc < 25   => 'Normal',
+            $imc < 30   => 'Sobrepeso',
+            $imc < 35   => 'Obesidad II',
+            $imc < 40   => 'Obesidad III',
+            default     => 'Obesidad Mórbida',
+        };
     }
 
-    /* public function citas(){
-         return $this->hasMany(Cita::class);
-     }
+    /*--------------------------------------------------------------
+     | VALIDACIÓN: edad mínima >= 5 años
+     --------------------------------------------------------------*/
+    protected static function boot()
+    {
+        parent::boot();
 
-     public function medicos(){
-         return $this->hasManyThrough(Medico::class, Cita::class);
-     }
+        static::saving(function ($paciente) {
+            if ($paciente->fecha_nacimiento &&
+                now()->diffInYears($paciente->fecha_nacimiento) < 5) {
 
-     public function getMedicamentosActualesAttribute(){
-         $medicamentos_actuales = collect([]);
-         foreach ($this->citas as $cita) {
-             $medicamentos_actuales->merge($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->get());
-             /* Alternativa
-             if($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->exists()){
-                 $medicamentos_actuales->merge($cita->medicamentos()->wherePivot('inicio','<=', Carbon::now())->wherePivot('fin','>=', Carbon::now())->get());
-             }
-
-         }
-         return $medicamentos_actuales;
-     }*/
-
+                throw new \Exception(
+                    'La fecha de nacimiento no puede indicar menos de 5 años.'
+                );
+            }
+        });
+    }
 }

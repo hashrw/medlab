@@ -35,7 +35,7 @@ class MedicamentoController extends Controller
     {
         $medicamento = new Medicamento($request->validated());
         $medicamento->save();
-        session()->flash('success', 'Medicamento creado correctamente. Si nos da tiempo haremos este mensaje internacionalizable y parametrizable');
+        session()->flash('success', 'Registro creado correctamente.');
         return redirect()->route('medicamentos.index');
     }
 
@@ -65,7 +65,7 @@ class MedicamentoController extends Controller
         $this->authorize('update', $medicamento);
         $medicamento->fill($request->validated());
         $medicamento->save();
-        session()->flash('success', 'Medicamento modificado correctamente. Si nos da tiempo haremos este mensaje internacionalizable y parametrizable');
+        session()->flash('success', 'Medicamento modificado correctamente.');
         return redirect()->route('medicamentos.index');
     }
 
@@ -76,7 +76,7 @@ class MedicamentoController extends Controller
     {
         $this->authorize('delete', $medicamento);
         if($medicamento->delete())
-            session()->flash('success', 'Medicamento borrado correctamente. Si nos da tiempo haremos este mensaje internacionalizable y parametrizable');
+            session()->flash('success', 'Medicamento borrado correctamente.');
         else
             session()->flash('warning', 'No pudo borrarse el Medicamento.');
         return redirect()->route('medicamentos.index');

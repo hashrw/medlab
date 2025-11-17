@@ -1,137 +1,164 @@
 <x-medico-layout>
+
+    {{-- BREADCRUMB --}}
     <x-slot name="header">
         <nav class="font-semibold text-xl text-gray-800 leading-tight" aria-label="Breadcrumb">
-            <ol class="list-none p-0 inline-flex">
-                <li class="flex items-center">
-                    <a href="{{ route('tratamientos.index') }}">Tratamientos</a>
-                    <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
-                        <path
-                            d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z" />
-                    </svg>
-                </li>
+            <ol class="list-none inline-flex items-center p-0">
                 <li>
-                    <a href="#" class="text-gray-500" aria-current="page">Ver tratamiento</a>
+                    <a href="{{ route('tratamientos.index') }}" class="hover:text-blue-700">
+                        Tratamientos
+                    </a>
                 </li>
+
+                <li class="mx-2 text-gray-500">›</li>
+
+                <li class="text-gray-500">Ver tratamiento</li>
             </ol>
         </nav>
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                    Información del tratamiento
+
+    {{-- FICHA PRINCIPAL --}}
+    <div class="py-6 px-4">
+        <div class="max-w-5xl mx-auto">
+
+            <div class="bg-white shadow-md rounded-lg border border-gray-200 overflow-hidden">
+
+                {{-- CABECERA --}}
+                <div class="bg-blue-600 text-white p-5">
+                    <h3 class="text-lg font-semibold tracking-wide">
+                        Información del tratamiento
+                    </h3>
                 </div>
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <!-- Nombre del Tratamiento -->
-                    <div class="mt-4">
-                        <x-input-label for="tratamiento" :value="__('Nombre del Tratamiento')" />
-                        <x-text-input id="tratamiento" class="block mt-1 w-full" type="text" disabled
-                            :value="$tratamiento->tratamiento" />
+
+                {{-- CAMPOS (inputs deshabilitados) --}}
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                    {{-- Nombre --}}
+                    <div>
+                        <x-input-label for="tratamiento" value="Nombre del tratamiento" />
+                        <x-text-input id="tratamiento"
+                                      type="text"
+                                      class="w-full mt-1"
+                                      disabled
+                                      :value="$tratamiento->tratamiento"/>
                     </div>
 
-                    <!-- Fecha de Asignación -->
-                    <div class="mt-4">
-                        <x-input-label for="fecha_asignacion" :value="__('Fecha de Asignación')" />
-                        <x-text-input id="fecha_asignacion" class="block mt-1 w-full" type="date" disabled
-                            :value="$tratamiento->fecha_asignacion->format('Y-m-d')" />
+                    {{-- Fecha --}}
+                    <div>
+                        <x-input-label for="fecha_asignacion" value="Fecha de asignación" />
+                        <x-text-input id="fecha_asignacion"
+                                      type="date"
+                                      class="w-full mt-1"
+                                      disabled
+                                      :value="$tratamiento->fecha_asignacion->format('Y-m-d')"/>
                     </div>
 
-                    <!-- Descripción -->
-                    <div class="mt-4">
-                        <x-input-label for="descripcion" :value="__('Descripción')" />
-                        <textarea id="descripcion" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm"
-                            disabled>{{ $tratamiento->descripcion }}</textarea>
+                    {{-- Paciente --}}
+                    <div>
+                        <x-input-label for="paciente" value="Paciente" />
+                        <x-text-input id="paciente"
+                                      type="text"
+                                      class="w-full mt-1"
+                                      disabled
+                                      :value="$tratamiento->paciente->user->name . ' (' . $tratamiento->paciente->nuhsa . ')'" />
                     </div>
 
-                    <!-- Duración del Tratamiento -->
-                    <x-input-label for="duracion_total" :value="__('Duración total real (días)')" />
-                    <x-text-input id="duracion_total" class="block mt-1 w-full" type="number" disabled
-                        :value="$tratamiento->duracion_total" />
-
-
-                    <!-- Paciente -->
-                    <div class="mt-4">
-                        <x-input-label for="paciente_id" :value="__('Paciente')" />
-                        <x-text-input class="block mt-1 w-full" type="text" disabled
-                            :value="optional($tratamiento->paciente?->first()?->user)->name ?? 'Sin paciente asociado'" />
-
+                    {{-- Duración total --}}
+                    <div>
+                        <x-input-label for="duracion_total" value="Duración total (días)" />
+                        <x-text-input id="duracion_total"
+                                      type="text"
+                                      class="w-full mt-1"
+                                      disabled
+                                      :value="$tratamiento->duracion_total . ' días'"/>
                     </div>
 
-                    <!-- Botón de Volver -->
-                    <div class="flex items-center justify-end mt-4">
-                        <x-danger-button type="button">
-                            <a href="{{ route('tratamientos.index') }}">{{ __('Volver') }}</a>
-                        </x-danger-button>
+                    {{-- Descripción (span visual con apariencia de texto clínico) --}}
+                    <div class="md:col-span-2">
+                        <x-input-label for="descripcion" value="Descripción" />
+                        <textarea id="descripcion"
+                                  class="w-full mt-1 rounded-md border-gray-300 shadow-sm bg-gray-50 text-gray-700"
+                                  rows="5"
+                                  disabled>{{ $tratamiento->descripcion }}</textarea>
                     </div>
+
                 </div>
+
+                {{-- BOTÓN VOLVER --}}
+                <div class="px-6 py-4 bg-gray-50 flex justify-end border-t border-gray-200">
+                    <a href="{{ route('tratamientos.index') }}"
+                       class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow">
+                        Volver
+                    </a>
+                </div>
+
             </div>
+
         </div>
     </div>
 
-    <!-- Líneas de Tratamiento -->
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                    Líneas de Tratamiento
+
+    {{-- LÍNEAS DE TRATAMIENTO --}}
+    <div class="py-6 px-4">
+        <div class="max-w-5xl mx-auto">
+
+            <div class="bg-white shadow-md rounded-lg border border-gray-200">
+
+                {{-- CABECERA --}}
+                <div class="bg-blue-600 text-white p-5">
+                    <h3 class="text-lg font-semibold tracking-wide">
+                        Líneas de tratamiento
+                    </h3>
                 </div>
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <table class="min-w-max w-full table-auto">
-                        <thead>
-                            <tr class="bg-gray-200 text-gray-900 uppercase text-sm leading-normal">
-                                <th class="py-3 px-6 text-left">Medicamento</th>
-                                <th class="py-3 px-6 text-left">Inicio</th>
-                                <th class="py-3 px-6 text-left">Fin</th>
-                                <th class="py-3 px-6 text-left">Tomas/día</th>
-                                <th class="py-3 px-6 text-left">Observaciones</th>
+
+                {{-- TABLA --}}
+                <div class="p-6">
+
+                    <table class="min-w-full border border-gray-200 rounded-md">
+                        <thead class="bg-blue-50 text-gray-700 text-sm font-semibold">
+                            <tr>
+                                <th class="py-2 px-3 border-b text-left">Medicamento</th>
+                                <th class="py-2 px-3 border-b text-left">Inicio</th>
+                                <th class="py-2 px-3 border-b text-left">Fin</th>
+                                <th class="py-2 px-3 border-b text-left">Tomas/día</th>
+                                <th class="py-2 px-3 border-b text-left">Observaciones</th>
                             </tr>
                         </thead>
-                        <tbody class="text-gray-600 text-sm font-light">
-                            @foreach ($tratamiento->lineasTratamiento as $linea)
-                                <tr class="border-b border-gray-200 hover:bg-gray-100">
-                                    <!-- Medicamento -->
-                                    <td class="py-3 px-6 text-left whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span class="font-medium">{{ $linea->nombre }}</span>
-                                        </div>
+
+                        <tbody class="text-gray-700 text-sm">
+                            @foreach($tratamiento->lineasTratamiento as $linea)
+                                <tr class="hover:bg-blue-50 transition">
+                                    <td class="py-3 px-3 border-b">
+                                        {{ $linea->nombre }}
                                     </td>
 
-                                    <!-- Fecha de Inicio -->
-                                    <td class="py-3 px-6 text-center whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span
-                                                class="font-medium">{{ $linea->pivot->fecha_ini_linea->format('d/m/Y') }}</span>
-                                        </div>
+                                    <td class="py-3 px-3 border-b">
+                                        {{ optional($linea->pivot->fecha_ini_linea)->format('d/m/Y') }}
                                     </td>
 
-                                    <!-- Fecha de Fin -->
-                                    <td class="py-3 px-6 text-center whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span
-                                                class="font-medium">{{ $linea->pivot->fecha_fin_linea->format('d/m/Y') }}</span>
-                                        </div>
+                                    <td class="py-3 px-3 border-b">
+                                        {{ optional($linea->pivot->fecha_fin_linea)->format('d/m/Y') }}
                                     </td>
 
-                                    <!-- Tomas al Día -->
-                                    <td class="py-3 px-6 text-center whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span class="font-medium">{{ $linea->pivot->tomas }}</span>
-                                        </div>
+                                    <td class="py-3 px-3 border-b">
+                                        {{ $linea->pivot->tomas }}
                                     </td>
 
-                                    <!-- Observaciones -->
-                                    <td class="py-3 px-6 text-center whitespace-nowrap">
-                                        <div class="flex items-center">
-                                            <span class="font-medium">{{ $linea->pivot->observaciones }}</span>
-                                        </div>
+                                    <td class="py-3 px-3 border-b">
+                                        {{ $linea->pivot->observaciones ?: '—' }}
                                     </td>
                                 </tr>
                             @endforeach
                         </tbody>
+
                     </table>
+
                 </div>
+
             </div>
+
         </div>
     </div>
+
 </x-medico-layout>
