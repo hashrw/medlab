@@ -21,19 +21,36 @@ class TratamientoController extends Controller
         $this->authorize('viewAny', Tratamiento::class);
 
         $user = Auth::user();
-        $with = ['paciente.user', 'medico.user', 'lineasTratamiento'];
+
+        // Carga correcta según la nueva arquitectura
+        $with = [
+            'paciente',          // Paciente clínico
+            'paciente.usuarioAcceso', // Usuario del paciente (si existe)
+            'medico',
+            'medico.user',       // Usuario del médico
+            'lineasTratamiento'
+        ];
 
         if ($user->es_medico) {
-            $tratamientos = $user->medico->tratamientos()
+
+            $tratamientos = $user->medico
+                ->tratamientos()
                 ->with($with)
                 ->latest('fecha_asignacion')
                 ->paginate(25);
+
         } elseif ($user->es_paciente) {
-            $tratamientos = $user->paciente->tratamientos()
+
+            // Ahora el usuario → pertenece al Paciente
+            $tratamientos = $user->paciente
+                ->tratamientos()
                 ->with($with)
                 ->latest('fecha_asignacion')
                 ->paginate(25);
+
         } else {
+
+            // Admin o roles especiales
             $tratamientos = Tratamiento::with($with)
                 ->latest('fecha_asignacion')
                 ->paginate(25);
@@ -42,6 +59,7 @@ class TratamientoController extends Controller
         return view('tratamientos.index', compact('tratamientos'));
     }
 
+
     /**
      * Show the form for creating a new resource.
      */
@@ -49,21 +67,28 @@ class TratamientoController extends Controller
     {
         $this->authorize('create', Tratamiento::class);
 
-        if (Auth::user()->es_medico) {
-            $pacientes = Paciente::all();
-            return view('tratamientos.create', ['medico' => Auth::user()->medico, 'pacientes' => $pacientes]);
+        $user = Auth::user();
+
+        if ($user->es_medico) {
+            return view('tratamientos.create', [
+                'medico' => $user->medico,
+                'pacientes' => Paciente::all(),
+            ]);
         }
 
-        if (Auth::user()->es_paciente) {
-            $medicos = Medico::all();
-            return view('tratamientos.create', ['paciente' => Auth::user()->paciente, 'medicos' => $medicos]);
+        if ($user->es_paciente) {
+            return view('tratamientos.create', [
+                'paciente' => $user->paciente,
+                'medicos' => Medico::with('user')->get()
+            ]);
         }
 
         return view('tratamientos.create', [
             'pacientes' => Paciente::all(),
-            'medicos' => Medico::all(),
+            'medicos' => Medico::with('user')->get(),
         ]);
     }
+
 
     /**
      * Store a newly created resource in storage.
@@ -73,10 +98,11 @@ class TratamientoController extends Controller
         $data = $request->validated();
         $user = Auth::user();
 
-        // Forzar asignación por rol (no confiar en el input)
+        // Forzar integridad de medico/paciente según rol
         if ($user->es_medico) {
             $data['medico_id'] = $user->medico->id;
         }
+
         if ($user->es_paciente) {
             $data['paciente_id'] = $user->paciente->id;
         }
@@ -87,16 +113,20 @@ class TratamientoController extends Controller
         return redirect()->route('tratamientos.index');
     }
 
+
     /**
      * Display the specified resource.
      */
     public function show(Tratamiento $tratamiento)
     {
         $this->authorize('view', $tratamiento);
-        $pacientes = Paciente::all();
+
+        // Si necesitamos mostrar lista de pacientes (p.ej para asignación secundaria):
+        $pacientes = Paciente::with('usuarioAcceso')->get();
 
         return view('tratamientos.show', compact('tratamiento', 'pacientes'));
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -105,17 +135,14 @@ class TratamientoController extends Controller
     {
         $this->authorize('update', $tratamiento);
 
-        $medicos = Medico::with('user')->get();
-        $pacientes = Paciente::with('user')->get();
-        $medicamentos = Medicamento::all();
-
-        return view('tratamientos.edit', compact(
-            'tratamiento',
-            'medicos',
-            'pacientes',
-            'medicamentos'
-        ));
+        return view('tratamientos.edit', [
+            'tratamiento' => $tratamiento,
+            'medicos' => Medico::with('user')->get(),
+            'pacientes' => Paciente::with('usuarioAcceso')->get(),
+            'medicamentos' => Medicamento::all(),
+        ]);
     }
+
 
     /**
      * Update the specified resource in storage.
@@ -124,14 +151,16 @@ class TratamientoController extends Controller
     {
         $this->authorize('update', $tratamiento);
 
-        // No permitir sobreescribir medico_id/paciente_id si el usuario es médico/paciente
         $data = $request->validated();
         $user = Auth::user();
+
+        // No permitir reasignar médico/paciente si el usuario NO es admin
         if ($user->es_medico) {
-            $data['medico_id'] = $tratamiento->medico_id; // mantener el existente
+            $data['medico_id'] = $tratamiento->medico_id;
         }
+
         if ($user->es_paciente) {
-            $data['paciente_id'] = $tratamiento->paciente_id; // mantener el existente
+            $data['paciente_id'] = $tratamiento->paciente_id;
         }
 
         $tratamiento->update($data);
@@ -140,6 +169,7 @@ class TratamientoController extends Controller
         return redirect()->route('tratamientos.index');
     }
 
+
     /**
      * Remove the specified resource from storage.
      */
@@ -147,17 +177,15 @@ class TratamientoController extends Controller
     {
         $this->authorize('delete', $tratamiento);
 
-        if ($tratamiento->delete()) {
-            session()->flash('success', 'Registro borrado correctamente.');
-        } else {
-            session()->flash('warning', 'No pudo borrarse el registro.');
-        }
+        $tratamiento->delete();
 
+        session()->flash('success', 'Registro borrado correctamente.');
         return redirect()->route('tratamientos.index');
     }
 
+
     /**
-     * Adjuntar linea de tratamiento al tratamiento creando una línea de tratamiento (pivot model).
+     * Añadir línea de tratamiento desde formulario pivot.
      */
     public function attach_medicamento(Request $request, Tratamiento $tratamiento)
     {
@@ -171,7 +199,6 @@ class TratamientoController extends Controller
             'observaciones' => 'nullable|string',
             'tomas' => 'required|numeric|min:0',
             'duracion_linea' => 'required|numeric|min:0',
-            // ❌ duracion_total NO se recibe (se deriva a nivel Tratamiento)
         ]);
 
         $tratamiento->lineasTratamiento()->attach($request->medicamento_id, [
@@ -181,17 +208,18 @@ class TratamientoController extends Controller
             'observaciones' => $request->observaciones,
             'tomas' => $request->tomas,
             'duracion_linea' => $request->duracion_linea,
-            // 'duracion_total'  => ❌ nunca
         ]);
 
         return redirect()->route('tratamientos.edit', $tratamiento->id);
     }
 
+
     public function detach_medicamento(Tratamiento $tratamiento, Medicamento $medicamento)
     {
         $this->authorize('update', $tratamiento);
+
         $tratamiento->lineasTratamiento()->detach($medicamento->id);
+
         return redirect()->route('tratamientos.edit', $tratamiento->id);
     }
-
 }

@@ -8,57 +8,57 @@
                 <ul class="space-y-1">
                     <li>
                         <a href="{{ route('dashboard.medico') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('dashboard.medico') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
+                            class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('dashboard.medico') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
                             <i class="fas fa-home w-5 mr-2"></i>
                             <span>Inicio</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('pacientes.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('pacientes.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
+                            class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('pacientes.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
                             <i class="fas fa-user-injured w-5 mr-2"></i>
-                            <span>Módulo de pacientes</span>
+                            <span>Módulo de Pacientes</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('diagnosticos.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('diagnosticos.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
+                            class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('diagnosticos.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
                             <i class="fas fa-file-medical w-5 mr-2"></i>
-                            <span>Módulo de diagnósticos</span>
+                            <span>Módulo de Diagnósticos</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('tratamientos.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('tratamientos.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
+                            class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('tratamientos.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
                             <i class="fas fa-pills w-5 mr-2"></i>
-                            <span>Módulo de tratamientos</span>
+                            <span>Módulo de Tratamientos</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('medicamentos.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('medicamentos.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
+                            class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('medicamentos.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
                             <i class="fas fa-prescription-bottle-alt w-5 mr-2"></i>
-                            <span>Módulo de medicamentos</span>
+                            <span>Módulo de Medicamentos</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('trasplantes.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('trasplantes.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
+                            class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('trasplantes.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
                             <i class="fas fa-calendar-check w-5 mr-2"></i>
                             <span>Módulo de Trasplantes</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('pruebas.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('pruebas.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
+                            class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('pruebas.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
                             <i class="fas fa-vials w-5 mr-2"></i>
                             <span>Módulo de Pruebas</span>
                         </a>
                     </li>
                     <li>
                         <a href="{{ route('sintomas.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('sintomas.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
-                            <i class="fas fa-vials w-5 mr-2"></i>
+                            class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 {{ request()->routeIs('sintomas.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
+                            <i class="fas fa-heartbeat w-5 mr-2"></i>
                             <span>Módulo de Síntomas</span>
                         </a>
                     </li>

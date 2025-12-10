@@ -6,7 +6,6 @@
 
 <div class="p-6 bg-white border-t border-gray-200">
 
-    {{-- Errores --}}
     <x-input-error class="mb-4" :messages="$errors->all()" />
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -57,7 +56,7 @@
                 </label>
 
                 @if($pacienteSeleccionado)
-                    {{-- MODO “PACIENTE FIJO” (al crear desde la ficha del paciente) --}}
+                    {{-- PACIENTE FIJO --}}
                     <x-text-input type="hidden" name="paciente_id" :value="$pacienteSeleccionado->id" />
 
                     <div class="flex items-center gap-3 bg-gray-50 border border-gray-300 rounded-md px-3 py-2 shadow-sm">
@@ -65,11 +64,11 @@
                         <input type="text"
                                class="w-full bg-transparent border-0 focus:ring-0 text-gray-700"
                                disabled
-                               value="{{ $pacienteSeleccionado->user->name }} ({{ $pacienteSeleccionado->nuhsa }})">
+                               value="{{ $pacienteSeleccionado->usuarioAcceso->name ?? 'Paciente sin usuario' }} ({{ $pacienteSeleccionado->nuhsa }})">
                     </div>
 
                 @else
-                    {{-- LISTA DE PACIENTES --}}
+                    {{-- LISTA --}}
                     <div class="flex items-center gap-3 bg-gray-50 border border-gray-300 rounded-md px-3 py-2 shadow-sm">
                         <i class="fas fa-user-injured text-blue-600"></i>
 
@@ -81,7 +80,7 @@
                             @foreach($pacientes as $p)
                                 <option value="{{ $p->id }}"
                                     @selected(old('paciente_id', $tratamiento->paciente_id ?? '') == $p->id)>
-                                    {{ $p->user->name }} ({{ $p->nuhsa }})
+                                    {{ ($p->usuarioAcceso->name ?? 'Paciente sin usuario') }} ({{ $p->nuhsa }})
                                 </option>
                             @endforeach
                         </select>
@@ -93,7 +92,6 @@
 
         {{-- COLUMNA DERECHA --}}
         <div class="space-y-6">
-            {{-- Descripción --}}
             <div>
                 <label for="descripcion" class="block text-sm font-semibold text-gray-700 mb-1">
                     Descripción
@@ -111,7 +109,6 @@
 
     </div>
 
-    {{-- BOTONES --}}
     <div class="flex justify-end mt-8 pt-4 border-t border-gray-200 bg-gray-50 -mx-6 px-6 py-4">
         <a href="{{ route('tratamientos.index') }}"
            class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded shadow">

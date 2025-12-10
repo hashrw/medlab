@@ -9,48 +9,65 @@ class DiagnosticoSeeder extends Seeder
 {
     public function run(): void
     {
-        // Insertar en la tabla 'diagnosticos'
-        DB::table('diagnosticos')->insert([
-            [
-                'fecha_diagnostico' => '2022-01-01',
-                'tipo_enfermedad' => 'aguda',
-                'origen_id' => 2, // 'manual' si fue ingresado por un médico
-                'estado_injerto' => 'Estable', //quizá añadir en una otra tabla como con la especialidad del medico.
-                'regla_decision_id' => 1, // Debe existir una regla con ID 1 o ajustarlo
-                'estado_id' => 3,
-                'comienzo_id' => 2,
-                'infeccion_id' => 1,
-                'escala_karnofsky' => 'ECOG 2',
-                'grado_eich' => 'Grado 1',
-                'observaciones' => 'No aplica',
-            ],
-        ]);
+        // 1. IDs necesarios que deben existir previamente
+        $origenManualId = DB::table('origens')->where('origen', 'manual')->value('id');
+        $reglaId = DB::table('regla_decisions')->value('id');   // primera regla
+        $estadoId = DB::table('estados')->value('id');
+        $comienzoId = DB::table('comienzos')->value('id');
+        $infeccionId = DB::table('infeccions')->value('id');
+        $pacienteId = DB::table('pacientes')->value('id');
+        $sintoma1Id = DB::table('sintomas')->skip(0)->value('id');
+        $sintoma2Id = DB::table('sintomas')->skip(1)->value('id');
 
-        // Obtener el ID del diagnóstico recién insertado
-        $diagnosticoId = DB::table('diagnosticos')->orderBy('id', 'desc')->first()->id;
+        // Evitar fallos si faltan tablas/datos base
+        if (!$pacienteId || !$sintoma1Id) {
+            dump("DiagnosticoSeeder: faltan datos base. Abortando.");
+            return;
+        }
 
-        DB::table('diagnostico_paciente')->insert([
-            'diagnostico_id' => $diagnosticoId,
-            'paciente_id' => 1,
+        // 2. Insertar diagnóstico
+        $diagnosticoId = DB::table('diagnosticos')->insertGetId([
+            'fecha_diagnostico' => '2022-01-01',
+            'tipo_enfermedad' => 'aguda',
+            'origen_id' => $origenManualId,
+            'estado_injerto' => 'Estable',
+            'regla_decision_id' => $reglaId,
+            'estado_id' => $estadoId,
+            'comienzo_id' => $comienzoId,
+            'infeccion_id' => $infeccionId,
+            'escala_karnofsky' => 'ECOG 2',
+            'grado_eich' => 'Grado 1',
+            'observaciones' => 'No aplica',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
-        // Relación con síntomas
-        DB::table('diagnostico_sintoma')->insert([
-            [
-                'fecha_diagnostico' => '2022-01-01',
-                'score_nih' => 3.5,
-                'sintoma_id' => 1,
-                'diagnostico_id' => $diagnosticoId,
-            ],
-            [
-                'fecha_diagnostico' => '2022-01-01',
-                'score_nih' => 2.0,
-                'sintoma_id' => 2,
-                'diagnostico_id' => $diagnosticoId,
-            ],
+        // 3. Relación diagnóstico ↔ paciente
+        DB::table('diagnostico_paciente')->insert([
+            'diagnostico_id' => $diagnosticoId,
+            'paciente_id' => $pacienteId,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
+        // 4. Pivot diagnóstico_sintoma (SIN campo origen)
+        DB::table('diagnostico_sintoma')->insert([
+            [
+                'diagnostico_id' => $diagnosticoId,
+                'sintoma_id' => $sintoma1Id,
+                'fecha_diagnostico' => '2022-01-01',
+                'score_nih' => 3.5,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'diagnostico_id' => $diagnosticoId,
+                'sintoma_id' => $sintoma2Id,
+                'fecha_diagnostico' => '2022-01-01',
+                'score_nih' => 2.0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+        ]);
     }
 }

@@ -62,7 +62,8 @@
                                     {{-- Paciente (solo médicos) --}}
                                     @if(Auth::user()->es_medico)
                                         <td class="py-3 px-4 border-b">
-                                            {{ $tratamiento->paciente->user->name }}
+                                            {{ ($tratamiento->paciente->usuarioAcceso->name ?? 'Paciente sin usuario') }}
+                                            ({{ $tratamiento->paciente->nuhsa }})
                                         </td>
                                     @endif
 
@@ -111,7 +112,6 @@
                                                     </button>
                                                 </form>
                                             @endif
-                                            
                                         </div>
                                     </td>
 

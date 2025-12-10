@@ -70,7 +70,7 @@ class DiagnosticoController extends Controller
             'comienzos',
             'estados',
             'infeccions',
-             'pacientes',
+            'pacientes',
         ));
 
     }
@@ -84,28 +84,50 @@ class DiagnosticoController extends Controller
 
         $validated = $request->validated();
 
-        // Crear diagnóstico sin el campo cie10 (si existe en $validated)
-        $diagnostico = Diagnostico::create(collect($validated)->except(['sintomas', 'pacientes'])->toArray());
+        // Datos propios del diagnóstico (sin relaciones ni campos de control)
+        $datosDiagnostico = collect($validated)->except([
+            'sintomas',
+            'paciente_id',
+            'medico_id',
+        ])->toArray();
+
+        // Si quieres que los diagnósticos manuales tengan fecha por defecto:
+        if (!isset($datosDiagnostico['fecha_diagnostico'])) {
+            $datosDiagnostico['fecha_diagnostico'] = now()->toDateString();
+        }
+
+        // Crear diagnóstico
+        $diagnostico = Diagnostico::create($datosDiagnostico);
 
         // Asociar síntomas si vienen en el request
-        if ($request->has('sintomas')) {
-            foreach ($request->sintomas as $sintomaId => $datos) {
+        if (!empty($validated['sintomas'])) {
+            foreach ($validated['sintomas'] as $sintomaId => $datos) {
                 $diagnostico->sintomas()->attach($sintomaId, [
                     'fecha_diagnostico' => $datos['fecha_diagnostico'] ?? now(),
                     'score_nih' => $datos['score_nih'] ?? null,
-                    'origen' => $datos['origen'] ?? 'manual', // <-- trazabilidad origen diagnostico
-
                 ]);
             }
         }
 
-        // Asociar pacientes si vienen en el request (puede ser uno o varios)
-        if ($request->has('pacientes')) {
-            $diagnostico->pacientes()->attach($request->pacientes);
+        // Asociar paciente (solo 1)
+        $pacienteId = null;
+
+        if ($request->user()->es_medico && isset($validated['paciente_id'])) {
+            $pacienteId = $validated['paciente_id'];
+        } elseif ($request->user()->es_paciente && $request->user()->paciente_id) {
+            // En caso de que en el futuro permitas que el propio paciente cree algo
+            $pacienteId = $request->user()->paciente_id;
         }
 
-        return redirect()->route('diagnosticos.index')->with('success', 'Diagnóstico creado correctamente.');
+        if ($pacienteId) {
+            $diagnostico->pacientes()->attach($pacienteId);
+        }
+
+        return redirect()
+            ->route('diagnosticos.index')
+            ->with('success', 'Diagnóstico creado correctamente.');
     }
+
 
     /**
      * Display the specified resource.
@@ -144,11 +166,42 @@ class DiagnosticoController extends Controller
     public function update(UpdateDiagnosticoRequest $request, Diagnostico $diagnostico)
     {
         $this->authorize('update', $diagnostico);
-        $diagnostico->fill($request->validated());
+
+        $validated = $request->validated();
+
+        // Nunca vamos a guardar medico_id en diagnóstico
+        unset($validated['medico_id'], $validated['sintomas']);
+
+        // Si el diagnóstico es inferido (viene de una regla), limitamos campos editables
+        if ($diagnostico->regla_decision_id) {
+            $permitidos = [
+                'estado_injerto',
+                'observaciones',
+                'grado_eich',
+                'escala_karnofsky',
+                'estado_id',
+                'comienzo_id',
+                'infeccion_id',
+            ];
+
+            $datosActualizables = array_intersect_key(
+                $validated,
+                array_flip($permitidos)
+            );
+
+            $diagnostico->fill($datosActualizables);
+        } else {
+            // Diagnóstico manual: podemos usar todo lo validado (menos lo que hemos quitado arriba)
+            $diagnostico->fill($validated);
+        }
+
         $diagnostico->save();
+
         session()->flash('success', 'Registro modificado correctamente.');
+
         return redirect()->route('diagnosticos.index');
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -168,34 +221,40 @@ class DiagnosticoController extends Controller
      */
     public function attach_Sintoma(Request $request, Diagnostico $diagnostico): RedirectResponse
     {
-        // Validación con un nombre de error bag específico ('attach')
+        // No permitir modificar síntomas de diagnósticos inferidos
+        if ($diagnostico->regla_decision_id) {
+            return redirect()
+                ->route('diagnosticos.edit', $diagnostico->id)
+                ->with('warning', 'No se pueden modificar los síntomas de un diagnóstico inferido.');
+        }
+
         $this->validateWithBag('attach', $request, [
             'sintoma_id' => 'required|exists:sintomas,id',
             'fecha_diagnostico' => 'required|date',
             'score_nih' => 'required|integer|min:1|max:12',
         ]);
 
-        // Adjuntar el síntoma al diagnóstico con los datos de la tabla pivote
         $diagnostico->sintomas()->attach($request->sintoma_id, [
             'fecha_diagnostico' => $request->fecha_diagnostico,
             'score_nih' => $request->score_nih,
         ]);
 
-        // Redirigir a la vista de edición del diagnóstico
         return redirect()->route('diagnosticos.edit', $diagnostico->id);
     }
 
-    /**
-     * Desvincula un síntoma del diagnóstico.
-     */
     public function detach_Sintoma(Diagnostico $diagnostico, Sintoma $sintoma): RedirectResponse
     {
-        //Desvincular el síntoma del diagnóstico
+        if ($diagnostico->regla_decision_id) {
+            return redirect()
+                ->route('diagnosticos.edit', $diagnostico->id)
+                ->with('warning', 'No se pueden modificar los síntomas de un diagnóstico inferido.');
+        }
+
         $diagnostico->sintomas()->detach($sintoma->id);
 
-        //Redirigir a la vista de edición del diagnóstico
         return redirect()->route('diagnosticos.edit', $diagnostico->id);
     }
+
 
     public function inferirDesdeSistema($pacienteId, InferenciaDiagnosticoService $inferenciaService)
     {
@@ -229,15 +288,14 @@ class DiagnosticoController extends Controller
         $this->authorize('viewAny', Diagnostico::class);
 
         $diagnosticos = Diagnostico::with(['regla', 'estado'])
-            ->whereHas('sintomas', function ($query) {
-                $query->wherePivot('origen', 'Inferido');
-            })
+            ->whereNotNull('regla_decision_id')
             ->paginate(25);
 
         return view('diagnosticos.index', [
             'diagnosticos' => $diagnosticos,
-            'soloInferidos' => true // Flag para distinguir en la vista
+            'soloInferidos' => true,
         ]);
     }
+
 
 }
