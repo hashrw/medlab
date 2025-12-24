@@ -3,118 +3,182 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
+use App\Models\ReglaDecision;
+use App\Models\Sintoma;
 
 class ReglaDecisionSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('regla_decisions')->insert([
+        // Nombres exactos de órganos (DEBEN coincidir con organos.nombre)
+        $ORG_GI   = 'Tracto gastrointestinal';
+        $ORG_HIG  = 'Hígado';
+        $ORG_PIEL = 'Piel';
 
-            // 1. EICH aguda gastrointestinal severa
-            [
-                'nombre' => 'EICH aguda gastrointestinal severa',
-                'condiciones' => json_encode([
-                    'Tracto gastrointestinal' => [
-                        'score' => '3',
-                        'sintomas' => [1, 2, 3], // diarrea con sangre, acuosa, dolor abdominal
-                    ],
-                ]),
-                'diagnostico' => json_encode([
-                    'tipo_enfermedad' => 'aguda',
-                    'estado_injerto' => 'Compromiso gastrointestinal severo',
-                    'grado_eich' => 'Grado 3',
-                    'escala_karnofsky' => 'ECOG 3',
-                    'observaciones' => 'Diarrea >1000 ml/día con sangrado y dolor abdominal.',
-                ]),
-                'tipo_recomendacion' => 'Alerta clínica',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+        // organo_id según SintomaSeeder
+        $OID_GI   = 1;
+        $OID_HIG  = 2;
+        $OID_PIEL = 7;
 
-            // 2. EICH hepática moderada
-            [
-                'nombre' => 'EICH hepática moderada',
-                'condiciones' => json_encode([
-                    'Hígado' => [
-                        'score' => '2',
-                        'sintomas' => [6, 19], // hiperbilirrubinemia, ALT elevada
-                    ],
-                ]),
-                'diagnostico' => json_encode([
-                    'tipo_enfermedad' => 'crónica',
-                    'estado_injerto' => 'Compromiso hepático moderado',
-                    'grado_eich' => 'Moderada',
-                    'escala_karnofsky' => 'ECOG 2',
-                    'observaciones' => 'Bilirrubina 3–6 mg/dl con alteración enzimática.',
-                ]),
-                'tipo_recomendacion' => 'Seguimiento intensivo',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+        // Helper: resuelve IDs por texto exacto de síntoma + órgano
+        $sid = function (string $textoSintoma, int $organoId): int {
+            $s = Sintoma::query()
+                ->where('sintoma', $textoSintoma)
+                ->where('organo_id', $organoId)
+                ->first();
 
-            // 3. EICH ocular leve
-            [
-                'nombre' => 'EICH ocular leve',
-                'condiciones' => json_encode([
-                    'Ojos' => [
-                        'score' => '1',
-                        'sintomas' => [8], // ojo seco
-                    ],
-                ]),
-                'diagnostico' => json_encode([
-                    'tipo_enfermedad' => 'crónica',
-                    'estado_injerto' => 'Compromiso ocular leve',
-                    'grado_eich' => 'Leve',
-                    'escala_karnofsky' => 'ECOG 1',
-                    'observaciones' => 'Sequedad ocular leve sin impacto funcional relevante.',
-                ]),
-                'tipo_recomendacion' => 'Control ambulatorio',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            if (!$s) {
+                throw new \RuntimeException(
+                    "Síntoma no encontrado: '{$textoSintoma}' (organo_id={$organoId})"
+                );
+            }
 
-            // 4. EICH pulmonar severa
-            [
-                'nombre' => 'EICH pulmonar severa',
-                'condiciones' => json_encode([
-                    'Pulmones' => [
-                        'score' => '3',
-                        'sintomas' => [29, 30], // disnea, tos seca
-                    ],
-                ]),
-                'diagnostico' => json_encode([
-                    'tipo_enfermedad' => 'crónica',
-                    'estado_injerto' => 'Compromiso pulmonar severo',
-                    'grado_eich' => 'Grave',
-                    'escala_karnofsky' => 'ECOG 3',
-                    'observaciones' => 'Compromiso pulmonar grave con disnea marcada y tos seca persistente.',
-                ]),
-                'tipo_recomendacion' => 'Ingreso hospitalario',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
+            return (int) $s->id;
+        };
 
-            // 5. EICH cutánea moderada
+        /*
+        |--------------------------------------------------------------------------
+        | REGLA SEVERA
+        |--------------------------------------------------------------------------
+        */
+        ReglaDecision::updateOrCreate(
+            ['nombre' => 'EICH severa (GI score 2 + hígado score 2)'],
             [
-                'nombre' => 'EICH cutánea moderada',
-                'condiciones' => json_encode([
-                    'Piel' => [
-                        'score' => '2',
-                        'sintomas' => [7, 19], // exantema maculopapular, cambios escleróticos
+                'prioridad' => 5,
+                'tipo_recomendacion' => 'diagnostico',
+                'activo' => true,
+                'condiciones' => [
+                    $ORG_HIG => [
+                        'score' => 2,
+                        'sintomas' => [
+                            $sid('Hiperbilirrubinemia', $OID_HIG),
+                            $sid('ALT elevada', $OID_HIG),
+                            $sid('Fosfatasa alcalina elevada', $OID_HIG),
+                        ],
                     ],
+                    $ORG_GI => [
+                        'score' => 2,
+                        'sintomas' => [
+                            $sid('Diarrea con sangre', $OID_GI),
+                            $sid('Dolor abdominal', $OID_GI),
+                            $sid('Vómitos', $OID_GI),
+                            $sid('Náuseas', $OID_GI),
+                        ],
+                    ],
+                ],
+                'diagnostico' => $this->diagnosticoBase([
+                    'tipo_enfermedad' => 'EICH',
+                    'estado_injerto' => 'critico',
+                    'grado_eich' => 'severa',
+                    'observaciones' =>
+                        'EICH severa con afectación gastrointestinal y hepática.',
                 ]),
-                'diagnostico' => json_encode([
-                    'tipo_enfermedad' => 'crónica',
-                    'estado_injerto' => 'Compromiso cutáneo moderado',
-                    'grado_eich' => 'Moderada',
-                    'escala_karnofsky' => 'ECOG 2',
-                    'observaciones' => 'Lesiones cutáneas difusas con cambios escleróticos superficiales.',
+            ]
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | REGLA MODERADA
+        |--------------------------------------------------------------------------
+        */
+        ReglaDecision::updateOrCreate(
+            ['nombre' => 'EICH moderada (GI score 1 + piel score 1)'],
+            [
+                'prioridad' => 20,
+                'tipo_recomendacion' => 'diagnostico',
+                'activo' => true,
+                'condiciones' => [
+                    $ORG_GI => [
+                        'score' => 1,
+                        'sintomas' => [
+                            $sid('Diarrea acuosa', $OID_GI),
+                            $sid('Dolor abdominal', $OID_GI),
+                            $sid('Anorexia', $OID_GI),
+                        ],
+                    ],
+                    $ORG_PIEL => [
+                        'score' => 1,
+                        'sintomas' => [
+                            $sid('Exantema maculopapular', $OID_PIEL),
+                        ],
+                    ],
+                ],
+                'diagnostico' => $this->diagnosticoBase([
+                    'tipo_enfermedad' => 'EICH',
+                    'estado_injerto' => 'inestable',
+                    'grado_eich' => 'moderada',
+                    'observaciones' =>
+                        'EICH moderada con afectación cutánea y gastrointestinal.',
                 ]),
-                'tipo_recomendacion' => 'Tratamiento inmunosupresor',
-                'created_at' => now(),
-                'updated_at' => now(),
-            ],
-        ]);
+            ]
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | REGLA LEVE
+        |--------------------------------------------------------------------------
+        */
+        ReglaDecision::updateOrCreate(
+            ['nombre' => 'EICH leve (piel score 1)'],
+            [
+                'prioridad' => 30,
+                'tipo_recomendacion' => 'diagnostico',
+                'activo' => true,
+                'condiciones' => [
+                    $ORG_PIEL => [
+                        'score' => 1,
+                        'sintomas' => [
+                            $sid('Exantema maculopapular', $OID_PIEL),
+                        ],
+                    ],
+                ],
+                'diagnostico' => $this->diagnosticoBase([
+                    'tipo_enfermedad' => 'EICH',
+                    'estado_injerto' => 'estable',
+                    'grado_eich' => 'leve',
+                    'observaciones' =>
+                        'EICH leve con afectación cutánea mínima.',
+                ]),
+            ]
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | FALLBACK (última, prioridad máxima)
+        |--------------------------------------------------------------------------
+        */
+        ReglaDecision::updateOrCreate(
+            ['nombre' => 'Sin criterios suficientes de EICH'],
+            [
+                'prioridad' => 9999,
+                'tipo_recomendacion' => 'diagnostico',
+                'activo' => true,
+                'condiciones' => [],
+                'diagnostico' => $this->diagnosticoBase([
+                    'tipo_enfermedad' => 'EICH',
+                    'estado_injerto' => 'estable',
+                    'grado_eich' => 'no_concluyente',
+                    'observaciones' =>
+                        'No se cumplen criterios suficientes para inferir EICH.',
+                ]),
+            ]
+        );
+    }
+
+    private function diagnosticoBase(array $override = []): array
+    {
+        return array_merge([
+            'fecha_diagnostico' => null,
+            'tipo_enfermedad' => null,
+            'estado_injerto' => null,
+            'observaciones' => null,
+            'grado_eich' => null,
+            'escala_karnofsky' => null,
+            'regla_decision_id' => null,
+            'estado_id' => null,
+            'comienzo_id' => null,
+            'infeccion_id' => null,
+            'origen_id' => null, // sobrescrito por el servicio
+        ], $override);
     }
 }

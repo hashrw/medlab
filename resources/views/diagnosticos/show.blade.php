@@ -12,71 +12,89 @@
     <div class="py-6">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
-            <!-- Información General -->
+            {{-- Bloque: Contexto paciente (si existe) --}}
             <div class="bg-white shadow rounded-lg p-6 border border-gray-200">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4">Información General</h4>
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Paciente</h4>
 
-                <x-show-field label="Días desde Trasplante" :value="$diagnostico->dias_desde_trasplante" />
-                <x-show-field label="Tipo de Enfermedad" :value="$diagnostico->tipo_enfermedad" />
-                <x-show-field label="Estado de Enfermedad" :value="$diagnostico->estado_enfermedad" />
-                <x-show-field label="Comienzo Crónica" :value="$diagnostico->comienzo_cronica" />
-                <x-show-field label="Estado del Injerto" :value="$diagnostico->estado_injerto" />
-                <x-show-field label="Tipo de Infección" :value="$diagnostico->tipo_infeccion" />
+                @if($paciente)
+                    <x-show-field label="ID Paciente" :value="$paciente->id" />
+                    <x-show-field label="NUHSA" :value="$paciente->nuhsa" />
 
-                @if($regla)
+                    @if($paciente->usuarioAcceso)
+                        <x-show-field label="Nombre" :value="$paciente->usuarioAcceso->name" />
+                        <x-show-field label="Email" :value="$paciente->usuarioAcceso->email" />
+                    @endif
+
+                    <x-show-field label="Días desde trasplante" :value="$diasDesdeTrasplante" />
+                    <x-show-field label="Fecha último trasplante" :value="$ultimoTrasplante?->fecha_trasplante?->format('d/m/Y')" />
+                @else
+                    <p class="text-sm text-gray-600">Este diagnóstico no tiene paciente asociado.</p>
+                @endif
+            </div>
+
+            {{-- Bloque: Diagnóstico --}}
+            <div class="bg-white shadow rounded-lg p-6 border border-gray-200">
+                <h4 class="text-lg font-semibold text-gray-800 mb-4">Diagnóstico</h4>
+
+                <x-show-field label="Fecha diagnóstico" :value="$diagnostico->fecha_diagnostico?->format('d/m/Y')" />
+                <x-show-field label="Tipo de enfermedad" :value="$diagnostico->tipo_enfermedad" />
+                <x-show-field label="Grado EICH" :value="$diagnostico->grado_eich" />
+                <x-show-field label="Escala Karnofsky" :value="$diagnostico->escala_karnofsky" />
+                <x-show-field label="Estado del injerto" :value="$diagnostico->estado_injerto" />
+
+                <x-show-field label="Estado" :value="$diagnostico->estado?->nombre" />
+                <x-show-field label="Comienzo" :value="$diagnostico->comienzo?->nombre" />
+                <x-show-field label="Infección" :value="$diagnostico->infeccion?->nombre" />
+                <x-show-field label="Origen" :value="$diagnostico->origen?->origen" />
+
+                <x-show-field label="Observaciones">
+                    <p class="text-sm text-gray-700">{{ $diagnostico->observaciones ?: '-' }}</p>
+                </x-show-field>
+
+                @if($diagnostico->regla)
                     <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded">
-                        <h5 class="text-md font-semibold text-gray-700 mb-2">Recomendación clínica</h5>
-                        <p class="text-sm text-gray-800">{{ $regla->tipo_recomendacion }}</p>
+                        <h5 class="text-md font-semibold text-gray-700 mb-2">Regla aplicada</h5>
+                        <p class="text-sm text-gray-800"><strong>Nombre:</strong> {{ $diagnostico->regla->nombre }}</p>
+                        <p class="text-sm text-gray-800"><strong>Prioridad:</strong> {{ $diagnostico->regla->prioridad }}</p>
+                        <p class="text-sm text-gray-800"><strong>Recomendación clínica:</strong> {{ $diagnostico->regla->tipo_recomendacion }}</p>
+
+                        @if(!empty($diagnostico->regla->descripcion_clinica))
+                            <p class="text-sm text-gray-800 mt-2">
+                                <strong>Descripción clínica:</strong> {{ $diagnostico->regla->descripcion_clinica }}
+                            </p>
+                        @endif
                     </div>
                 @endif
             </div>
 
-            <!-- Fechas Clínicas -->
-            <div class="bg-white shadow rounded-lg p-6 border border-gray-200">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4">Fechas Clínicas</h4>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <x-show-field label="Fecha de Trasplante" :value="$diagnostico->f_trasplante?->format('d/m/Y H:i')" />
-                    <x-show-field label="Electromiografía" :value="$diagnostico->f_electromiografia?->format('d/m/Y H:i')" />
-                    <x-show-field label="Evaluación Injerto" :value="$diagnostico->f_eval_injerto?->format('d/m/Y H:i')" />
-                    <x-show-field label="Medulograma" :value="$diagnostico->f_medulograma?->format('d/m/Y H:i')" />
-                    <x-show-field label="Espirometría" :value="$diagnostico->f_espirometria?->format('d/m/Y H:i')" />
-                    <x-show-field label="Esplenectomía" :value="$diagnostico->f_esplenectomia?->format('d/m/Y H:i')" />
-                </div>
-            </div>
-
-            <!-- Evaluaciones y Observaciones -->
-            <div class="bg-white shadow rounded-lg p-6 border border-gray-200">
-                <h4 class="text-lg font-semibold text-gray-800 mb-4">Evaluaciones y Observaciones</h4>
-
-                <x-show-field label="Hipoalbuminemia" :value="$diagnostico->hipoalbuminemia ? 'Sí' : 'No'" />
-                <x-show-field label="Observaciones">
-                    <p class="text-sm text-gray-700">{{ $diagnostico->observaciones }}</p>
-                </x-show-field>
-            </div>
-
-            <!-- Síntomas -->
+            {{-- Bloque: Síntomas asociados --}}
             <div class="bg-white shadow rounded-lg p-6 border border-gray-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4">Síntomas Asociados</h4>
 
-                <table class="w-full table-auto text-sm">
-                    <thead class="bg-gray-100 text-gray-600 uppercase">
-                        <tr>
-                            <th class="px-4 py-2 text-left">Síntoma</th>
-                            <th class="px-4 py-2 text-left">Fecha Diagnóstico</th>
-                            <th class="px-4 py-2 text-left">Score NIH</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        @foreach ($diagnostico->sintomas as $sintoma)
+                @if($diagnostico->sintomas->isEmpty())
+                    <p class="text-sm text-gray-600">No hay síntomas asociados a este diagnóstico.</p>
+                @else
+                    <table class="w-full table-auto text-sm">
+                        <thead class="bg-gray-100 text-gray-600 uppercase">
                             <tr>
-                                <td class="px-4 py-2">{{ $sintoma->sintoma }}</td>
-                                <td class="px-4 py-2">{{ $sintoma->pivot->fecha_diagnostico->format('d/m/Y') }}</td>
-                                <td class="px-4 py-2">{{ $sintoma->pivot->score_nih }}</td>
+                                <th class="px-4 py-2 text-left">Síntoma</th>
+                                <th class="px-4 py-2 text-left">Fecha diagnóstico</th>
+                                <th class="px-4 py-2 text-left">Score NIH</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200">
+                            @foreach ($diagnostico->sintomas as $sintoma)
+                                <tr>
+                                    <td class="px-4 py-2">{{ $sintoma->sintoma }}</td>
+                                    <td class="px-4 py-2">
+                                        {{ $sintoma->pivot->fecha_diagnostico ? $sintoma->pivot->fecha_diagnostico->format('d/m/Y') : '-' }}
+                                    </td>
+                                    <td class="px-4 py-2">{{ $sintoma->pivot->score_nih ?? '-' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @endif
 
                 <div class="flex items-center justify-end mt-6">
                     <x-danger-button type="button">

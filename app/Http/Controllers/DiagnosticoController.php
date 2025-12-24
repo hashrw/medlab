@@ -136,16 +136,32 @@ class DiagnosticoController extends Controller
     {
         $this->authorize('view', $diagnostico);
 
-        // Cargar la regla de decisión (si existe)
-        $regla = $diagnostico->regla_decision_id
-            ? ReglaDecision::find($diagnostico->regla_decision_id)
+        $diagnostico->load([
+            'regla',
+            'origen',
+            'estado',
+            'comienzo',
+            'infeccion',
+            'sintomas',
+            'pacientes', // de momento M:N, cogemos el primero
+        ]);
+
+        $paciente = $diagnostico->pacientes->first();
+
+        $ultimoTrasplante = $paciente
+            ? $paciente->trasplantes()->orderByDesc('fecha_trasplante')->first()
             : null;
+
+        $diasDesdeTrasplante = $ultimoTrasplante?->dias_desde_trasplante;
 
         return view('diagnosticos.show', [
             'diagnostico' => $diagnostico,
-            'regla' => $regla,
+            'paciente' => $paciente,
+            'ultimoTrasplante' => $ultimoTrasplante,
+            'diasDesdeTrasplante' => $diasDesdeTrasplante,
         ]);
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -297,5 +313,36 @@ class DiagnosticoController extends Controller
         ]);
     }
 
+    public function inferirSelector(Request $request)
+    {
+        $q = trim((string) $request->get('q', ''));
+
+        $pacientes = Paciente::query()
+            ->with('usuarioAcceso') // para mostrar nombre/email sin N+1
+            ->when($q !== '', function ($query) use ($q) {
+
+                $query->where(function ($sub) use ($q) {
+
+                    // ID exacto si es numérico
+                    if (ctype_digit($q)) {
+                        $sub->orWhere('id', (int) $q);
+                    }
+
+                    // NUHSA en pacientes
+                    $sub->orWhere('nuhsa', 'like', "%{$q}%");
+
+                    // Nombre en usuarioAcceso (user)
+                    $sub->orWhereHas('usuarioAcceso', function ($u) use ($q) {
+                        $u->where('name', 'like', "%{$q}%")
+                            ->orWhere('email', 'like', "%{$q}%");
+                    });
+                });
+            })
+            ->orderByDesc('id')
+            ->paginate(10)
+            ->withQueryString();
+
+        return view('diagnosticos.inferir_selector', compact('pacientes', 'q'));
+    }
 
 }

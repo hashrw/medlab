@@ -8,14 +8,21 @@ use Illuminate\Database\Eloquent\Model;
 class ReglaDecision extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        'nombre_regla',
+        'nombre',
+        'prioridad',
+        'activo',
+        'tipo_recomendacion',
+        'descripcion_clinica',
         'condiciones',
-        'diagnostico'
+        'diagnostico',
     ];
 
     protected $casts = [
         'condiciones' => 'array',
-        'diagnostico' => 'array'
+        'diagnostico' => 'array',
+        'activo' => 'boolean',
     ];
 }
+

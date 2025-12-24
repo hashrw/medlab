@@ -13,8 +13,10 @@ return new class extends Migration {
         Schema::create('regla_decisions', function (Blueprint $table) {
             $table->id();
             $table->string('nombre')->nullable();
+            $table->unsignedInteger('prioridad')->default(100);
             $table->json('condiciones')->nullable();
             $table->json('diagnostico')->nullable();
+            $table->boolean('activo')->default(true);
             $table->string('tipo_recomendacion')->nullable();
             $table->timestamps();
         });

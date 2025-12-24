@@ -5,14 +5,13 @@
         </h2>
     </x-slot>
 
-    <div class="py-3">
+    <div class="py-1">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
 
             <div class="bg-white shadow-xl rounded-lg overflow-hidden">
 
                 {{-- ENCABEZADO --}}
                 <div class="p-6 bg-blue-800 text-white flex justify-between items-start">
-
                     <div>
                         <h3 class="text-2xl font-bold">{{ $paciente->nombre }}</h3>
 
@@ -44,7 +43,6 @@
 
                         <form method="POST" action="{{ route('pacientes.destroy', $paciente->id) }}"
                             onsubmit="return confirm('¿Eliminar este paciente?')">
-
                             @csrf
                             @method('DELETE')
 
@@ -53,7 +51,6 @@
                             </button>
                         </form>
                     </div>
-
                 </div>
 
                 {{-- CONTENIDO --}}
@@ -160,14 +157,14 @@
                                                         $origenNombre = optional($diagnostico->origen)->origen ?? null;
                                                     @endphp
                                                     <span class="px-2 py-1 rounded text-xs
-                                                                                @if($origenNombre === 'inferido')
-                                                                                    bg-purple-100 text-purple-800
-                                                                                @elseif($origenNombre === 'manual')
-                                                                                    bg-gray-100 text-gray-800
-                                                                                @else
-                                                                                    bg-gray-50 text-gray-600
-                                                                                @endif
-                                                                            ">
+                                                                        @if($origenNombre === 'inferido')
+                                                                            bg-purple-100 text-purple-800
+                                                                        @elseif($origenNombre === 'manual')
+                                                                            bg-gray-100 text-gray-800
+                                                                        @else
+                                                                            bg-gray-50 text-gray-600
+                                                                        @endif
+                                                                    ">
                                                         {{ $origenNombre ?? 'No definido' }}
                                                     </span>
                                                 </td>
@@ -175,16 +172,149 @@
                                                     {{ $diagnostico->grado_eich ?? '-' }}
                                                 </td>
                                                 <td class="px-3 py-2">
-                                                    <a href="{{ route('diagnosticos.show', $diagnostico) }}"
+                                                    <button type="button" onclick="openDiagnosticoModal({{ $diagnostico->id }})"
                                                         class="text-blue-600 hover:text-blue-800 underline text-xs">
                                                         Ver detalle
-                                                    </a>
+                                                    </button>
                                                 </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                 </table>
                             </div>
+
+                            {{-- MODALES DE DETALLE DE DIAGNÓSTICO --}}
+                            @foreach($paciente->diagnosticos as $diagnostico)
+                                            <div id="modal-diagnostico-{{ $diagnostico->id }}"
+                                                class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+                                                <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 overflow-hidden">
+
+                                                    {{-- CABECERA MODAL --}}
+                                                    <div class="px-6 py-4 bg-blue-700 text-white flex justify-between items-center">
+                                                        <div>
+                                                            <h3 class="text-lg font-semibold">
+                                                                Detalle del diagnóstico
+                                                            </h3>
+                                                            <p class="text-xs text-blue-100">
+                                                                Paciente: {{ $paciente->nombre }} |
+                                                                Fecha:
+                                                                {{ optional($diagnostico->fecha_diagnostico)->format('d/m/Y') ?? '-' }}
+                                                            </p>
+                                                        </div>
+
+                                                        <button type="button" onclick="closeDiagnosticoModal({{ $diagnostico->id }})"
+                                                            class="text-white hover:text-gray-200 text-xl leading-none">
+                                                            &times;
+                                                        </button>
+                                                    </div>
+
+                                                    {{-- CUERPO MODAL --}}
+                                                    <div class="px-6 py-4 space-y-4 text-sm text-gray-800">
+
+                                                        {{-- DATOS PRINCIPALES --}}
+                                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                            <div>
+                                                                <h4 class="font-semibold text-gray-700 mb-1">
+                                                                    Datos del diagnóstico
+                                                                </h4>
+                                                                <p><strong>Tipo enfermedad:</strong>
+                                                                    {{ $diagnostico->tipo_enfermedad ?? '-' }}</p>
+                                                                <p><strong>Grado EICH:</strong> {{ $diagnostico->grado_eich ?? '-' }}</p>
+                                                                <p>
+                                                                    <strong>Origen:</strong>
+                                                                    {{ optional($diagnostico->origen)->origen ?? 'No definido' }}
+                                                                </p>
+                                                                <p><strong>CIE-10:</strong> {{ $diagnostico->cie10 ?? '-' }}</p>
+                                                            </div>
+
+                                                            <div>
+                                                                <h4 class="font-semibold text-gray-700 mb-1">
+                                                                    Regla / Enfermedad asociada
+                                                                </h4>
+                                                                <p>
+                                                                    <strong>Enfermedad:</strong>
+                                                                    {{ optional($diagnostico->enfermedad)->nombre ?? 'No especificada' }}
+                                                                </p>
+                                                                <p>
+                                                                    <strong>Regla clínica:</strong>
+                                                                    {{ optional($diagnostico->reglaDecision)->nombre
+                                ?? ('ID ' . ($diagnostico->regla_decision_id ?? '-')) }}
+                                                                </p>
+                                                                @if(!empty($diagnostico->descripcion_clinica ?? $diagnostico->observaciones))
+                                                                    <p class="mt-1">
+                                                                        <strong>Resumen clínico:</strong><br>
+                                                                        <span class="text-gray-700">
+                                                                            {{ $diagnostico->descripcion_clinica ?? $diagnostico->observaciones }}
+                                                                        </span>
+                                                                    </p>
+                                                                @endif
+                                                            </div>
+                                                        </div>
+
+                                                        {{-- SÍNTOMAS ASOCIADOS --}}
+                                                        <div>
+                                                            <h4 class="font-semibold text-gray-700 mb-2">
+                                                                Síntomas asociados
+                                                            </h4>
+
+                                                            @if($diagnostico->sintomas && $diagnostico->sintomas->count())
+                                                                <div class="max-h-60 overflow-y-auto border rounded">
+                                                                    <table class="min-w-full text-xs">
+                                                                        <thead class="bg-gray-50">
+                                                                            <tr>
+                                                                                <th class="px-2 py-1 text-left font-semibold text-gray-600">
+                                                                                    Órgano</th>
+                                                                                <th class="px-2 py-1 text-left font-semibold text-gray-600">
+                                                                                    Síntoma</th>
+                                                                                <th class="px-2 py-1 text-left font-semibold text-gray-600">
+                                                                                    Categoría</th>
+                                                                                <th class="px-2 py-1 text-left font-semibold text-gray-600">
+                                                                                    Score NIH</th>
+                                                                            </tr>
+                                                                        </thead>
+                                                                        <tbody class="divide-y divide-gray-100">
+                                                                            @foreach($diagnostico->sintomas as $sintoma)
+                                                                                <tr>
+                                                                                    <td class="px-2 py-1">
+                                                                                        {{ optional($sintoma->organo)->nombre ?? '-' }}
+                                                                                    </td>
+                                                                                    <td class="px-2 py-1">
+                                                                                        {{ $sintoma->nombre }}
+                                                                                    </td>
+                                                                                    <td class="px-2 py-1">
+                                                                                        {{ optional($sintoma->categoria)->nombre ?? '-' }}
+                                                                                    </td>
+                                                                                    <td class="px-2 py-1">
+                                                                                        {{ $sintoma->pivot->score_nih ?? '-' }}
+                                                                                    </td>
+                                                                                </tr>
+                                                                            @endforeach
+                                                                        </tbody>
+                                                                    </table>
+                                                                </div>
+                                                            @else
+                                                                <p class="text-gray-600">
+                                                                    No hay síntomas asociados a este diagnóstico.
+                                                                </p>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- PIE DE MODAL --}}
+                                                    <div class="px-6 py-3 bg-gray-50 flex justify-between items-center text-xs">
+                                                        <a href="{{ route('diagnosticos.show', $diagnostico) }}"
+                                                            class="text-blue-600 hover:text-blue-800 underline">
+                                                            Abrir ficha completa del diagnóstico
+                                                        </a>
+
+                                                        <button type="button" onclick="closeDiagnosticoModal({{ $diagnostico->id }})"
+                                                            class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">
+                                                            Cerrar
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                            @endforeach
                         @else
                             <p class="text-gray-600">
                                 No hay diagnósticos registrados para este paciente.
@@ -192,44 +322,35 @@
                         @endif
                     </div>
 
-                    {{-- SECCIÓN 3: INFORMACIÓN CLÍNICA RELACIONADA --}}
+                    {{-- SECCIÓN 3: INFORMACIÓN CLÍNICA ASOCIADA --}}
                     <div>
                         <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
                             Información Clínica Asociada
                         </h4>
 
-                        <ul class="list-disc ml-6 space-y-2">
+                        <div class="flex flex-wrap gap-4 mt-4">
 
-                            <li>
-                                <a href="{{ route('trasplantes.index') }}?paciente_id={{ $paciente->id }}"
-                                    class="text-blue-600 hover:text-blue-800 font-semibold">
-                                    Ver trasplantes del paciente →
-                                </a>
-                            </li>
+                            {{-- TRASPLANTES --}}
+                            <a href="{{ route('trasplantes.index') }}?paciente_id={{ $paciente->id }}"
+                                class="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 transition text-sm font-medium">
+                                Gestión de Trasplantes
+                            </a>
 
-                            <li>
-                                <a href="{{ route('diagnosticos.index') }}?paciente_id={{ $paciente->id }}"
-                                    class="text-blue-600 hover:text-blue-800 font-semibold">
-                                    Ver diagnósticos →
-                                </a>
-                            </li>
+                            {{-- PRUEBAS CLÍNICAS --}}
+                            <a href="{{ route('pruebas.index') }}?paciente_id={{ $paciente->id }}"
+                                class="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 transition text-sm font-medium">
+                                Gestión de Pruebas Clínicas
+                            </a>
 
-                            <li>
-                                <a href="{{ route('pruebas.index') }}?paciente_id={{ $paciente->id }}"
-                                    class="text-blue-600 hover:text-blue-800 font-semibold">
-                                    Ver pruebas clínicas →
-                                </a>
-                            </li>
+                            {{-- SÍNTOMAS --}}
+                            <a href="{{ route('sintomas.index') }}?paciente_id={{ $paciente->id }}"
+                                class="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 transition text-sm font-medium">
+                                Gestión de Síntomas
+                            </a>
 
-                            <li>
-                                <a href="{{ route('sintomas.index') }}?paciente_id={{ $paciente->id }}"
-                                    class="text-blue-600 hover:text-blue-800 font-semibold">
-                                    Ver síntomas →
-                                </a>
-                            </li>
-
-                        </ul>
+                        </div>
                     </div>
+
 
                     {{-- SECCIÓN 5: MOTOR DE INFERENCIA CLÍNICA --}}
                     <div class="border rounded-lg p-4 bg-gray-50">
@@ -299,15 +420,13 @@
                         @endif
                     </div>
 
-
-                    {{-- SECCIÓN 6: BOTONES DE ACCIÓN CLÍNICA --}}
+                    {{-- SECCIÓN 6: BOTONES DE ACCIÓN CLÍNICA 
                     <div>
                         <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
                             Acciones Clínicas Rápidas
                         </h4>
 
                         <div class="flex flex-wrap gap-4">
-
                             <a href="{{ route('diagnosticos.create') }}?paciente_id={{ $paciente->id }}"
                                 class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                                 + Registrar diagnóstico
@@ -326,14 +445,29 @@
                             <a href="#" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                                 + Registrar síntoma
                             </a>
-
                         </div>
                     </div>
 
-                </div>
+                </div>--}}
 
             </div>
 
         </div>
     </div>
+
+    <script>
+        function openDiagnosticoModal(id) {
+            const modal = document.getElementById('modal-diagnostico-' + id);
+            if (modal) {
+                modal.classList.remove('hidden');
+            }
+        }
+
+        function closeDiagnosticoModal(id) {
+            const modal = document.getElementById('modal-diagnostico-' + id);
+            if (modal) {
+                modal.classList.add('hidden');
+            }
+        }
+    </script>
 </x-medico-layout>
