@@ -38,7 +38,7 @@ class InferenciaDiagnosticoService
             $condiciones = $regla->condiciones ?? [];
 
             if ($this->evaluarCondiciones($condiciones, $organosPaciente, $sintomasActivos)) {
-                // ===== BLOQUE 3: IDempotencia + creación del diagnóstico =====
+                // ===== BLOQUE 3: Idempotencia + creación del diagnóstico =====
                 return $this->crearDiagnosticoInferido($paciente, $regla, $sintomasActivos);
             }
         }
@@ -123,7 +123,7 @@ class InferenciaDiagnosticoService
             // ===== BLOQUE 4: IDEMPOTENCIA =====
             // Si ya existe un diagnóstico inferido para este paciente y esta regla, se reutiliza.
             $diagnosticoExistente = Diagnostico::where('regla_decision_id', $regla->id)
-                ->whereHas('pacientes', fn ($q) => $q->where('paciente_id', $paciente->id))
+                ->where('paciente_id', $paciente->id)
                 ->first();
 
             if ($diagnosticoExistente) {
@@ -137,17 +137,15 @@ class InferenciaDiagnosticoService
             $origenInferidoId = Origen::where('origen', 'inferido')->value('id');
 
             $datosDiagnostico = array_merge($datosBase, [
-                'fecha_diagnostico'  => $hoy,
-                'regla_decision_id'  => $regla->id,
-                'origen_id'          => $origenInferidoId,
+                'fecha_diagnostico' => $hoy,
+                'paciente_id'       => $paciente->id,
+                'regla_decision_id' => $regla->id,
+                'origen_id'         => $origenInferidoId,
                 'observaciones'     => $regla->descripcion_clinica
                     ?? 'Diagnóstico generado automáticamente por inferencia clínica',
             ]);
 
             $diagnostico = Diagnostico::create($datosDiagnostico);
-
-            // Asociación paciente ↔ diagnóstico
-            $diagnostico->pacientes()->attach($paciente->id);
 
             // ===== BLOQUE 6: TRAZABILIDAD DE SÍNTOMAS =====
 

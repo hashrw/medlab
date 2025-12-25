@@ -14,7 +14,7 @@ class Diagnostico extends Model
     protected $fillable = [
         'fecha_diagnostico',
         'tipo_enfermedad',
-        'estado_injerto',      // estable, pobre...
+        'estado_injerto',  // estable, pobre...
         'observaciones',
         'grado_eich',
         'escala_karnofsky',
@@ -22,7 +22,8 @@ class Diagnostico extends Model
         'estado_id',
         'comienzo_id',
         'infeccion_id',
-        'origen_id',           // FK a tabla origins (manual / inferido)
+        'origen_id',
+        'paciente_id'
     ];
 
     protected $casts = [
@@ -58,10 +59,9 @@ class Diagnostico extends Model
             ->withTimestamps();
     }
 
-    public function pacientes(): BelongsToMany
+    public function paciente(): BelongsTo
     {
-        return $this->belongsToMany(Paciente::class, 'diagnostico_paciente')
-            ->withTimestamps();
+        return $this->belongsTo(Paciente::class, 'paciente_id');
     }
 
     public function regla(): BelongsTo

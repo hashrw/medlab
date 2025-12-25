@@ -1,0 +1,24 @@
+[90m= [39m[34;4mApp\Models\Diagnostico[39;24m {#6271
+    [34mid[39m: [35m1[39m,
+    [34mfecha_diagnostico[39m: "[32m2022-01-01[39m",
+    [34mtipo_enfermedad[39m: "[32maguda[39m",
+    [34mestado_injerto[39m: "[32mEstable[39m",
+    [34mobservaciones[39m: "[32mNo aplica[39m",
+    [34mgrado_eich[39m: "[32mGrado 1[39m",
+    [34mescala_karnofsky[39m: "[32mECOG 2[39m",
+    [34mregla_decision_id[39m: [35m1[39m,
+    [34mcreated_at[39m: "[32m2025-12-25 13:41:09[39m",
+    [34mupdated_at[39m: "[32m2025-12-25 13:41:09[39m",
+    [34mestado_id[39m: [35m1[39m,
+    [34mcomienzo_id[39m: [35m1[39m,
+    [34minfeccion_id[39m: [35m1[39m,
+    [34morigen_id[39m: [35m1[39m,
+    [34mpaciente_id[39m: [35m1[39m,
+    [34mestado[39m: [34;4mApp\Models\Estado[39;24m {#6277
+      [34mid[39m: [35m1[39m,
+      [34mcreated_at[39m: [36mnull[39m,
+      [34mupdated_at[39m: [36mnull[39m,
+      [34mestado[39m: "[32mEnfermedad Progresiva[39m",
+    },
+  }
+

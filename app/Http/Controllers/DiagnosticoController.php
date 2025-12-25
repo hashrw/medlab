@@ -27,8 +27,8 @@ class DiagnosticoController extends Controller
     {
         $this->authorize('viewAny', Diagnostico::class);
 
-        // Eager loading: cargamos la relación 'regla' y 'estado'
-        $diagnosticos = Diagnostico::with(['regla', 'estado'])->paginate(25);
+        // cargamos la relación 'regla' y 'estado'
+        $diagnosticos = Diagnostico::with(['regla', 'estado', 'paciente.usuarioAcceso'])->paginate(25);
 
         return view('diagnosticos.index', ['diagnosticos' => $diagnosticos]);
     }
@@ -84,43 +84,42 @@ class DiagnosticoController extends Controller
 
         $validated = $request->validated();
 
-        // Datos propios del diagnóstico (sin relaciones ni campos de control)
+        // Determinar paciente_id (1:N) según rol
+        $pacienteId = null;
+
+        if ($request->user()->es_medico) {
+            // StoreDiagnosticoRequest ya obliga paciente_id para médico
+            $pacienteId = (int) $validated['paciente_id'];
+        } elseif ($request->user()->es_paciente && $request->user()->paciente_id) {
+            // Si en el futuro permites que el paciente cree diagnósticos: se toma de su user->paciente_id
+            $pacienteId = (int) $request->user()->paciente_id;
+        }
+
+        // Datos propios del diagnóstico (sin relaciones pivot/control)
         $datosDiagnostico = collect($validated)->except([
             'sintomas',
             'paciente_id',
-            'medico_id',
         ])->toArray();
 
-        // Si quieres que los diagnósticos manuales tengan fecha por defecto:
-        if (!isset($datosDiagnostico['fecha_diagnostico'])) {
+        // Fecha por defecto si no viene
+        if (empty($datosDiagnostico['fecha_diagnostico'])) {
             $datosDiagnostico['fecha_diagnostico'] = now()->toDateString();
         }
+
+        // Asignar paciente_id en la tabla diagnosticos (1:N)
+        $datosDiagnostico['paciente_id'] = $pacienteId;
 
         // Crear diagnóstico
         $diagnostico = Diagnostico::create($datosDiagnostico);
 
-        // Asociar síntomas si vienen en el request
+        // Asociar síntomas (pivot diagnostico_sintoma)
         if (!empty($validated['sintomas'])) {
             foreach ($validated['sintomas'] as $sintomaId => $datos) {
-                $diagnostico->sintomas()->attach($sintomaId, [
+                $diagnostico->sintomas()->attach((int) $sintomaId, [
                     'fecha_diagnostico' => $datos['fecha_diagnostico'] ?? now(),
                     'score_nih' => $datos['score_nih'] ?? null,
                 ]);
             }
-        }
-
-        // Asociar paciente (solo 1)
-        $pacienteId = null;
-
-        if ($request->user()->es_medico && isset($validated['paciente_id'])) {
-            $pacienteId = $validated['paciente_id'];
-        } elseif ($request->user()->es_paciente && $request->user()->paciente_id) {
-            // En caso de que en el futuro permitas que el propio paciente cree algo
-            $pacienteId = $request->user()->paciente_id;
-        }
-
-        if ($pacienteId) {
-            $diagnostico->pacientes()->attach($pacienteId);
         }
 
         return redirect()
@@ -143,10 +142,10 @@ class DiagnosticoController extends Controller
             'comienzo',
             'infeccion',
             'sintomas',
-            'pacientes', // de momento M:N, cogemos el primero
+            'paciente',
         ]);
 
-        $paciente = $diagnostico->pacientes->first();
+        $paciente = $diagnostico->paciente;
 
         $ultimoTrasplante = $paciente
             ? $paciente->trasplantes()->orderByDesc('fecha_trasplante')->first()

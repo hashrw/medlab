@@ -25,8 +25,11 @@
                         <x-show-field label="Email" :value="$paciente->usuarioAcceso->email" />
                     @endif
 
-                    <x-show-field label="Días desde trasplante" :value="$diasDesdeTrasplante" />
-                    <x-show-field label="Fecha último trasplante" :value="$ultimoTrasplante?->fecha_trasplante?->format('d/m/Y')" />
+                    <x-show-field label="Días desde trasplante" :value="$diasDesdeTrasplante ?? '-'" />
+                    <x-show-field
+                        label="Fecha último trasplante"
+                        :value="$ultimoTrasplante?->fecha_trasplante ? $ultimoTrasplante->fecha_trasplante->format('d/m/Y') : '-'"
+                    />
                 @else
                     <p class="text-sm text-gray-600">Este diagnóstico no tiene paciente asociado.</p>
                 @endif
@@ -36,16 +39,16 @@
             <div class="bg-white shadow rounded-lg p-6 border border-gray-200">
                 <h4 class="text-lg font-semibold text-gray-800 mb-4">Diagnóstico</h4>
 
-                <x-show-field label="Fecha diagnóstico" :value="$diagnostico->fecha_diagnostico?->format('d/m/Y')" />
-                <x-show-field label="Tipo de enfermedad" :value="$diagnostico->tipo_enfermedad" />
-                <x-show-field label="Grado EICH" :value="$diagnostico->grado_eich" />
-                <x-show-field label="Escala Karnofsky" :value="$diagnostico->escala_karnofsky" />
-                <x-show-field label="Estado del injerto" :value="$diagnostico->estado_injerto" />
+                <x-show-field label="Fecha diagnóstico" :value="$diagnostico->fecha_diagnostico?->format('d/m/Y') ?? '-'" />
+                <x-show-field label="Tipo de enfermedad" :value="$diagnostico->tipo_enfermedad ?? '-'" />
+                <x-show-field label="Grado EICH" :value="$diagnostico->grado_eich ?? '-'" />
+                <x-show-field label="Escala Karnofsky" :value="$diagnostico->escala_karnofsky ?? '-'" />
+                <x-show-field label="Estado del injerto" :value="$diagnostico->estado_injerto ?? '-'" />
 
-                <x-show-field label="Estado" :value="$diagnostico->estado?->nombre" />
-                <x-show-field label="Comienzo" :value="$diagnostico->comienzo?->nombre" />
-                <x-show-field label="Infección" :value="$diagnostico->infeccion?->nombre" />
-                <x-show-field label="Origen" :value="$diagnostico->origen?->origen" />
+                <x-show-field label="Estado" :value="$diagnostico->estado?->nombre ?? '-'" />
+                <x-show-field label="Comienzo" :value="$diagnostico->comienzo?->nombre ?? '-'" />
+                <x-show-field label="Infección" :value="$diagnostico->infeccion?->nombre ?? '-'" />
+                <x-show-field label="Origen" :value="$diagnostico->origen?->origen ?? '-'" />
 
                 <x-show-field label="Observaciones">
                     <p class="text-sm text-gray-700">{{ $diagnostico->observaciones ?: '-' }}</p>
@@ -54,9 +57,16 @@
                 @if($diagnostico->regla)
                     <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded">
                         <h5 class="text-md font-semibold text-gray-700 mb-2">Regla aplicada</h5>
-                        <p class="text-sm text-gray-800"><strong>Nombre:</strong> {{ $diagnostico->regla->nombre }}</p>
-                        <p class="text-sm text-gray-800"><strong>Prioridad:</strong> {{ $diagnostico->regla->prioridad }}</p>
-                        <p class="text-sm text-gray-800"><strong>Recomendación clínica:</strong> {{ $diagnostico->regla->tipo_recomendacion }}</p>
+
+                        <p class="text-sm text-gray-800">
+                            <strong>Nombre:</strong> {{ $diagnostico->regla->nombre ?? '-' }}
+                        </p>
+                        <p class="text-sm text-gray-800">
+                            <strong>Prioridad:</strong> {{ $diagnostico->regla->prioridad ?? '-' }}
+                        </p>
+                        <p class="text-sm text-gray-800">
+                            <strong>Recomendación clínica:</strong> {{ $diagnostico->regla->tipo_recomendacion ?? '-' }}
+                        </p>
 
                         @if(!empty($diagnostico->regla->descripcion_clinica))
                             <p class="text-sm text-gray-800 mt-2">
@@ -84,11 +94,13 @@
                         </thead>
                         <tbody class="divide-y divide-gray-200">
                             @foreach ($diagnostico->sintomas as $sintoma)
+                                @php
+                                    $fd = $sintoma->pivot->fecha_diagnostico ?? null;
+                                    $fdFormatted = $fd ? \Illuminate\Support\Carbon::parse($fd)->format('d/m/Y') : '-';
+                                @endphp
                                 <tr>
                                     <td class="px-4 py-2">{{ $sintoma->sintoma }}</td>
-                                    <td class="px-4 py-2">
-                                        {{ $sintoma->pivot->fecha_diagnostico ? $sintoma->pivot->fecha_diagnostico->format('d/m/Y') : '-' }}
-                                    </td>
+                                    <td class="px-4 py-2">{{ $fdFormatted }}</td>
                                     <td class="px-4 py-2">{{ $sintoma->pivot->score_nih ?? '-' }}</td>
                                 </tr>
                             @endforeach
@@ -97,11 +109,10 @@
                 @endif
 
                 <div class="flex items-center justify-end mt-6">
-                    <x-danger-button type="button">
-                        <a href="{{ route('diagnosticos.index') }}">
-                            {{ __('Volver') }}
-                        </a>
-                    </x-danger-button>
+                    <a href="{{ route('diagnosticos.index') }}"
+                       class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded">
+                        Volver
+                    </a>
                 </div>
             </div>
 

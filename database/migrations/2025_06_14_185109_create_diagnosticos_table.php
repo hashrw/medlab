@@ -21,7 +21,7 @@ return new class extends Migration {
             //$table->enum('origen', allowed: ['manual', 'inferido'])->nullable();
             $table->string('estado_injerto')->nullable();
             $table->string('observaciones')->nullable();
-            $table->string('grado_eich')->nullable(); //grado específico a tipo trasplante//(grado 1, grado 2, grado 3 y grado 4 y grados EICH crónica: 'Leve', 'Moderada', 'Grave']
+            $table->string('grado_eich')->nullable(); //grado específico a tipo enfermedad//(grado 1, grado 2, grado 3 y grado 4 y grados EICH crónica: 'Leve', 'Moderada', 'Grave']
             $table->string('escala_karnofsky')->nullable(); //estado fase crónica general // ['ECOG 1', 'ECOG 2', 'ECOG 3', 'ECOG 4']
             $table->foreignId('regla_decision_id')->nullable()->constrained()->onDelete('set null');
             $table->timestamps();

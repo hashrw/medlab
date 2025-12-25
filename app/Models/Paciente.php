@@ -6,6 +6,8 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class Paciente extends Model
 {
@@ -74,10 +76,9 @@ class Paciente extends Model
     /*--------------------------------------------------------------
      | DIAGNÓSTICOS
      --------------------------------------------------------------*/
-    public function diagnosticos(): BelongsToMany
+    public function diagnosticos(): HasMany
     {
-        return $this->belongsToMany(Diagnostico::class, 'diagnostico_paciente')
-            ->withTimestamps();
+        return $this->hasMany(Diagnostico::class,'paciente_id');
     }
 
     /*--------------------------------------------------------------
