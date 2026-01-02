@@ -45,8 +45,8 @@
                 <x-show-field label="Escala Karnofsky" :value="$diagnostico->escala_karnofsky ?? '-'" />
                 <x-show-field label="Estado del injerto" :value="$diagnostico->estado_injerto ?? '-'" />
 
-                <x-show-field label="Estado" :value="$diagnostico->estado?->nombre ?? '-'" />
-                <x-show-field label="Comienzo" :value="$diagnostico->comienzo?->nombre ?? '-'" />
+                <x-show-field label="Estado" :value="$diagnostico->estado?->estado ?? '-'" />
+                <x-show-field label="Comienzo" :value="$diagnostico->comienzo?->tipo_comienzo ?? '-'" />
                 <x-show-field label="Infección" :value="$diagnostico->infeccion?->nombre ?? '-'" />
                 <x-show-field label="Origen" :value="$diagnostico->origen?->origen ?? '-'" />
 

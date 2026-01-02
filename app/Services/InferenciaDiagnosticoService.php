@@ -54,8 +54,9 @@ class InferenciaDiagnosticoService
     private function obtenerSintomasActivos(Paciente $paciente): array
     {
         return $paciente->sintomas()
+            ->wherePivot('activo', true)
             ->pluck('sintomas.id')
-            ->map(fn ($id) => (int) $id)
+            ->map(fn($id) => (int) $id)
             ->unique()
             ->values()
             ->all();
@@ -89,7 +90,7 @@ class InferenciaDiagnosticoService
 
             // Evaluación de síntomas
             $sintomasEsperados = collect($criterios['sintomas'] ?? [])
-                ->map(fn ($id) => (int) $id);
+                ->map(fn($id) => (int) $id);
 
             if ($sintomasEsperados->isNotEmpty()) {
                 $coincidentes = $sintomasEsperados->intersect($sintomasActivos);
@@ -138,10 +139,10 @@ class InferenciaDiagnosticoService
 
             $datosDiagnostico = array_merge($datosBase, [
                 'fecha_diagnostico' => $hoy,
-                'paciente_id'       => $paciente->id,
+                'paciente_id' => $paciente->id,
                 'regla_decision_id' => $regla->id,
-                'origen_id'         => $origenInferidoId,
-                'observaciones'     => $regla->descripcion_clinica
+                'origen_id' => $origenInferidoId,
+                'observaciones' => $regla->descripcion_clinica
                     ?? 'Diagnóstico generado automáticamente por inferencia clínica',
             ]);
 
@@ -156,7 +157,7 @@ class InferenciaDiagnosticoService
                 $scoreOrgano = $criterios['score'] ?? null;
 
                 $sintomasRegla = collect($criterios['sintomas'] ?? [])
-                    ->map(fn ($id) => (int) $id);
+                    ->map(fn($id) => (int) $id);
 
                 $sintomasCoincidentes = $sintomasRegla->intersect($sintomasActivos);
 
@@ -164,7 +165,7 @@ class InferenciaDiagnosticoService
                     if (!isset($pivotData[$sintomaId])) {
                         $pivotData[$sintomaId] = [
                             'fecha_diagnostico' => $hoy,
-                            'score_nih'         => $scoreOrgano !== null ? (int) $scoreOrgano : null,
+                            'score_nih' => $scoreOrgano !== null ? (int) $scoreOrgano : null,
                         ];
                     }
                 }

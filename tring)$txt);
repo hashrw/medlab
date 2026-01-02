@@ -1,0 +1,165 @@
+[90m= [39m[34;4mIlluminate\Support\Collection[39;24m {#6267
+    [34mall[39m: [
+      {#6264
+        +"[1mid[22m": [35m5[39m,
+        +"[1morgano_id[22m": [35m1[39m,
+        +"[1msintoma[22m": "[32mAnorexia[39m",
+      },
+      {#6263
+        +"[1mid[22m": [35m2[39m,
+        +"[1morgano_id[22m": [35m1[39m,
+        +"[1msintoma[22m": "[32mDiarrea acuosa[39m",
+      },
+      {#6262
+        +"[1mid[22m": [35m1[39m,
+        +"[1morgano_id[22m": [35m1[39m,
+        +"[1msintoma[22m": "[32mDiarrea con sangre[39m",
+      },
+      {#6261
+        +"[1mid[22m": [35m3[39m,
+        +"[1morgano_id[22m": [35m1[39m,
+        +"[1msintoma[22m": "[32mDolor abdominal[39m",
+      },
+      {#6260
+        +"[1mid[22m": [35m11[39m,
+        +"[1morgano_id[22m": [35m1[39m,
+        +"[1msintoma[22m": "[32mInsuficiencia pancreática exocrina[39m",
+      },
+      {#6259
+        +"[1mid[22m": [35m4[39m,
+        +"[1morgano_id[22m": [35m1[39m,
+        +"[1msintoma[22m": "[32mNáuseas[39m",
+      },
+      {#6258
+        +"[1mid[22m": [35m10[39m,
+        +"[1morgano_id[22m": [35m1[39m,
+        +"[1msintoma[22m": "[32mPérdida de peso[39m",
+      },
+      {#6275
+        +"[1mid[22m": [35m13[39m,
+        +"[1morgano_id[22m": [35m1[39m,
+        +"[1msintoma[22m": "[32mSíndrome de desgaste[39m",
+      },
+      {#6276
+        +"[1mid[22m": [35m12[39m,
+        +"[1morgano_id[22m": [35m1[39m,
+        +"[1msintoma[22m": "[32mVómitos[39m",
+      },
+      {#6277
+        +"[1mid[22m": [35m19[39m,
+        +"[1morgano_id[22m": [35m2[39m,
+        +"[1msintoma[22m": "[32mALT elevada[39m",
+      },
+      {#6278
+        +"[1mid[22m": [35m20[39m,
+        +"[1morgano_id[22m": [35m2[39m,
+        +"[1msintoma[22m": "[32mFosfatasa alcalina elevada[39m",
+      },
+      {#6279
+        +"[1mid[22m": [35m6[39m,
+        +"[1morgano_id[22m": [35m2[39m,
+        +"[1msintoma[22m": "[32mHiperbilirrubinemia[39m",
+      },
+      {#6280
+        +"[1mid[22m": [35m21[39m,
+        +"[1morgano_id[22m": [35m4[39m,
+        +"[1msintoma[22m": "[32mAtrofia mucosa[39m",
+      },
+      {#6281
+        +"[1mid[22m": [35m22[39m,
+        +"[1morgano_id[22m": [35m4[39m,
+        +"[1msintoma[22m": "[32mDolor bucal[39m",
+      },
+      {#6282
+        +"[1mid[22m": [35m23[39m,
+        +"[1morgano_id[22m": [35m4[39m,
+        +"[1msintoma[22m": "[32mGingivitis[39m",
+      },
+      {#6283
+        +"[1mid[22m": [35m24[39m,
+        +"[1morgano_id[22m": [35m4[39m,
+        +"[1msintoma[22m": "[32mÚlceras orales[39m",
+      },
+      {#6284
+        +"[1mid[22m": [35m25[39m,
+        +"[1morgano_id[22m": [35m4[39m,
+        +"[1msintoma[22m": "[32mXerostomía[39m",
+      },
+      {#6285
+        +"[1mid[22m": [35m9[39m,
+        +"[1morgano_id[22m": [35m5[39m,
+        +"[1msintoma[22m": "[32mFotofobia[39m",
+      },
+      {#6286
+        +"[1mid[22m": [35m8[39m,
+        +"[1morgano_id[22m": [35m5[39m,
+        +"[1msintoma[22m": "[32mOjo seco[39m",
+      },
+      {#6287
+        +"[1mid[22m": [35m18[39m,
+        +"[1morgano_id[22m": [35m7[39m,
+        +"[1msintoma[22m": "[32mCambios escleróticos de la piel[39m",
+      },
+      {#6288
+        +"[1mid[22m": [35m7[39m,
+        +"[1morgano_id[22m": [35m7[39m,
+        +"[1msintoma[22m": "[32mExantema maculopapular[39m",
+      },
+      {#6289
+        +"[1mid[22m": [35m29[39m,
+        +"[1morgano_id[22m": [35m8[39m,
+        +"[1msintoma[22m": "[32mDisnea[39m",
+      },
+      {#6290
+        +"[1mid[22m": [35m30[39m,
+        +"[1morgano_id[22m": [35m8[39m,
+        +"[1msintoma[22m": "[32mTos seca[39m",
+      },
+      {#6291
+        +"[1mid[22m": [35m31[39m,
+        +"[1morgano_id[22m": [35m9[39m,
+        +"[1msintoma[22m": "[32mOnicolisis[39m",
+      },
+      {#6292
+        +"[1mid[22m": [35m32[39m,
+        +"[1morgano_id[22m": [35m9[39m,
+        +"[1msintoma[22m": "[32mPterigion ungueal[39m",
+      },
+      {#6293
+        +"[1mid[22m": [35m15[39m,
+        +"[1morgano_id[22m": [35m10[39m,
+        +"[1msintoma[22m": "[32mArtritis/artralgia[39m",
+      },
+      {#6294
+        +"[1mid[22m": [35m16[39m,
+        +"[1morgano_id[22m": [35m10[39m,
+        +"[1msintoma[22m": "[32mCalambres musculares[39m",
+      },
+      {#6295
+        +"[1mid[22m": [35m14[39m,
+        +"[1morgano_id[22m": [35m10[39m,
+        +"[1msintoma[22m": "[32mContracturas[39m",
+      },
+      {#6296
+        +"[1mid[22m": [35m17[39m,
+        +"[1morgano_id[22m": [35m10[39m,
+        +"[1msintoma[22m": "[32mEdema[39m",
+      },
+      {#6297
+        +"[1mid[22m": [35m26[39m,
+        +"[1morgano_id[22m": [35m12[39m,
+        +"[1msintoma[22m": "[32mDispareunia[39m",
+      },
+      {#6298
+        +"[1mid[22m": [35m27[39m,
+        +"[1morgano_id[22m": [35m12[39m,
+        +"[1msintoma[22m": "[32mLiquen esclerosus-like[39m",
+      },
+      {#6299
+        +"[1mid[22m": [35m28[39m,
+        +"[1morgano_id[22m": [35m12[39m,
+        +"[1msintoma[22m": "[32mÚlceras genitales[39m",
+      },
+    ],
+  }
+

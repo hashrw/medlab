@@ -10,7 +10,7 @@ class DiagnosticoSeeder extends Seeder
     public function run(): void
     {
         // 1) IDs base (deben existir)
-        $origenManualId = DB::table('origens')->where('origen', 'manual')->value('id');
+        $origenManualId = DB::table('origens')->where('origen', 'Inferido')->value('id');
         $reglaId        = DB::table('regla_decisions')->orderBy('id')->value('id'); // primera regla
         $estadoId       = DB::table('estados')->orderBy('id')->value('id');
         $comienzoId     = DB::table('comienzos')->orderBy('id')->value('id');

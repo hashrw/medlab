@@ -15,12 +15,12 @@ class OrigenDiagnosticoSeeder extends Seeder
     public function run(): void
     {
         // Evitar duplicar registros si ya existen
-        $existenteManual = DB::table('origens')->where('origen', 'manual')->exists();
-        $existenteInferido = DB::table('origens')->where('origen', 'inferido')->exists();
+        $existenteManual = DB::table('origens')->where('origen', 'Manual')->exists();
+        $existenteInferido = DB::table('origens')->where('origen', 'Inferido')->exists();
 
         if (!$existenteManual) {
             DB::table('origens')->insert([
-                'origen' => 'manual',
+                'origen' => 'Manual',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);
@@ -28,7 +28,7 @@ class OrigenDiagnosticoSeeder extends Seeder
 
         if (!$existenteInferido) {
             DB::table('origens')->insert([
-                'origen' => 'inferido',
+                'origen' => 'Inferido',
                 'created_at' => now(),
                 'updated_at' => now(),
             ]);

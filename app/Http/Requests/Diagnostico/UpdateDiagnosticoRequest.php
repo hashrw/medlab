@@ -29,22 +29,32 @@ class UpdateDiagnosticoRequest extends FormRequest
     {
         $rules = [
             // Campos clínicos del diagnóstico
-            'tipo_enfermedad'   => 'nullable|string|max:255',
-            'estado_injerto'    => 'nullable|string|max:255',
-            'observaciones'     => 'nullable|string',
-            'grado_eich'        => 'nullable|string|max:255',
-            'escala_karnofsky'  => 'nullable|string|max:255',
+            'tipo_enfermedad' => 'nullable|string|max:255',
+            'estado_injerto' => 'nullable|string|max:255',
+            'observaciones' => 'nullable|string',
+            'grado_eich' => 'nullable|string|max:255',
+            'escala_karnofsky' => [
+                'nullable',
+                'integer',
+                'min:0',
+                'max:100',
+                Rule::requiredIf(fn() => $this->tipo_enfermedad === 'cronica'),
+            ],
 
             // Síntomas asociados al diagnóstico (solo si permitimos tocarlos;
             // la restricción real para inferidos la haremos en el controlador)
-            'sintomas'                      => 'nullable|array',
-            'sintomas.*.fecha_diagnostico'  => 'nullable|date',
-            'sintomas.*.score_nih'          => 'nullable|integer|min:0',
+            'sintomas' => 'nullable|array',
+            'sintomas.*.fecha_diagnostico' => 'nullable|date',
+            'sintomas.*.score_nih' => 'nullable|integer|min:0',
 
             // Relaciones opcionales
-            'estado_id'         => 'nullable|exists:estados,id',
-            'comienzo_id'       => 'nullable|exists:comienzos,id',
-            'infeccion_id'      => 'nullable|exists:infeccions,id',
+            'estado_id' => 'nullable|exists:estados,id',
+            'comienzo_id' => [
+                'nullable',
+                'exists:comienzos,id',
+                Rule::requiredIf(fn() => $this->tipo_enfermedad === 'cronica'),
+            ],
+            'infeccion_id' => 'nullable|exists:infeccions,id',
 
             // En update podrías aceptar cambiar la regla asociada SOLO en manuales
             // (la lógica la controlaremos luego en el controlador si hace falta)

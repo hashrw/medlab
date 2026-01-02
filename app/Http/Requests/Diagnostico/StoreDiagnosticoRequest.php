@@ -22,7 +22,13 @@ class StoreDiagnosticoRequest extends FormRequest
             'estado_injerto' => 'nullable|string|max:255',
             'observaciones' => 'nullable|string',
             'grado_eich' => 'nullable|string|max:255',
-            'escala_karnofsky' => 'nullable|string|max:255',
+            'escala_karnofsky' => [
+                'nullable',
+                'integer',
+                'min:0',
+                'max:100',
+                Rule::requiredIf(fn() => $this->tipo_enfermedad === 'cronica'),
+            ],
 
             // Síntomas asociados (pivot diagnostico_sintoma)
             'sintomas' => 'nullable|array',
@@ -31,7 +37,11 @@ class StoreDiagnosticoRequest extends FormRequest
 
             // Relaciones opcionales (catálogos)
             'estado_id' => 'nullable|exists:estados,id',
-            'comienzo_id' => 'nullable|exists:comienzos,id',
+            'comienzo_id' => [
+                'nullable',
+                'exists:comienzos,id',
+                Rule::requiredIf(fn() => $this->tipo_enfermedad === 'cronica'),
+            ],
             'infeccion_id' => 'nullable|exists:infeccions,id',
 
             // Regla (solo si alguna vez creas diagnósticos manuales con regla asociada)
