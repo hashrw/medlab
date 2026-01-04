@@ -3,75 +3,96 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 use App\Models\ReglaDecision;
-use App\Models\Sintoma;
 
 class ReglaDecisionSeeder extends Seeder
 {
     public function run(): void
     {
         // Nombres exactos de órganos (DEBEN coincidir con organos.nombre)
-        $ORG_GI   = 'Tracto gastrointestinal';
-        $ORG_HIG  = 'Hígado';
+        $ORG_GI = 'Tracto gastrointestinal';
+        $ORG_HIG = 'Hígado';
         $ORG_PIEL = 'Piel';
 
-        // organo_id según SintomaSeeder
-        $OID_GI   = 1;
-        $OID_HIG  = 2;
-        $OID_PIEL = 7;
+        // Resolver organo_id dinámico (sin hardcode)
+        $oid = function (string $organoNombre): int {
+            $id = DB::table('organos')->where('nombre', $organoNombre)->value('id');
+            if (!$id) {
+                throw new \RuntimeException("Órgano no encontrado en organos.nombre: '{$organoNombre}'");
+            }
+            return (int) $id;
+        };
 
-        // Helper: resuelve IDs por texto exacto de síntoma + órgano
-        $sid = function (string $textoSintoma, int $organoId): int {
-            $s = Sintoma::query()
-                ->where('sintoma', $textoSintoma)
-                ->where('organo_id', $organoId)
-                ->first();
+        $OID_GI = $oid($ORG_GI);
+        $OID_HIG = $oid($ORG_HIG);
+        $OID_PIEL = $oid($ORG_PIEL);
 
-            if (!$s) {
+        // Helper: devuelve alias canónico a partir del texto de sintomas.sintoma:
+        // alias = o{organo_id}_{slug(Str::ascii(sintoma))}
+        $canon = function (string $textoSintoma, int $organoId): string {
+            $base = $this->slug($textoSintoma);
+            return 'o' . $organoId . '_' . $base;
+        };
+
+        // Helper: valida que el alias canónico exista en sintoma_aliases y pertenece al órgano
+        $a = function (string $textoSintoma, int $organoId) use ($canon): string {
+            $alias = $canon($textoSintoma, $organoId);
+
+            $exists = DB::table('sintoma_aliases')
+                ->join('sintomas', 'sintomas.id', '=', 'sintoma_aliases.sintoma_id')
+                ->where('sintoma_aliases.alias', $alias)
+                ->where('sintoma_aliases.tipo', 'canonical')
+                ->where('sintomas.organo_id', $organoId)
+                ->exists();
+
+            if (!$exists) {
                 throw new \RuntimeException(
-                    "Síntoma no encontrado: '{$textoSintoma}' (organo_id={$organoId})"
+                    "Alias canónico no encontrado: '{$alias}' (texto='{$textoSintoma}', organo_id={$organoId}). " .
+                    "Revisa que sintomas.sintoma coincida y que SintomaAliasSeeder se haya ejecutado."
                 );
             }
 
-            return (int) $s->id;
+            return $alias;
         };
 
         /*
         |--------------------------------------------------------------------------
         | REGLA SEVERA
         |--------------------------------------------------------------------------
+        | Nota: mantenemos score exacto como en tu versión (2).
+        | Si quieres >=2, cambia 'score' por 'score_min' en regla + servicio.
         */
         ReglaDecision::updateOrCreate(
             ['nombre' => 'EICH severa (GI score 2 + hígado score 2)'],
             [
                 'prioridad' => 5,
-                'tipo_recomendacion' => 'diagnostico',
+                'tipo_recomendacion' => 'Diagnóstico clínico compatible con EICH aguda severa. Requiere valoración médica inmediata y manejo especializado.',
                 'activo' => true,
                 'condiciones' => [
                     $ORG_HIG => [
                         'score' => 2,
                         'sintomas' => [
-                            $sid('Hiperbilirrubinemia', $OID_HIG),
-                            $sid('ALT elevada', $OID_HIG),
-                            $sid('Fosfatasa alcalina elevada', $OID_HIG),
+                            $a('Hiperbilirrubinemia', $OID_HIG),
+                            $a('ALT elevada', $OID_HIG),
+                            $a('Fosfatasa alcalina elevada', $OID_HIG),
                         ],
                     ],
                     $ORG_GI => [
                         'score' => 2,
                         'sintomas' => [
-                            $sid('Diarrea con sangre', $OID_GI),
-                            $sid('Dolor abdominal', $OID_GI),
-                            $sid('Vómitos', $OID_GI),
-                            $sid('Náuseas', $OID_GI),
+                            $a('Diarrea con sangre', $OID_GI),
+                            $a('Dolor abdominal', $OID_GI),
+                            $a('Vómitos', $OID_GI),
+                            $a('Náuseas', $OID_GI),
                         ],
                     ],
                 ],
                 'diagnostico' => $this->diagnosticoBase([
-                    'tipo_enfermedad' => 'EICH',
+                    'tipo_enfermedad' => 'EICH Aguda',
                     'estado_injerto' => 'critico',
                     'grado_eich' => 'severa',
-                    'observaciones' =>
-                        'EICH severa con afectación gastrointestinal y hepática.',
+                    'observaciones' => 'EICH severa con afectación gastrointestinal y hepática.',
                 ]),
             ]
         );
@@ -85,30 +106,29 @@ class ReglaDecisionSeeder extends Seeder
             ['nombre' => 'EICH moderada (GI score 1 + piel score 1)'],
             [
                 'prioridad' => 20,
-                'tipo_recomendacion' => 'diagnostico',
+                'tipo_recomendacion' => 'Diagnóstico clínico compatible con EICH aguda moderada. Requiere seguimiento estrecho y ajuste terapéutico.',
                 'activo' => true,
                 'condiciones' => [
                     $ORG_GI => [
                         'score' => 1,
                         'sintomas' => [
-                            $sid('Diarrea acuosa', $OID_GI),
-                            $sid('Dolor abdominal', $OID_GI),
-                            $sid('Anorexia', $OID_GI),
+                            $a('Diarrea acuosa', $OID_GI),
+                            $a('Dolor abdominal', $OID_GI),
+                            $a('Anorexia', $OID_GI),
                         ],
                     ],
                     $ORG_PIEL => [
                         'score' => 1,
                         'sintomas' => [
-                            $sid('Exantema maculopapular', $OID_PIEL),
+                            $a('Exantema maculopapular', $OID_PIEL),
                         ],
                     ],
                 ],
                 'diagnostico' => $this->diagnosticoBase([
-                    'tipo_enfermedad' => 'EICH',
+                    'tipo_enfermedad' => 'EICH Aguda ',
                     'estado_injerto' => 'inestable',
                     'grado_eich' => 'moderada',
-                    'observaciones' =>
-                        'EICH moderada con afectación cutánea y gastrointestinal.',
+                    'observaciones' => 'EICH moderada con afectación cutánea y gastrointestinal.',
                 ]),
             ]
         );
@@ -128,17 +148,17 @@ class ReglaDecisionSeeder extends Seeder
                     $ORG_PIEL => [
                         'score' => 1,
                         'sintomas' => [
-                            $sid('Exantema maculopapular', $OID_PIEL),
+                            $a('Exantema maculopapular', $OID_PIEL),
                         ],
                     ],
                 ],
                 'diagnostico' => $this->diagnosticoBase([
-                    'tipo_enfermedad' => 'EICH',
+                    'tipo_recomendacion' => 'Diagnóstico clínico compatible con EICH aguda leve. Requiere control clínico y monitorización evolutiva.',
                     'estado_injerto' => 'estable',
                     'grado_eich' => 'leve',
-                    'observaciones' =>
-                        'EICH leve con afectación cutánea mínima.',
+                    'observaciones' => 'EICH leve con afectación cutánea mínima.',
                 ]),
+
             ]
         );
 
@@ -151,15 +171,14 @@ class ReglaDecisionSeeder extends Seeder
             ['nombre' => 'Sin criterios suficientes de EICH'],
             [
                 'prioridad' => 9999,
-                'tipo_recomendacion' => 'diagnostico',
+                'tipo_recomendacion' => 'No se identifican criterios clínicos suficientes para establecer diagnóstico de EICH en este momento.',
                 'activo' => true,
                 'condiciones' => [],
                 'diagnostico' => $this->diagnosticoBase([
-                    'tipo_enfermedad' => 'EICH',
+                    'tipo_enfermedad' => 'EICH Aguda',
                     'estado_injerto' => 'estable',
                     'grado_eich' => 'no_concluyente',
-                    'observaciones' =>
-                        'No se cumplen criterios suficientes para inferir EICH.',
+                    'observaciones' => 'No se cumplen criterios suficientes para inferir EICH.',
                 ]),
             ]
         );
@@ -180,5 +199,13 @@ class ReglaDecisionSeeder extends Seeder
             'infeccion_id' => null,
             'origen_id' => null, // sobrescrito por el servicio
         ], $override);
+    }
+
+    private function slug(string $txt): string
+    {
+        $txt = trim($txt);
+        $txt = preg_replace('/\s+/u', ' ', $txt);
+        $ascii = \Illuminate\Support\Str::ascii($txt);
+        return \Illuminate\Support\Str::slug($ascii, '_');
     }
 }

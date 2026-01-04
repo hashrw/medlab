@@ -50,17 +50,10 @@
                         </header>
                     @endif
 
-                    <!-- Flash Messages -->
-                    @if (session('warning'))
-                        <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
-                            <strong>{{ session('warning') }}</strong>
-                        </div>
-                    @endif
-                    @if (session('success'))
-                        <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700">
-                            <strong>{{ session('success') }}</strong>
-                        </div>
-                    @endif
+                    <!-- Flash Messages 
+                     <x-flash-message type="success" />
+                     <x-flash-message type="warning" />
+                     <x-flash-message type="error" /> -->
 
                     <div class="bg-white shadow rounded p-6">
                         {{ $slot }}

@@ -42,18 +42,25 @@
                 <x-show-field label="Fecha diagnóstico" :value="$diagnostico->fecha_diagnostico?->format('d/m/Y') ?? '-'" />
                 <x-show-field label="Tipo de enfermedad" :value="$diagnostico->tipo_enfermedad ?? '-'" />
                 <x-show-field label="Grado EICH" :value="$diagnostico->grado_eich ?? '-'" />
-                <x-show-field label="Escala Karnofsky" :value="$diagnostico->escala_karnofsky ?? '-'" />
                 <x-show-field label="Estado del injerto" :value="$diagnostico->estado_injerto ?? '-'" />
-
                 <x-show-field label="Estado" :value="$diagnostico->estado?->estado ?? '-'" />
-                <x-show-field label="Comienzo" :value="$diagnostico->comienzo?->tipo_comienzo ?? '-'" />
                 <x-show-field label="Infección" :value="$diagnostico->infeccion?->nombre ?? '-'" />
                 <x-show-field label="Origen" :value="$diagnostico->origen?->origen ?? '-'" />
+                @php
+                $tipo = strtolower(trim($diagnostico->tipo_enfermedad ?? ''));
+                $esCronica = in_array($tipo, ['eich crónica', 'eich cronica'], true);
+                @endphp
+                
+                @if($esCronica)
+                <x-show-field label="Escala Karnofsky" :value="$diagnostico->escala_karnofsky ?? '-'" />
+                <x-show-field label="Comienzo" :value="$diagnostico->comienzo?->tipo_comienzo ?? '-'" />
+                @endif
 
                 <x-show-field label="Observaciones">
                     <p class="text-sm text-gray-700">{{ $diagnostico->observaciones ?: '-' }}</p>
                 </x-show-field>
 
+                {{-- REGLA APLICADA AL DIAGNÓSTICO --}}
                 @if($diagnostico->regla)
                     <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded">
                         <h5 class="text-md font-semibold text-gray-700 mb-2">Regla aplicada</h5>
@@ -99,7 +106,7 @@
                                     $fdFormatted = $fd ? \Illuminate\Support\Carbon::parse($fd)->format('d/m/Y') : '-';
                                 @endphp
                                 <tr>
-                                    <td class="px-4 py-2">{{ $sintoma->sintoma }}</td>
+                                    <td class="px-4 py-2">{{ $sintoma->sintoma ?? $sintoma->nombre ?? '-' }}</td>
                                     <td class="px-4 py-2">{{ $fdFormatted }}</td>
                                     <td class="px-4 py-2">{{ $sintoma->pivot->score_nih ?? '-' }}</td>
                                 </tr>

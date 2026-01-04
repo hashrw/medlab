@@ -18,5 +18,11 @@ class Prueba extends Model
         return $this->belongsTo(TipoPrueba::class, 'tipo_prueba_id');
     }
 
+    public function paciente()
+    {
+        return $this->belongsTo(Paciente::class);
+    }
+
+
 
 }

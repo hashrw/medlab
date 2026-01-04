@@ -16,6 +16,9 @@ return new class extends Migration {
             $table->date('fecha')->nullable();
             $table->text('resultado')->nullable();
             $table->text('comentario')->nullable();
+            $table->foreignId('paciente_id')
+                ->constrained('pacientes')
+                ->cascadeOnDelete();
             $table->timestamps();
         });
     }

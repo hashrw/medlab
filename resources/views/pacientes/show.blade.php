@@ -3,6 +3,11 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             Ficha Clínica del Paciente
         </h2>
+
+        <x-flash-message type="success" />
+        <x-flash-message type="warning" />
+        <x-flash-message type="error" />
+
     </x-slot>
 
     <div class="py-1">
@@ -108,11 +113,11 @@
 
                                         @if($imc)
                                             <span class="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm
-                                                            @if($imc < 25) bg-green-100 text-green-700
-                                                            @elseif($imc < 30) bg-yellow-100 text-yellow-700
-                                                            @else bg-red-100 text-red-700
-                                                            @endif
-                                                        ">
+                                                                @if($imc < 25) bg-green-100 text-green-700
+                                                                @elseif($imc < 30) bg-yellow-100 text-yellow-700
+                                                                @else bg-red-100 text-red-700
+                                                                @endif
+                                                            ">
                                                 {{ $imc }}
                                             </span>
                                         @else
@@ -157,14 +162,14 @@
                                                         $origenNombre = optional($diagnostico->origen)->origen ?? null;
                                                     @endphp
                                                     <span class="px-2 py-1 rounded text-xs
-                                                                        @if($origenNombre === 'inferido')
-                                                                            bg-purple-100 text-purple-800
-                                                                        @elseif($origenNombre === 'manual')
-                                                                            bg-gray-100 text-gray-800
-                                                                        @else
-                                                                            bg-gray-50 text-gray-600
-                                                                        @endif
-                                                                    ">
+                                                                                @if($origenNombre === 'inferido')
+                                                                                    bg-purple-100 text-purple-800
+                                                                                @elseif($origenNombre === 'manual')
+                                                                                    bg-gray-100 text-gray-800
+                                                                                @else
+                                                                                    bg-gray-50 text-gray-600
+                                                                                @endif
+                                                                            ">
                                                         {{ $origenNombre ?? 'No definido' }}
                                                     </span>
                                                 </td>
@@ -323,33 +328,82 @@
                     </div>
 
                     {{-- SECCIÓN 3: INFORMACIÓN CLÍNICA ASOCIADA --}}
-                    <div>
-                        <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
-                            Información Clínica Asociada
-                        </h4>
+<div>
+    <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
+        Información Clínica Asociada
+    </h4>
 
-                        <div class="flex flex-wrap gap-4 mt-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
 
-                            {{-- TRASPLANTES --}}
-                            <a href="{{ route('trasplantes.index') }}?paciente_id={{ $paciente->id }}"
-                                class="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 transition text-sm font-medium">
-                                Gestión de Trasplantes
-                            </a>
+        {{-- TRASPLANTES --}}
+        <div class="bg-white border rounded-lg p-4 shadow-sm">
+            <h5 class="font-semibold text-blue-600 mb-2">
+                Trasplantes
+            </h5>
 
-                            {{-- PRUEBAS CLÍNICAS --}}
-                            <a href="{{ route('pruebas.index') }}?paciente_id={{ $paciente->id }}"
-                                class="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 transition text-sm font-medium">
-                                Gestión de Pruebas Clínicas
-                            </a>
+            @if($paciente->trasplantes->count())
+                <ul class="space-y-2 text-sm">
+                    @foreach($paciente->trasplantes->sortByDesc('fecha_trasplante') as $trasplante)
+                        <li class="border-b pb-2">
+                            <p>
+                                <strong>Fecha:</strong>
+                                {{ $trasplante->fecha_trasplante?->format('d/m/Y') ?? '-' }}
+                            </p>
+                            <p>
+                                <strong>Tipo:</strong> {{ $trasplante->tipo_trasplante ?? '-' }}
+                            </p>
+                            <p>
+                                <strong>Días desde trasplante:</strong>
+                                {{ $trasplante->dias_desde_trasplante ?? '-' }}
+                            </p>
+                        </li>
+                    @endforeach
+                </ul>
+            @else
+                <p class="text-sm text-gray-600">
+                    No hay trasplantes registrados.
+                </p>
+            @endif
+        </div>
 
-                            {{-- SÍNTOMAS --}}
-                            <a href="{{ route('sintomas.index') }}?paciente_id={{ $paciente->id }}"
-                                class="px-4 py-2 bg-blue-600 text-white rounded shadow-sm hover:bg-blue-700 transition text-sm font-medium">
-                                Gestión de Síntomas
-                            </a>
+        {{-- PRUEBAS CLÍNICAS --}}
+        <div class="bg-white border rounded-lg p-4 shadow-sm">
+            <h5 class="font-semibold text-blue-600 mb-2">
+                Pruebas Clínicas
+            </h5>
 
-                        </div>
-                    </div>
+            @if($paciente->pruebas->count())
+                <ul class="space-y-2 text-sm">
+                    @foreach($paciente->pruebas->sortByDesc('fecha') as $prueba)
+                        <li class="border-b pb-2">
+                            <p>
+                                <strong>Fecha:</strong>
+                                {{ $prueba->fecha?->format('d/m/Y') ?? '-' }}
+                            </p>
+                            <p>
+                                <strong>Prueba:</strong> {{ $prueba->nombre }}
+                            </p>
+                            <p>
+                                <strong>Tipo:</strong>
+                                {{ optional($prueba->tipo_prueba)->nombre ?? '-' }}
+                            </p>
+                            <p class="text-gray-700">
+                                <strong>Resultado:</strong>
+                                {{ $prueba->resultado ?? '-' }}
+                            </p>
+                        </li>
+                    @endforeach
+                </ul>
+            @else
+                <p class="text-sm text-gray-600">
+                    No hay pruebas clínicas registradas.
+                </p>
+            @endif
+        </div>
+
+    </div>
+</div>
+
 
 
                     {{-- SECCIÓN 5: MOTOR DE INFERENCIA CLÍNICA --}}
@@ -420,7 +474,7 @@
                         @endif
                     </div>
 
-                    {{-- SECCIÓN 6: BOTONES DE ACCIÓN CLÍNICA 
+                    {{-- SECCIÓN 6: BOTONES DE ACCIÓN CLÍNICA
                     <div>
                         <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
                             Acciones Clínicas Rápidas

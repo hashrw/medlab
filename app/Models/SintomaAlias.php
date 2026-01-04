@@ -2,16 +2,16 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class SintomaAlias extends Model
 {
-    use HasFactory;
+    protected $table = 'sintoma_aliases';
 
     protected $fillable = [
         'sintoma_id',
         'alias',
+        'tipo',
         'nota',
     ];
 
@@ -20,4 +20,3 @@ class SintomaAlias extends Model
         return $this->belongsTo(Sintoma::class);
     }
 }
-        

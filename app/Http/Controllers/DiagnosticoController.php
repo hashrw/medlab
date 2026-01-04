@@ -276,10 +276,14 @@ class DiagnosticoController extends Controller
         $paciente = Paciente::find($pacienteId);
 
         if (!$paciente) {
-            return redirect()->back()->with('warning', 'Paciente no encontrado.');
+            return redirect()->back()->with([
+                'warning' => 'paciente_no_encontrado',
+                'flash_ctx' => ['paciente_id' => (int) $pacienteId],
+            ]);
+
         }
 
-        $diagnostico = $inferenciaService->ejecutar($paciente);
+        [$diagnostico, $fallback] = $inferenciaService->ejecutar($paciente);
 
         if ($diagnostico) {
             $regla = $diagnostico->regla_decision_id
@@ -295,7 +299,22 @@ class DiagnosticoController extends Controller
                 ->with('success', $mensaje);
         }
 
-        return redirect()->back()->with('warning', 'No se ha podido inferir ningún diagnóstico para este paciente.');
+        // aquí: no diagnóstico, pero sí fallback
+        if ($fallback) {
+            return redirect()->back()->with([
+                'warning' => 'fallback_aplicado',
+                'flash_ctx' => [
+                    'regla_id' => (int) $fallback->id,
+                    'regla_nombre' => (string) $fallback->nombre,
+                ],
+            ]);
+        }
+
+        return redirect()->back()->with([
+            'warning' => 'sin_diagnostico',
+            'flash_ctx' => ['paciente_id' => (int) $pacienteId],
+        ]);
+
     }
 
     public function inferidos()

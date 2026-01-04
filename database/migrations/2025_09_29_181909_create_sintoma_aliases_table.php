@@ -16,15 +16,21 @@ return new class extends Migration
                   ->constrained('sintomas')
                   ->onDelete('cascade');
 
-            // Texto del alias
+            // Alias semántico del síntoma (canónico o sinónimo)
             $table->string('alias');
 
-            // Nota opcional para contexto (ej. “leve/moderado/severo”)
+            // Tipo de alias: canonical | synonym | ontology | import | etc.
+            $table->string('tipo')->default('canonical');
+
+            // Nota opcional para contexto clínico o técnico
             $table->string('nota')->nullable();
 
             $table->timestamps();
 
-            // Evita duplicados de alias para el mismo síntoma
+            // Un alias identifica UN solo concepto clínico (clave para inferencia)
+            $table->unique('alias', 'ux_sintoma_aliases_alias_global');
+
+            // Evita duplicar el mismo alias dentro del mismo síntoma (redundante pero correcto)
             $table->unique(['sintoma_id', 'alias'], 'ux_alias_por_sintoma');
         });
     }

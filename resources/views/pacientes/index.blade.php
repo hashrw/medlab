@@ -3,6 +3,7 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             Módulo de Pacientes
         </h2>
+
     </x-slot>
 
     <div class="py-3">
@@ -62,9 +63,11 @@
                             <label class="text-sm font-semibold text-gray-700">IMC</label>
                             <select name="imc" class="mt-1 w-full border-gray-300 rounded-md shadow-sm">
                                 <option value="">Todos</option>
-                                <option value="normal"    {{ request('imc') == 'normal' ? 'selected' : '' }}>Normal</option>
-                                <option value="sobrepeso" {{ request('imc') == 'sobrepeso' ? 'selected' : '' }}>Sobrepeso</option>
-                                <option value="obesidad"  {{ request('imc') == 'obesidad' ? 'selected' : '' }}>Obesidad</option>
+                                <option value="normal" {{ request('imc') == 'normal' ? 'selected' : '' }}>Normal</option>
+                                <option value="sobrepeso" {{ request('imc') == 'sobrepeso' ? 'selected' : '' }}>Sobrepeso
+                                </option>
+                                <option value="obesidad" {{ request('imc') == 'obesidad' ? 'selected' : '' }}>Obesidad
+                                </option>
                             </select>
                         </div>
 

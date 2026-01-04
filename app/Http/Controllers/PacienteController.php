@@ -88,6 +88,7 @@ class PacienteController extends Controller
             'trasplantes',
             'tratamientos',
             'sintomas',
+            'pruebas.tipo_prueba',
             'organos'
         ]);
 

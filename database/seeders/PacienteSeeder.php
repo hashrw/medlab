@@ -20,106 +20,55 @@ class PacienteSeeder extends Seeder
             ->toArray();
 
         if (empty($userIds)) {
-            dump('PacienteSeeder: no hay users disponibles (users.paciente_id ya informado). Seeder abortado.');
+            echo "PacienteSeeder: no hay users disponibles (users.paciente_id ya informado). Seeder abortado.\n";
             return;
         }
 
-        $todosSintomas = DB::table('sintomas')->select('id', 'alias', 'nombre')->get();
-        if ($todosSintomas->isEmpty()) {
-            dump('PacienteSeeder: no hay síntomas en la tabla sintomas. Seeder abortado.');
+        $todosSintomasIds = DB::table('sintomas')->pluck('id')->map(fn ($v) => (int) $v)->toArray();
+        if (empty($todosSintomasIds)) {
+            echo "PacienteSeeder: no hay síntomas en la tabla sintomas. Seeder abortado.\n";
             return;
         }
 
-        // Resolver ID de síntoma por alias o nombre (exacto, y si no, por LIKE).
-        $sid = function (string $aliasOrName) use ($todosSintomas): ?int {
-            $s = $todosSintomas->firstWhere('alias', $aliasOrName)
-              ?? $todosSintomas->firstWhere('nombre', $aliasOrName);
+        // Debe existir SintomaAliasSeeder antes que PacienteSeeder
+        if (!Schema::hasTable('sintoma_aliases')) {
+            echo "PacienteSeeder: falta la tabla sintoma_aliases. Asegura migración/orden de seeders.\n";
+            return;
+        }
 
-            if ($s) return (int) $s->id;
+        // Cargamos TODOS los aliases canónicos y su sintoma_id, y los agrupamos por organo_id
+        $aliases = DB::table('sintoma_aliases as sa')
+            ->join('sintomas as s', 's.id', '=', 'sa.sintoma_id')
+            ->where('sa.tipo', 'canonical')
+            ->select('sa.alias', 'sa.sintoma_id', 's.organo_id')
+            ->orderBy('sa.id')
+            ->get();
 
-            $needle = mb_strtolower($aliasOrName);
-            $sLike = $todosSintomas->first(function ($row) use ($needle) {
-                $a = mb_strtolower((string) ($row->alias ?? ''));
-                $n = mb_strtolower((string) ($row->nombre ?? ''));
-                return str_contains($a, $needle) || str_contains($n, $needle);
-            });
+        if ($aliases->isEmpty()) {
+            echo "PacienteSeeder: no hay aliases canónicos en sintoma_aliases. Seeder abortado.\n";
+            return;
+        }
 
-            return $sLike ? (int) $sLike->id : null;
-        };
-
-        // Casos controlados para probar:
-        // Ajusta los aliases a los que existan realmente en tu tabla sintomas.
-        $casos = [
-            // Parcial GI: falta un síntoma clave (no debería cerrar regla completa)
-            'GI_parcial_1' => [
-                'sintomas' => ['gastro_diarrea', 'gastro_dolor_abdominal'],
-                'dias_desde_trasplante' => 35,
-            ],
-            // Casi GI: le falta 1 síntoma (casi dispara)
-            'GI_casi' => [
-                'sintomas' => ['gastro_diarrea', 'gastro_nauseas', 'gastro_dolor_abdominal'],
-                'dias_desde_trasplante' => 28,
-            ],
-            // Aguda GI completa: set completo (debería disparar si la regla usa estos)
-            'GI_aguda' => [
-                'sintomas' => ['gastro_diarrea', 'gastro_nauseas', 'gastro_dolor_abdominal', 'gastro_vomitos'],
-                'dias_desde_trasplante' => 22,
-            ],
-
-            // Parcial Piel
-            'Piel_parcial' => [
-                'sintomas' => ['piel_eritema'],
-                'dias_desde_trasplante' => 40,
-            ],
-            // Aguda Piel (ejemplo)
-            'Piel_aguda' => [
-                'sintomas' => ['piel_eritema', 'piel_exantema', 'piel_prurito'],
-                'dias_desde_trasplante' => 18,
-            ],
-
-            // Parcial Hígado
-            'Higado_parcial' => [
-                'sintomas' => ['higado_ictericia'],
-                'dias_desde_trasplante' => 45,
-            ],
-            // Aguda Hígado (ejemplo)
-            'Higado_aguda' => [
-                'sintomas' => ['higado_ictericia', 'higado_bilirrubina_alta'],
-                'dias_desde_trasplante' => 25,
-            ],
-        ];
-
-        // Convertimos casos a listas de IDs reales
-        $casosIds = [];
-        foreach ($casos as $key => $cfg) {
-            $ids = [];
-            foreach ($cfg['sintomas'] as $a) {
-                $id = $sid($a);
-                if ($id) $ids[] = $id;
-                else dump("PacienteSeeder: síntoma no encontrado para alias/nombre '{$a}' (caso {$key}). Se omite.");
-            }
-            $ids = array_values(array_unique($ids));
-            $casosIds[$key] = [
-                'sintomas' => $ids,
-                'dias_desde_trasplante' => (int) $cfg['dias_desde_trasplante'],
+        $byOrgano = [];
+        foreach ($aliases as $row) {
+            $oid = (int) $row->organo_id;
+            if (!isset($byOrgano[$oid])) $byOrgano[$oid] = [];
+            $byOrgano[$oid][] = [
+                'alias' => (string) $row->alias,
+                'sintoma_id' => (int) $row->sintoma_id,
             ];
         }
 
-        // Lista total de IDs para random
-        $todosSintomasIds = $todosSintomas->pluck('id')->map(fn($v) => (int) $v)->toArray();
+        // Helper: escoge N síntomas únicos de un órgano (si existen), de forma determinista-ish (por orden)
+        $pickN = function (int $organoId, int $n) use ($byOrgano): array {
+            $pool = $byOrgano[$organoId] ?? [];
+            if (count($pool) < $n) return [];
+            // Tomamos los primeros N (estable, reproducible)
+            return array_slice($pool, 0, $n);
+        };
 
-        $idxUser = 0;
-
-        foreach ($casosIds as $nombreCaso => $cfg) {
-            if ($idxUser >= count($userIds)) break; // no más users disponibles
-
-            // Si el caso quedó sin síntomas (porque no existían aliases), saltamos
-            if (empty($cfg['sintomas'])) {
-                continue;
-            }
-
-            $userId = $userIds[$idxUser++];
-
+        // Helper: inserta paciente + user link + sintomas activos + (opcional) paciente_enfermedad
+        $createPaciente = function (int $userId, array $sintomaIds, int $diasDesdeTrasplante, string $caso) use ($faker): ?int {
             $pacienteId = DB::table('pacientes')->insertGetId([
                 'nuhsa' => 'AN' . $faker->unique()->numerify('##########'),
                 'fecha_nacimiento' => $faker->dateTimeBetween('-70 years', '-18 years')->format('Y-m-d'),
@@ -132,11 +81,12 @@ class PacienteSeeder extends Seeder
 
             DB::table('users')->where('id', $userId)->update(['paciente_id' => $pacienteId]);
 
-            // Insertar síntomas activos (caso controlado)
-            foreach ($cfg['sintomas'] as $sintomaId) {
+            $sintomaIds = array_values(array_unique(array_map(fn ($v) => (int) $v, $sintomaIds)));
+
+            foreach ($sintomaIds as $sid) {
                 DB::table('paciente_sintoma')->insert([
                     'paciente_id' => $pacienteId,
-                    'sintoma_id' => $sintomaId,
+                    'sintoma_id' => $sid,
                     'fecha_observacion' => now()->toDateString(),
                     'activo' => true,
                     'fuente' => 'observación médica',
@@ -145,25 +95,69 @@ class PacienteSeeder extends Seeder
                 ]);
             }
 
-            // Opcional: si existe paciente_enfermedad, fijamos fecha_trasplante para simular aguda
             if (Schema::hasTable('paciente_enfermedad')) {
-                $fechaTrasplante = now()->subDays($cfg['dias_desde_trasplante'])->toDateString();
+                $fechaTrasplante = now()->subDays($diasDesdeTrasplante)->toDateString();
 
-                // Si tu pivot requiere más campos obligatorios, añade aquí.
-                DB::table('paciente_enfermedad')->insert([
-                    'paciente_id' => $pacienteId,
-                    'enfermedad_id' => DB::table('enfermedads')->value('id'), // primera enfermedad
-                    'fecha_trasplante' => $fechaTrasplante,
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
+                // Si no hay enfermedad, no insertamos
+                $enfermedadId = DB::table('enfermedads')->value('id');
+
+                if ($enfermedadId) {
+                    DB::table('paciente_enfermedad')->insert([
+                        'paciente_id' => $pacienteId,
+                        'enfermedad_id' => $enfermedadId,
+                        'fecha_trasplante' => $fechaTrasplante,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
 
-            // Marca en consola para que sepas qué paciente corresponde a qué caso
-            dump("PacienteSeeder: creado paciente {$pacienteId} para caso {$nombreCaso} (user {$userId}).");
+            echo "PacienteSeeder: creado paciente {$pacienteId} para caso {$caso} (user {$userId}).\n";
+            return (int) $pacienteId;
+        };
+
+        // Mapeo de órganos objetivo: no inventamos; si en tu catálogo GI/Hígado/Piel son otros IDs, se detecta por falta de pool.
+        // Ajusta SOLO estos IDs si tu modelo de órganos cambia.
+        $ORG_GI = 1;
+        $ORG_HIGADO = 2;
+        $ORG_PIEL = 7;
+
+        // Definición de casos: solo N síntomas por órgano (no nombres concretos)
+        $casos = [
+            'GI_parcial_1'   => ['organo_id' => $ORG_GI,     'n' => 2, 'dias' => 35],
+            'GI_casi'        => ['organo_id' => $ORG_GI,     'n' => 3, 'dias' => 28],
+            'GI_aguda'       => ['organo_id' => $ORG_GI,     'n' => 4, 'dias' => 22],
+            'Higado_parcial' => ['organo_id' => $ORG_HIGADO, 'n' => 1, 'dias' => 45],
+            'Higado_aguda'   => ['organo_id' => $ORG_HIGADO, 'n' => 3, 'dias' => 25],
+            'Piel_parcial'   => ['organo_id' => $ORG_PIEL,   'n' => 1, 'dias' => 40],
+            'Piel_aguda'     => ['organo_id' => $ORG_PIEL,   'n' => 2, 'dias' => 18],
+        ];
+
+        $idxUser = 0;
+
+        // Crear casos controlados
+        foreach ($casos as $nombreCaso => $cfg) {
+            if ($idxUser >= count($userIds)) break;
+
+            $organoId = (int) $cfg['organo_id'];
+            $n = (int) $cfg['n'];
+            $dias = (int) $cfg['dias'];
+
+            $picked = $pickN($organoId, $n);
+
+            if (empty($picked)) {
+                $count = isset($byOrgano[$organoId]) ? count($byOrgano[$organoId]) : 0;
+                echo "PacienteSeeder: caso {$nombreCaso} sin pool suficiente (organo {$organoId} tiene {$count}, requiere {$n}). Se salta.\n";
+                continue;
+            }
+
+            $sintomaIds = array_map(fn ($x) => (int) $x['sintoma_id'], $picked);
+
+            $userId = $userIds[$idxUser++];
+            $createPaciente($userId, $sintomaIds, $dias, $nombreCaso);
         }
 
-        // Resto de users: pacientes aleatorios como antes
+        // Resto aleatorio
         for (; $idxUser < count($userIds); $idxUser++) {
             $userId = $userIds[$idxUser];
 
@@ -180,11 +174,12 @@ class PacienteSeeder extends Seeder
             DB::table('users')->where('id', $userId)->update(['paciente_id' => $pacienteId]);
 
             $sintomasPaciente = $faker->randomElements($todosSintomasIds, rand(3, 6));
+            $sintomasPaciente = array_values(array_unique(array_map(fn ($v) => (int) $v, $sintomasPaciente)));
 
             foreach ($sintomasPaciente as $sintomaId) {
                 DB::table('paciente_sintoma')->insert([
                     'paciente_id' => $pacienteId,
-                    'sintoma_id' => (int) $sintomaId,
+                    'sintoma_id' => $sintomaId,
                     'fecha_observacion' => $faker->dateTimeBetween('-1 year', 'now')->format('Y-m-d'),
                     'activo' => true,
                     'fuente' => $faker->randomElement(['paciente', 'observación médica', 'monitorización']),

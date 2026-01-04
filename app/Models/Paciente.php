@@ -78,8 +78,14 @@ class Paciente extends Model
      --------------------------------------------------------------*/
     public function diagnosticos(): HasMany
     {
-        return $this->hasMany(Diagnostico::class,'paciente_id');
+        return $this->hasMany(Diagnostico::class, 'paciente_id');
     }
+
+    public function pruebas()
+    {
+        return $this->hasMany(Prueba::class);
+    }
+
 
     /*--------------------------------------------------------------
      | ACCESOR: Edad
@@ -104,11 +110,11 @@ class Paciente extends Model
 
         return match (true) {
             $imc < 18.5 => 'Bajo Peso',
-            $imc < 25   => 'Normal',
-            $imc < 30   => 'Sobrepeso',
-            $imc < 35   => 'Obesidad II',
-            $imc < 40   => 'Obesidad III',
-            default     => 'Obesidad Mórbida',
+            $imc < 25 => 'Normal',
+            $imc < 30 => 'Sobrepeso',
+            $imc < 35 => 'Obesidad II',
+            $imc < 40 => 'Obesidad III',
+            default => 'Obesidad Mórbida',
         };
     }
 
@@ -120,8 +126,10 @@ class Paciente extends Model
         parent::boot();
 
         static::saving(function ($paciente) {
-            if ($paciente->fecha_nacimiento &&
-                now()->diffInYears($paciente->fecha_nacimiento) < 5) {
+            if (
+                $paciente->fecha_nacimiento &&
+                now()->diffInYears($paciente->fecha_nacimiento) < 5
+            ) {
 
                 throw new \Exception(
                     'La fecha de nacimiento no puede indicar menos de 5 años.'

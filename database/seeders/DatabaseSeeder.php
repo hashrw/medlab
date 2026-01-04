@@ -22,6 +22,7 @@ class DatabaseSeeder extends Seeder
             InfeccionSeeder::class,
             OrganoSeeder::class,
             SintomaSeeder::class,
+            SintomaAliasSeeder::class,
             PacienteSeeder::class,
             MedicamentoSeeder::class,
             TratamientoSeeder::class,
