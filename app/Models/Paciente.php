@@ -98,6 +98,49 @@ class Paciente extends Model
     }
 
     /*--------------------------------------------------------------
+ | ACCESOR: IMC
+ --------------------------------------------------------------*/
+    public function getImcAttribute(): ?float
+    {
+        if (!$this->peso || !$this->altura) {
+            return null;
+        }
+
+        $peso = (float) $this->peso;
+        $alturaCm = (float) $this->altura;
+
+        if ($peso <= 0 || $alturaCm <= 0) {
+            return null;
+        }
+
+        $alturaM = $alturaCm / 100;
+
+        return round($peso / ($alturaM * $alturaM), 1);
+    }
+
+    /*--------------------------------------------------------------
+     | ACCESOR: Categoría IMC
+     --------------------------------------------------------------*/
+    public function getImcCategoriaAttribute(): ?string
+    {
+        $imc = $this->imc;
+
+        if ($imc === null) {
+            return null;
+        }
+
+        return match (true) {
+            $imc < 18.5 => 'Bajo Peso',
+            $imc < 25 => 'Normal',
+            $imc < 30 => 'Sobrepeso',
+            $imc < 35 => 'Obesidad II',
+            $imc < 40 => 'Obesidad III',
+            default => 'Obesidad Mórbida',
+        };
+    }
+
+
+    /*--------------------------------------------------------------
      | ACCESOR: Categoría IMC
      --------------------------------------------------------------*/
     public function getICMCategoriaAttribute()
