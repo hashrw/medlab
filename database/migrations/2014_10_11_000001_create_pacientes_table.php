@@ -24,7 +24,6 @@ return new class extends Migration
             $table->string('sexo')->nullable();
             //relación con Diagnósticos y Tratamientos
             
-
         });
     }
 

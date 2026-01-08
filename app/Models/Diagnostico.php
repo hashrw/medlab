@@ -68,4 +68,10 @@ class Diagnostico extends Model
     {
         return $this->belongsTo(ReglaDecision::class, 'regla_decision_id');
     }
+
+    public function tratamientos()
+    {
+        return $this->hasMany(\App\Models\Tratamiento::class);
+    }
+
 }

@@ -63,4 +63,10 @@ class Tratamiento extends Model
         return $this->belongsToMany(Paciente::class)->using(PacienteTratamiento::class)->withPivot('paciente_id','tratamiento_id');
     }*/
 
+    public function diagnostico()
+    {
+        return $this->belongsTo(\App\Models\Diagnostico::class);
+    }
+
+
 }

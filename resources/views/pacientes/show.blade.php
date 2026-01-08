@@ -36,7 +36,7 @@
                     </div>
 
                     <div class="flex space-x-4 text-lg">
-                        <a href="{{ route('pacientes.index') }}" class="hover:text-gray-200" title="Volver">
+                        <a href="javascript:window.history.back()" class="hover:text-gray-200" title="Volver">
                             <i class="fas fa-arrow-left"></i>
                         </a>
 
