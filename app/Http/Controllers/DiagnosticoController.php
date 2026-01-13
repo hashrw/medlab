@@ -145,6 +145,8 @@ class DiagnosticoController extends Controller
             'paciente',
         ]);
 
+        $prev = url()->previous();
+
         $paciente = $diagnostico->paciente;
 
         $ultimoTrasplante = $paciente
@@ -152,6 +154,11 @@ class DiagnosticoController extends Controller
             : null;
 
         $diasDesdeTrasplante = $ultimoTrasplante?->dias_desde_trasplante;
+
+        // Evitar que se guarde a sí misma
+        if (!str_contains($prev, route('diagnosticos.show', $diagnostico->id))) {
+            session(['diagnosticos_back_url' => $prev]);
+        }
 
         return view('diagnosticos.show', [
             'diagnostico' => $diagnostico,
@@ -270,7 +277,6 @@ class DiagnosticoController extends Controller
         return redirect()->route('diagnosticos.edit', $diagnostico->id);
     }
 
-
     public function inferirDesdeSistema($pacienteId, InferenciaDiagnosticoService $inferenciaService)
     {
         $paciente = Paciente::find($pacienteId);
@@ -280,9 +286,30 @@ class DiagnosticoController extends Controller
                 'warning' => 'paciente_no_encontrado',
                 'flash_ctx' => ['paciente_id' => (int) $pacienteId],
             ]);
-
         }
 
+        // 1) Idempotencia: si ya existe un diagnóstico inferido, avisar y ofrecer botón para abrirlo
+        $existente = Diagnostico::query()
+            ->where('paciente_id', (int) $pacienteId)
+            ->whereNotNull('regla_decision_id')
+            ->orderByDesc('fecha_diagnostico')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($existente) {
+            return redirect()
+                ->route('pacientes.show', (int) $pacienteId)
+                ->with([
+                    'warning' => 'diagnostico_ya_existe',
+                    'flash_ctx' => [
+                        'paciente_id' => (int) $pacienteId,
+                        'diagnostico_id' => (int) $existente->id,
+                        'grado_eich' => (string) ($existente->grado_eich ?? ''),
+                    ],
+                ]);
+        }
+
+        // 2) Ejecutar inferencia (no tocamos el service)
         [$diagnostico, $fallback] = $inferenciaService->ejecutar($paciente);
 
         if ($diagnostico) {
@@ -295,11 +322,11 @@ class DiagnosticoController extends Controller
                 $mensaje .= ' Recomendación: ' . $regla->tipo_recomendacion . '.';
             }
 
-            return redirect()->route('diagnosticos.show', $diagnostico->id)
+            return redirect()
+                ->route('diagnosticos.show', $diagnostico->id)
                 ->with('success', $mensaje);
         }
 
-        // aquí: no diagnóstico, pero sí fallback
         if ($fallback) {
             return redirect()->back()->with([
                 'warning' => 'fallback_aplicado',
@@ -314,8 +341,10 @@ class DiagnosticoController extends Controller
             'warning' => 'sin_diagnostico',
             'flash_ctx' => ['paciente_id' => (int) $pacienteId],
         ]);
-
     }
+
+
+
 
     public function inferidos()
     {

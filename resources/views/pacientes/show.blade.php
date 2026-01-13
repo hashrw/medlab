@@ -3,18 +3,43 @@
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
             Ficha Clínica del Paciente
         </h2>
-
-        <x-flash-message type="success" />
-        <x-flash-message type="warning" />
-        <x-flash-message type="error" />
     </x-slot>
 
     <div class="py-1">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
 
+            <x-flash-message type="success" />
+            <x-flash-message type="warning" />
+            <x-flash-message type="error" />
+
+            {{-- AVISO: diagnóstico ya existente (idempotencia) --}}
+            @php
+                $w = session('warning');
+                $ctx = session('flash_ctx', []);
+            @endphp
+
+            @if($w === 'diagnostico_ya_existe' && !empty($ctx['diagnostico_id']))
+                <div class="mb-4 border border-yellow-200 bg-yellow-50 text-yellow-900 rounded-lg p-4 flex items-start justify-between gap-4">
+                    <div class="text-sm">
+                        <p class="font-semibold">Ya existe un diagnóstico inferido para este paciente.</p>
+                        @if(!empty($ctx['grado_eich']))
+                            <p class="mt-1">Grado: <span class="font-semibold">{{ $ctx['grado_eich'] }}</span></p>
+                        @endif
+                    </div>
+
+                    <div class="shrink-0">
+                        <a href="{{ route('diagnosticos.show', (int) $ctx['diagnostico_id']) }}"
+                           class="inline-flex items-center px-3 py-2 rounded bg-yellow-600 hover:bg-yellow-700 text-white text-xs font-semibold">
+                            Abrir diagnóstico
+                        </a>
+                    </div>
+                </div>
+            @endif
+
             <div class="bg-white shadow-xl rounded-lg overflow-hidden">
 
                 {{-- ENCABEZADO --}}
+                {{-- CLAVE: items-start para alinear botones arriba (como en Diagnostico) --}}
                 <div class="p-6 bg-blue-800 text-white flex justify-between items-start">
                     <div>
                         <h3 class="text-2xl font-bold">{{ $paciente->nombre }}</h3>
@@ -35,21 +60,34 @@
                         </p>
                     </div>
 
-                    <div class="flex space-x-4 text-lg">
-                        <a href="javascript:window.history.back()" class="hover:text-gray-200" title="Volver">
-                            <i class="fas fa-arrow-left"></i>
-                        </a>
+                    {{-- BOTONES --}}
+                    {{-- CLAVE: self-start + pt-1 para que queden a la misma altura visual que el título --}}
+                    <div class="flex items-start space-x-4 text-lg self-start pt-1">
+                        @php $backUrl = session('pacientes_back_url'); @endphp
 
-                        <a href="{{ route('pacientes.edit', $paciente->id) }}" class="hover:text-yellow-300" title="Editar">
+                        @if($backUrl)
+                            <a href="{{ $backUrl }}" class="hover:text-gray-200" title="Volver">
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        @else
+                            <a href="{{ route('pacientes.index') }}" class="hover:text-gray-200" title="Volver a pacientes">
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        @endif
+
+                        <a href="{{ route('pacientes.edit', $paciente->id) }}"
+                           class="hover:text-yellow-300"
+                           title="Editar">
                             <i class="fas fa-edit"></i>
                         </a>
 
-                        <form method="POST" action="{{ route('pacientes.destroy', $paciente->id) }}"
-                            onsubmit="return confirm('¿Eliminar este paciente?')">
+                        <form method="POST"
+                              action="{{ route('pacientes.destroy', $paciente->id) }}"
+                              onsubmit="return confirm('¿Eliminar este paciente?')">
                             @csrf
                             @method('DELETE')
 
-                            <button type="submit" class="hover:text-red-300" title="Eliminar">
+                            <button type="submit" class="hover:text-red-300 align-top" title="Eliminar">
                                 <i class="fas fa-trash-alt"></i>
                             </button>
                         </form>
@@ -111,13 +149,13 @@
 
                                         @if(!is_null($paciente->imc))
                                             <span class="
-                                                inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm
-                                                @if($paciente->imc_categoria === 'Normal') bg-green-100 text-green-700
-                                                @elseif($paciente->imc_categoria === 'Sobrepeso') bg-yellow-100 text-yellow-700
-                                                @elseif($paciente->imc_categoria && str_starts_with($paciente->imc_categoria, 'Obesidad')) bg-red-100 text-red-700
-                                                @else bg-gray-100 text-gray-700
-                                                @endif
-                                            ">
+                                                    inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm
+                                                    @if($paciente->imc_categoria === 'Normal') bg-green-100 text-green-700
+                                                    @elseif($paciente->imc_categoria === 'Sobrepeso') bg-yellow-100 text-yellow-700
+                                                    @elseif($paciente->imc_categoria && str_starts_with($paciente->imc_categoria, 'Obesidad')) bg-red-100 text-red-700
+                                                    @else bg-gray-100 text-gray-700
+                                                    @endif
+                                                ">
                                                 {{ number_format($paciente->imc, 1, '.', '') }}
                                                 — {{ $paciente->imc_categoria ?? 'No clasificado' }}
                                             </span>
@@ -163,14 +201,14 @@
                                                         $origenNombre = optional($diagnostico->origen)->origen ?? null;
                                                     @endphp
                                                     <span class="px-2 py-1 rounded text-xs
-                                                        @if($origenNombre === 'inferido')
-                                                            bg-purple-100 text-purple-800
-                                                        @elseif($origenNombre === 'manual')
-                                                            bg-gray-100 text-gray-800
-                                                        @else
-                                                            bg-gray-50 text-gray-600
-                                                        @endif
-                                                    ">
+                                                                @if($origenNombre === 'inferido')
+                                                                    bg-purple-100 text-purple-800
+                                                                @elseif($origenNombre === 'manual')
+                                                                    bg-gray-100 text-gray-800
+                                                                @else
+                                                                    bg-gray-50 text-gray-600
+                                                                @endif
+                                                            ">
                                                         {{ $origenNombre ?? 'No definido' }}
                                                     </span>
                                                 </td>
@@ -178,8 +216,7 @@
                                                     {{ $diagnostico->grado_eich ?? '-' }}
                                                 </td>
                                                 <td class="px-3 py-2">
-                                                    <button type="button"
-                                                        onclick="openDiagnosticoModal({{ $diagnostico->id }})"
+                                                    <button type="button" onclick="openDiagnosticoModal({{ $diagnostico->id }})"
                                                         class="text-blue-600 hover:text-blue-800 underline text-xs">
                                                         Ver detalle
                                                     </button>
@@ -209,8 +246,7 @@
                                                 </p>
                                             </div>
 
-                                            <button type="button"
-                                                onclick="closeDiagnosticoModal({{ $diagnostico->id }})"
+                                            <button type="button" onclick="closeDiagnosticoModal({{ $diagnostico->id }})"
                                                 class="text-white hover:text-gray-200 text-xl leading-none">
                                                 &times;
                                             </button>
@@ -225,7 +261,8 @@
                                                     <h4 class="font-semibold text-gray-700 mb-1">
                                                         Datos del diagnóstico
                                                     </h4>
-                                                    <p><strong>Tipo enfermedad:</strong> {{ $diagnostico->tipo_enfermedad ?? '-' }}</p>
+                                                    <p><strong>Tipo enfermedad:</strong>
+                                                        {{ $diagnostico->tipo_enfermedad ?? '-' }}</p>
                                                     <p><strong>Grado EICH:</strong> {{ $diagnostico->grado_eich ?? '-' }}</p>
                                                     <p>
                                                         <strong>Origen:</strong>
@@ -268,10 +305,14 @@
                                                         <table class="min-w-full text-xs">
                                                             <thead class="bg-gray-50">
                                                                 <tr>
-                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">Órgano</th>
-                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">Síntoma</th>
-                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">Manifestación Clínica</th>
-                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">Score NIH</th>
+                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">
+                                                                        Órgano</th>
+                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">
+                                                                        Síntoma</th>
+                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">
+                                                                        Manifestación Clínica</th>
+                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">
+                                                                        Score NIH</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody class="divide-y divide-gray-100">
@@ -309,8 +350,7 @@
                                                 Abrir ficha completa del diagnóstico
                                             </a>
 
-                                            <button type="button"
-                                                onclick="closeDiagnosticoModal({{ $diagnostico->id }})"
+                                            <button type="button" onclick="closeDiagnosticoModal({{ $diagnostico->id }})"
                                                 class="px-3 py-1 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">
                                                 Cerrar
                                             </button>
@@ -415,7 +455,6 @@
                             diagnóstico inferido.
                         </p>
 
-                        {{-- Botón para lanzar inferencia --}}
                         <form method="POST" action="{{ route('diagnosticos.inferir', $paciente->id) }}">
                             @csrf
 

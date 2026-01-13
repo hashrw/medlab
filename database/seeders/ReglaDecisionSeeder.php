@@ -89,7 +89,7 @@ class ReglaDecisionSeeder extends Seeder
                     ],
                 ],
                 'diagnostico' => $this->diagnosticoBase([
-                    'tipo_enfermedad' => 'EICH Aguda',
+                    'tipo_enfermedad' => 'aguda',
                     'estado_injerto' => 'critico',
                     'grado_eich' => 'severa',
                     'observaciones' => 'EICH severa con afectación gastrointestinal y hepática.',
@@ -125,7 +125,7 @@ class ReglaDecisionSeeder extends Seeder
                     ],
                 ],
                 'diagnostico' => $this->diagnosticoBase([
-                    'tipo_enfermedad' => 'EICH Aguda ',
+                    'tipo_enfermedad' => 'aguda ',
                     'estado_injerto' => 'inestable',
                     'grado_eich' => 'moderada',
                     'observaciones' => 'EICH moderada con afectación cutánea y gastrointestinal.',
@@ -153,7 +153,7 @@ class ReglaDecisionSeeder extends Seeder
                     ],
                 ],
                 'diagnostico' => $this->diagnosticoBase([
-                    'tipo_recomendacion' => 'Diagnóstico clínico compatible con EICH aguda leve. Requiere control clínico y monitorización evolutiva.',
+                    'tipo_enfermedad' => 'aguda',
                     'estado_injerto' => 'estable',
                     'grado_eich' => 'leve',
                     'observaciones' => 'EICH leve con afectación cutánea mínima.',
@@ -175,7 +175,7 @@ class ReglaDecisionSeeder extends Seeder
                 'activo' => true,
                 'condiciones' => [],
                 'diagnostico' => $this->diagnosticoBase([
-                    'tipo_enfermedad' => 'EICH Aguda',
+                    'tipo_enfermedad' => 'aguda',
                     'estado_injerto' => 'estable',
                     'grado_eich' => 'no_concluyente',
                     'observaciones' => 'No se cumplen criterios suficientes para inferir EICH.',

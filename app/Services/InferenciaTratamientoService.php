@@ -3,145 +3,247 @@
 namespace App\Services;
 
 use App\Models\Diagnostico;
+use App\Models\ReglaTratamiento;
 use App\Models\Tratamiento;
-use App\Models\Medicamento;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class InferenciaTratamientoService
 {
-    public function inferirParaDiagnostico(Diagnostico $diagnostico, int $medicoId): ?Tratamiento
+    /**
+     * Genera un tratamiento inferido a partir de un diagnóstico inferido.
+     *
+     * Alcance v1:
+     * - tipo_enfermedad: 'aguda'
+     * - 1ª línea (solo esteroide sistémico + esteroides tópicos)
+     * - NO infiere IC
+     *
+     * Reglas:
+     * - Máximo 1 tratamiento inferido "activo" por paciente:
+     *   - Si existe uno previo, se cierra (fecha_fin_linea hoy si estaba null)
+     * - Si el diagnóstico es no concluyente, no genera tratamiento.
+     */
+    public function inferirDesdeDiagnostico(Diagnostico $diagnostico, int $medicoId): ?Tratamiento
     {
-        // Si no hay grado concluyente, no se crea tratamiento
-        $grado = $diagnostico->grado_eich ?? null;
-        if (!$grado || $grado === 'no_concluyente') {
+        $pacienteId = (int) ($diagnostico->paciente_id ?? 0);
+        if ($pacienteId <= 0) {
+            throw new \LogicException("Diagnóstico {$diagnostico->id} no tiene paciente_id.");
+        }
+
+        $tipoEnf = (string) ($diagnostico->tipo_enfermedad ?? '');
+        if ($tipoEnf === '') {
+            throw new \LogicException("Diagnóstico {$diagnostico->id} no tiene tipo_enfermedad.");
+        }
+
+        $grado = (string) ($diagnostico->grado_eich ?? '');
+        if ($grado === '' || $grado === 'no_concluyente') {
             return null;
         }
 
-        // 2) Resolver paciente (según tu modelo M:M, elige uno)
-        $pacienteId = $diagnostico->paciente_id;
+        // Resolver regla aplicable (prioridad ascendente)
+        $regla = $this->resolverRegla($diagnostico);
 
-        if (!$pacienteId) {
-            throw new \LogicException("Diagnóstico {$diagnostico->id} sin paciente asociado.");
+        $acciones = (array) ($regla->acciones ?? []);
+        $tData = $acciones['tratamiento'] ?? null;
+
+        // Fallback o regla vacía
+        if (!$tData || empty($tData['tratamiento'])) {
+            return null;
         }
 
+        return DB::transaction(function () use ($diagnostico, $medicoId, $pacienteId, $regla, $acciones, $tData) {
 
-        // 3) Evitar duplicados: un tratamiento inferido por diagnóstico
-        $yaExiste = Tratamiento::query()
-            ->where('paciente_id', $pacienteId)
-            ->where('diagnostico_id', $diagnostico->id)
-            ->exists();
-
-        if ($yaExiste) {
-            return Tratamiento::where('paciente_id', $pacienteId)
-                ->where('diagnostico_id', $diagnostico->id)
-                ->latest('id')
-                ->first();
-        }
-
-        // 4) Selección de plan terapéutico (v1: solo por grado)
-        $plan = $this->planPorGrado($grado);
-
-        // 5) Persistir tratamiento + líneas en transacción
-        return DB::transaction(function () use ($plan, $pacienteId, $medicoId, $diagnostico) {
-
-            $trat = Tratamiento::create([
-                'tratamiento' => $plan['titulo'],
-                'fecha_asignacion' => Carbon::now()->toDateString(),
-                'descripcion' => $plan['descripcion'],
-                'paciente_id' => $pacienteId,
-                'medico_id' => $medicoId,
-                'diagnostico_id' => $diagnostico->id,
-            ]);
-
-            foreach ($plan['lineas'] as $linea) {
-                $medId = $this->resolverMedicamentoId($linea['medicamento']);
-
-                $trat->lineasTratamiento()->attach($medId, [
-                    'fecha_ini_linea' => $linea['fecha_ini_linea'],
-                    'duracion_linea' => $linea['duracion_linea'],
-                    'duracion_total' => $linea['duracion_total'] ?? null,
-                    'fecha_fin_linea' => $linea['fecha_fin_linea'],
-                    'fecha_resp_linea' => $linea['fecha_resp_linea'] ?? null,
-                    'observaciones' => $linea['observaciones'] ?? null,
-                    'tomas' => $linea['tomas'] ?? null,
-                ]);
+            // 1) Cerrar tratamiento inferido previo (si existe)
+            $prev = $this->ultimoTratamientoInferido($pacienteId);
+            if ($prev) {
+                $this->cerrarLineasAbiertas($prev);
             }
 
-            return $trat;
+            // 2) Crear tratamiento nuevo
+            $tratamiento = Tratamiento::create([
+                'tratamiento'      => $tData['tratamiento'],
+                'fecha_asignacion' => now()->toDateString(),
+                'descripcion'      => $tData['descripcion'] ?? null,
+                'paciente_id'      => $pacienteId,
+                'medico_id'        => $medicoId,
+                'diagnostico_id'   => $diagnostico->id,
+            ]);
+
+            // 3) Adjuntar líneas
+            $lineas = $acciones['lineas'] ?? [];
+            foreach ($lineas as $linea) {
+                $this->attachLinea($tratamiento, (array) $linea);
+            }
+
+            // 4) Recalcular duracion_total (opcional, útil para tu accesor)
+            $this->actualizarDuracionTotalPivot($tratamiento);
+
+            return $tratamiento;
         });
     }
 
-    private function planPorGrado(string $grado): array
+    private function resolverRegla(Diagnostico $diagnostico): ReglaTratamiento
     {
-        // Esto es V1 estructural. El contenido clínico real lo afinamos con tu ontología.
-        $hoy = Carbon::now();
-        $ini = $hoy->toDateString();
-        $fin14 = $hoy->copy()->addDays(14)->toDateString();
+        $reglas = ReglaTratamiento::query()
+            ->where('activo', true)
+            ->orderBy('prioridad')
+            ->get();
 
-        return match ($grado) {
-            'leve' => [
-                'titulo' => 'Plan EICH leve (propuesta)',
-                'descripcion' => 'Tratamiento de soporte y control clínico según afectación.',
-                'lineas' => [
-                    [
-                        'medicamento' => 'soporte_general', // alias en tu tabla medicamentos
-                        'fecha_ini_linea' => $ini,
-                        'duracion_linea' => 14,
-                        'fecha_fin_linea' => $fin14,
-                        'tomas' => null,
-                        'observaciones' => 'Ajustar según órgano afectado y evolución.',
-                    ],
-                ],
-            ],
-            'moderada' => [
-                'titulo' => 'Plan EICH moderada (propuesta)',
-                'descripcion' => 'Primera línea sistémica + soporte.',
-                'lineas' => [
-                    [
-                        'medicamento' => 'prednisona',
-                        'fecha_ini_linea' => $ini,
-                        'duracion_linea' => 14,
-                        'fecha_fin_linea' => $fin14,
-                        'tomas' => 'según pauta',
-                        'observaciones' => 'Pauta inicial; reevaluar respuesta.',
-                    ],
-                ],
-            ],
-            'severa' => [
-                'titulo' => 'Plan EICH severa (propuesta)',
-                'descripcion' => 'Manejo intensivo y escalado según respuesta.',
-                'lineas' => [
-                    [
-                        'medicamento' => 'prednisona',
-                        'fecha_ini_linea' => $ini,
-                        'duracion_linea' => 14,
-                        'fecha_fin_linea' => $fin14,
-                        'tomas' => 'según pauta',
-                        'observaciones' => 'Requiere valoración especializada.',
-                    ],
-                ],
-            ],
-            default => [
-                'titulo' => 'Plan no definido (propuesta)',
-                'descripcion' => 'No existe plan asociado a este grado.',
+        foreach ($reglas as $r) {
+            if ($this->cumpleCondiciones((array) ($r->condiciones ?? []), $diagnostico)) {
+                return $r;
+            }
+        }
+
+        // Si no hay match, devolvemos regla vacía (equivalente a fallback)
+        return new ReglaTratamiento([
+            'acciones' => [
+                'tratamiento' => ['tratamiento' => null, 'descripcion' => null],
                 'lineas' => [],
             ],
+        ]);
+    }
+
+    /**
+     * Condiciones soportadas v1:
+     * - tipo_enfermedad ('aguda'|'cronica')
+     * - grado_eich ('leve'|'moderada'|'severa'|...)
+     */
+    private function cumpleCondiciones(array $cond, Diagnostico $d): bool
+    {
+        if (empty($cond)) {
+            return true;
+        }
+
+        if (isset($cond['tipo_enfermedad']) && ($d->tipo_enfermedad ?? null) !== $cond['tipo_enfermedad']) {
+            return false;
+        }
+
+        if (isset($cond['grado_eich']) && ($d->grado_eich ?? null) !== $cond['grado_eich']) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Definición operativa de "inferido":
+     * - tratamientos con diagnostico_id NOT NULL.
+     */
+    private function ultimoTratamientoInferido(int $pacienteId): ?Tratamiento
+    {
+        return Tratamiento::query()
+            ->where('paciente_id', $pacienteId)
+            ->whereNotNull('diagnostico_id')
+            ->latest('id')
+            ->first();
+    }
+
+    private function cerrarLineasAbiertas(Tratamiento $tratamiento): void
+    {
+        $tratamiento->loadMissing('lineasTratamiento');
+
+        $hoy = now()->toDateString();
+
+        foreach ($tratamiento->lineasTratamiento as $med) {
+            if (!$med->pivot->fecha_fin_linea) {
+                $tratamiento->lineasTratamiento()->updateExistingPivot(
+                    $med->id,
+                    ['fecha_fin_linea' => $hoy]
+                );
+            }
+        }
+    }
+
+    private function attachLinea(Tratamiento $tratamiento, array $linea): void
+    {
+        $alias = (string) ($linea['medicamento_alias'] ?? '');
+        if ($alias === '') {
+            throw new \RuntimeException("ReglaTratamiento sin medicamento_alias en una línea.");
+        }
+
+        $medId = $this->medicamentoIdPorAlias($alias);
+
+        $ini = $this->resolverFecha((string) ($linea['fecha_ini_linea'] ?? 'AUTO_TODAY'));
+
+        $dur = array_key_exists('duracion_linea', $linea) ? (int) $linea['duracion_linea'] : null;
+
+        $fin = $linea['fecha_fin_linea'] ?? null;
+        if (!$fin && $dur) {
+            $fin = Carbon::parse($ini)->addDays($dur)->toDateString();
+        }
+
+        $tratamiento->lineasTratamiento()->attach($medId, [
+            'fecha_ini_linea'  => $ini,
+            'duracion_linea'   => $dur,
+            'duracion_total'   => null,
+            'fecha_fin_linea'  => $fin,
+            'fecha_resp_linea' => $linea['fecha_resp_linea'] ?? null,
+            'observaciones'    => $linea['observaciones'] ?? null,
+            'tomas'            => $linea['tomas'] ?? null,
+        ]);
+    }
+
+    private function medicamentoIdPorAlias(string $alias): int
+    {
+        $id = DB::table('medicamento_aliases')
+            ->where('alias', $alias)
+            ->value('medicamento_id');
+
+        if (!$id) {
+            throw new \RuntimeException("MedicamentoAlias no encontrado: '{$alias}'");
+        }
+
+        return (int) $id;
+    }
+
+    private function resolverFecha(string $token): string
+    {
+        return match ($token) {
+            'AUTO_TODAY' => now()->toDateString(),
+            'AUTO_AFTER_14D' => now()->addDays(14)->toDateString(),
+            default => Carbon::parse($token)->toDateString(),
         };
     }
 
-    private function resolverMedicamentoId(string $aliasOrName): int
+    /**
+     * Rellena duracion_total en las filas pivot del tratamiento, usando:
+     * - inicio mínimo
+     * - fin máximo
+     */
+    private function actualizarDuracionTotalPivot(Tratamiento $tratamiento): void
     {
-        $m = Medicamento::query()
-            ->where('alias', $aliasOrName)
-            ->orWhere('nombre', $aliasOrName)
-            ->first();
+        $tratamiento->loadMissing('lineasTratamiento');
 
-        if (!$m) {
-            throw new \RuntimeException("Medicamento no encontrado para '{$aliasOrName}'.");
+        if ($tratamiento->lineasTratamiento->isEmpty()) {
+            return;
         }
 
-        return (int) $m->id;
+        $iniMin = null;
+        $finMax = null;
+
+        foreach ($tratamiento->lineasTratamiento as $med) {
+            if ($med->pivot->fecha_ini_linea) {
+                $ini = Carbon::parse($med->pivot->fecha_ini_linea);
+                $iniMin = $iniMin ? $iniMin->min($ini) : $ini;
+            }
+            if ($med->pivot->fecha_fin_linea) {
+                $fin = Carbon::parse($med->pivot->fecha_fin_linea);
+                $finMax = $finMax ? $finMax->max($fin) : $fin;
+            }
+        }
+
+        if (!$iniMin || !$finMax) {
+            return;
+        }
+
+        $total = $finMax->diffInDays($iniMin);
+
+        foreach ($tratamiento->lineasTratamiento as $med) {
+            $tratamiento->lineasTratamiento()->updateExistingPivot(
+                $med->id,
+                ['duracion_total' => $total]
+            );
+        }
     }
 }

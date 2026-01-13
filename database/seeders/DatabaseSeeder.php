@@ -6,34 +6,47 @@ use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
 {
-    /**
-     * Seed the application's database.
-     *
-     * @return void
-     */
     public function run()
     {
         $this->call([
+
+            // 1) Usuarios y maestros básicos
             UserSeeder::class,
             EspecialidadSeeder::class,
-            MedicoSeeder::class,
             EstadoSeeder::class,
             ComienzoCronicaSeeder::class,
             InfeccionSeeder::class,
+
+            // 2) Estructura clínica
+            MedicoSeeder::class,
             OrganoSeeder::class,
+
+            // 3) Síntomas (con dependencia fuerte)
             SintomaSeeder::class,
             SintomaAliasSeeder::class,
-            PacienteSeeder::class,
+
+            // 4) Medicación (CRÍTICO para tratamientos)
             MedicamentoSeeder::class,
-            TratamientoSeeder::class,
-            //CitaSeeder::class,
+            MedicamentoAliasSeeder::class,
+
+            // 5) Pacientes y contexto clínico
+            PacienteSeeder::class,
             TrasplanteSeeder::class,
-            ReglaDecisionSeeder::class,
+            //OrganoPacienteSeeder::class,
+
+            // 6) Diagnóstico
             OrigenDiagnosticoSeeder::class,
-            DiagnosticoSeeder::class,
-            OrganoPacienteSeeder::class,
+            ReglaDecisionSeeder::class,
+            //DiagnosticoSeeder::class,
+
+            // 7) Tratamiento (reglas + datos)
+            ReglaTratamientoSeeder::class,
+           // TratamientoSeeder::class,
+
+            // 8) Pruebas clínicas
             TipoPruebaSeeder::class,
             PruebaSeeder::class,
+            // CitaSeeder::class,
         ]);
     }
 }

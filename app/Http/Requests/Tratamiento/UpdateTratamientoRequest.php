@@ -3,46 +3,22 @@
 namespace App\Http\Requests\Tratamiento;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-
 
 class UpdateTratamientoRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        $tratamiento = $this->route('tratamiento'); // Binding {tratamiento} de la ruta
-        return $tratamiento
-            ? $this->user()->can('update', $tratamiento)
-            : false;
+        $tratamiento = $this->route('tratamiento');
+        return $tratamiento ? $this->user()->can('update', $tratamiento) : false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        if ($this->user()->es_paciente) {
-            return [
-                'tratamiento' => 'required|string',
-                'fecha_asignacion' => 'required|date',
-                'descripcion' => 'nullable|string|max:2000',
-                'duracion_trat' => 'required|numeric',
-                // 'medico_id' eliminado porque se deduce en backend
-            ];
-        }
-
+        // Mismas reglas para paciente/médico porque no vamos a tocar permisos finos aquí.
         return [
-            'tratamiento' => 'required|string',
-            'fecha_asignacion' => 'required|date',
-            'descripcion' => 'nullable|string|max:2000',
-            'duracion_trat' => 'numeric',
-            // 'medico_id' eliminado también para médicos/admins
+            'tratamiento' => ['required', 'string', 'max:255'],
+            'fecha_asignacion' => ['nullable', 'date'],
+            'descripcion' => ['nullable', 'string', 'max:2000'],
         ];
-
     }
 }

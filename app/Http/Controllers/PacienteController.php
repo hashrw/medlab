@@ -81,8 +81,22 @@ class PacienteController extends Controller
 
     public function show(Paciente $paciente)
     {
-        $this->authorize('view', $paciente);
+        $prev = url()->previous();
 
+        $self = route('pacientes.show', $paciente->id);
+
+        // Si el previous es la propia ficha, no se guarda nada
+        if ($prev !== $self) {
+
+            // Evitar bucle si venimos desde diagnosticos.show o tratamientos.show,
+            // no sobreescribir el back_url del paciente con esa URL
+            $vieneDeResultado = str_contains($prev, '/diagnosticos/')
+                || str_contains($prev, '/tratamientos/');
+
+            if (!$vieneDeResultado) {
+                session(['pacientes_back_url' => $prev]);
+            }
+        }
         $paciente->load([
             'usuarioAcceso',
             'trasplantes',

@@ -6,33 +6,38 @@ use App\Models\Medico;
 use App\Models\Tratamiento;
 use App\Models\Medicamento;
 use App\Models\Paciente;
+use App\Models\Diagnostico;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use App\Http\Requests\Tratamiento\StoreTratamientoRequest;
 use App\Http\Requests\Tratamiento\UpdateTratamientoRequest;
+use App\Services\InferenciaTratamientoService;
+use Carbon\Carbon;
 
 class TratamientoController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    private InferenciaTratamientoService $inferenciaTratamientoService;
+
+    public function __construct(InferenciaTratamientoService $inferenciaTratamientoService)
+    {
+        $this->inferenciaTratamientoService = $inferenciaTratamientoService;
+    }
+
     public function index()
     {
         $this->authorize('viewAny', Tratamiento::class);
 
         $user = Auth::user();
 
-        // Carga correcta según la nueva arquitectura
         $with = [
-            'paciente',          // Paciente clínico
-            'paciente.usuarioAcceso', // Usuario del paciente (si existe)
+            'paciente',
+            'paciente.usuarioAcceso',
             'medico',
-            'medico.user',       // Usuario del médico
+            'medico.user',
             'lineasTratamiento'
         ];
 
         if ($user->es_medico) {
-
             $tratamientos = $user->medico
                 ->tratamientos()
                 ->with($with)
@@ -40,8 +45,6 @@ class TratamientoController extends Controller
                 ->paginate(25);
 
         } elseif ($user->es_paciente) {
-
-            // Ahora el usuario → pertenece al Paciente
             $tratamientos = $user->paciente
                 ->tratamientos()
                 ->with($with)
@@ -49,8 +52,6 @@ class TratamientoController extends Controller
                 ->paginate(25);
 
         } else {
-
-            // Admin o roles especiales
             $tratamientos = Tratamiento::with($with)
                 ->latest('fecha_asignacion')
                 ->paginate(25);
@@ -59,10 +60,6 @@ class TratamientoController extends Controller
         return view('tratamientos.index', compact('tratamientos'));
     }
 
-
-    /**
-     * Show the form for creating a new resource.
-     */
     public function create()
     {
         $this->authorize('create', Tratamiento::class);
@@ -89,16 +86,15 @@ class TratamientoController extends Controller
         ]);
     }
 
-
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(StoreTratamientoRequest $request)
     {
         $data = $request->validated();
         $user = Auth::user();
 
-        // Forzar integridad de medico/paciente según rol
+        if (empty($data['fecha_asignacion'])) {
+            $data['fecha_asignacion'] = now()->toDateString();
+        }
+
         if ($user->es_medico) {
             $data['medico_id'] = $user->medico->id;
         }
@@ -113,24 +109,15 @@ class TratamientoController extends Controller
         return redirect()->route('tratamientos.index');
     }
 
-
-    /**
-     * Display the specified resource.
-     */
     public function show(Tratamiento $tratamiento)
     {
         $this->authorize('view', $tratamiento);
 
-        // Si necesitamos mostrar lista de pacientes (p.ej para asignación secundaria):
         $pacientes = Paciente::with('usuarioAcceso')->get();
 
         return view('tratamientos.show', compact('tratamiento', 'pacientes'));
     }
 
-
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit(Tratamiento $tratamiento)
     {
         $this->authorize('update', $tratamiento);
@@ -143,10 +130,6 @@ class TratamientoController extends Controller
         ]);
     }
 
-
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(UpdateTratamientoRequest $request, Tratamiento $tratamiento)
     {
         $this->authorize('update', $tratamiento);
@@ -154,7 +137,10 @@ class TratamientoController extends Controller
         $data = $request->validated();
         $user = Auth::user();
 
-        // No permitir reasignar médico/paciente si el usuario NO es admin
+        if (empty($data['fecha_asignacion'])) {
+            $data['fecha_asignacion'] = $tratamiento->fecha_asignacion ?? now()->toDateString();
+        }
+
         if ($user->es_medico) {
             $data['medico_id'] = $tratamiento->medico_id;
         }
@@ -169,10 +155,6 @@ class TratamientoController extends Controller
         return redirect()->route('tratamientos.index');
     }
 
-
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy(Tratamiento $tratamiento)
     {
         $this->authorize('delete', $tratamiento);
@@ -183,10 +165,40 @@ class TratamientoController extends Controller
         return redirect()->route('tratamientos.index');
     }
 
+    public function inferir_desde_diagnostico(Diagnostico $diagnostico)
+    {
+        $this->authorize('create', Tratamiento::class);
 
-    /**
-     * Añadir línea de tratamiento desde formulario pivot.
-     */
+        $user = Auth::user();
+        if (!$user->es_medico) {
+            abort(403);
+        }
+
+        // 1) Si ya existe tratamiento para diagnóstico -> aviso + link
+        $existente = Tratamiento::query()
+            ->where('diagnostico_id', $diagnostico->id)
+            ->latest('id')
+            ->first();
+
+        if ($existente) {
+            return redirect()
+                ->route('diagnosticos.show', $diagnostico->id)
+                ->with('warning', 'Ya existe un tratamiento inferido para este diagnóstico.')
+                ->with('tratamiento_existente_id', $existente->id);
+        }
+
+        // 2) Inferir normal
+        $trat = $this->inferenciaTratamientoService->inferirDesdeDiagnostico($diagnostico, $user->medico->id);
+
+        if (!$trat) {
+            session()->flash('warning', 'No se ha inferido tratamiento: el diagnóstico no cumple criterios o no existe regla aplicable.');
+            return back();
+        }
+
+        session()->flash('success', 'Tratamiento inferido correctamente.');
+        return redirect()->route('tratamientos.show', $trat->id);
+    }
+
     public function attach_medicamento(Request $request, Tratamiento $tratamiento)
     {
         $this->authorize('update', $tratamiento);
@@ -198,8 +210,11 @@ class TratamientoController extends Controller
             'fecha_resp_linea' => 'required|date|after:fecha_ini_linea',
             'observaciones' => 'nullable|string',
             'tomas' => 'required|numeric|min:0',
-            'duracion_linea' => 'required|numeric|min:0',
+            // duracion_linea ya NO se valida ni se pide: se calcula
         ]);
+
+        $duracionLinea = Carbon::parse($request->fecha_fin_linea)
+            ->diffInDays(Carbon::parse($request->fecha_ini_linea));
 
         $tratamiento->lineasTratamiento()->attach($request->medicamento_id, [
             'fecha_ini_linea' => $request->fecha_ini_linea,
@@ -207,12 +222,11 @@ class TratamientoController extends Controller
             'fecha_resp_linea' => $request->fecha_resp_linea,
             'observaciones' => $request->observaciones,
             'tomas' => $request->tomas,
-            'duracion_linea' => $request->duracion_linea,
+            'duracion_linea' => $duracionLinea,
         ]);
 
         return redirect()->route('tratamientos.edit', $tratamiento->id);
     }
-
 
     public function detach_medicamento(Tratamiento $tratamiento, Medicamento $medicamento)
     {
@@ -222,4 +236,53 @@ class TratamientoController extends Controller
 
         return redirect()->route('tratamientos.edit', $tratamiento->id);
     }
+
+    public function cerrar_linea(Request $request, Tratamiento $tratamiento)
+    {
+        $this->authorize('update', $tratamiento);
+
+        $this->validateWithBag('cerrar', $request, [
+            'medicamento_id' => 'required|exists:medicamentos,id',
+            'fecha_fin_linea' => 'nullable|date',
+        ]);
+
+        $medicamentoId = (int) $request->medicamento_id;
+
+        // Si no llega fecha, por defecto hoy (cierre operativo)
+        $fechaFin = $request->filled('fecha_fin_linea')
+            ? Carbon::parse($request->fecha_fin_linea)->toDateString()
+            : now()->toDateString();
+
+        // Traer la fila pivot existente para recalcular duración
+        $pivot = $tratamiento->lineasTratamiento()
+            ->wherePivot('medicamento_id', $medicamentoId)
+            ->first();
+
+        if (!$pivot) {
+            return back()->with('error', 'No se encontró la línea de tratamiento para ese medicamento.');
+        }
+
+        $fechaIni = $pivot->pivot->fecha_ini_linea;
+
+        if (!$fechaIni) {
+            return back()->with('error', 'La línea no tiene fecha_ini_linea; no se puede cerrar de forma consistente.');
+        }
+
+        if (Carbon::parse($fechaFin)->lt(Carbon::parse($fechaIni))) {
+            return back()->with('error', 'fecha_fin_linea no puede ser anterior a fecha_ini_linea.');
+        }
+
+        $duracionLinea = Carbon::parse($fechaFin)->diffInDays(Carbon::parse($fechaIni));
+
+        // Update del pivot (tu pivot es medicamento_tratamiento)
+        $tratamiento->lineasTratamiento()->updateExistingPivot($medicamentoId, [
+            'fecha_fin_linea' => $fechaFin,
+            'duracion_linea' => $duracionLinea,
+        ]);
+
+        return redirect()
+            ->route('tratamientos.edit', $tratamiento->id)
+            ->with('success', 'Línea de tratamiento cerrada correctamente.');
+    }
+
 }
