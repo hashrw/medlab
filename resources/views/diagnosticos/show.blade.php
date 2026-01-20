@@ -5,7 +5,9 @@
         </h2>
 
         <x-flash-message type="success" />
-        <x-flash-message type="warning" />
+        @unless(session('tratamiento_existente_id')) 
+            <x-flash-message type="warning" />
+        @endunless
         <x-flash-message type="error" />
         @if(session('tratamiento_existente_id'))
     <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded flex items-center justify-between">
@@ -314,7 +316,6 @@
                 </button>
             </form>
         </div>
-
     </div>
 </div>
 

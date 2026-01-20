@@ -15,6 +15,8 @@ use App\Http\Controllers\TratamientoController;
 use App\Http\Controllers\EstadisticaController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\ReglaController;
+use App\Http\Controllers\Paciente\DiagnosticoController as PacienteDiagnosticoController;
+use App\Http\Controllers\Paciente\TratamientoController as PacienteTratamientoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -33,18 +35,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('dashboard');
 
     /**
-     * Dashboards por rol (blindados)
-     */
-    Route::get('/dashboard/medico', [HomeController::class, 'medico'])
-        ->middleware('tipo_usuario:1')
-        ->name('dashboard.medico');
-
-    Route::get('/dashboard/paciente', [HomeController::class, 'paciente'])
-        ->middleware('tipo_usuario:2')
-        ->name('dashboard.paciente');
-
-    /**
-     * Perfil
+     * Perfil (común)
      */
     Route::get('/profile', [ProfileController::class, 'edit'])
         ->name('profile.edit');
@@ -56,82 +47,158 @@ Route::middleware(['auth', 'verified'])->group(function () {
         ->name('profile.destroy');
 
     /**
-     * Historia clínica (antes era pública: ahora NO)
+     * ---------------------------
+     * ROL: MÉDICO (tipo_usuario_id=1)
+     * ---------------------------
      */
-    Route::get(
-        '/pacientes/{paciente}/historia-clinica',
-        [PacienteController::class, 'historiaClinica']
-    )->name('pacientes.historiaClinica');
+    Route::middleware(['auth', 'verified'])->group(function () {
 
-    /**
-     * Diagnóstico – inferencia (selector y ejecución) SOLO médico
-     */
-    Route::middleware(['tipo_usuario:1'])->group(function () {
+        Route::get('/dashboard', [HomeController::class, 'index'])->name('dashboard');
 
-        Route::get('/diagnosticos/inferir', [DiagnosticoController::class, 'inferirSelector'])
-            ->name('diagnosticos.inferirSelector');
+        Route::get('/dashboard/medico', [HomeController::class, 'medico'])
+            ->middleware('tipo_usuario:1')
+            ->name('dashboard.medico');
 
-        Route::post(
-            '/diagnosticos/inferir/{pacienteId}',
-            [DiagnosticoController::class, 'inferirDesdeSistema']
-        )->name('diagnosticos.inferir');
+        Route::get('/dashboard/paciente', [HomeController::class, 'paciente'])
+            ->middleware('tipo_usuario:2')
+            ->name('dashboard.paciente');
+
+        // Perfil (común)
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
         /**
-         * Inferencia de tratamiento (desde diagnóstico) SOLO médico
+         * PACIENTE (tipo_usuario_id=2)
          */
-        Route::post(
-            '/tratamientos/inferir-desde-diagnostico/{diagnostico}',
-            [TratamientoController::class, 'inferir_desde_diagnostico']
-        )->name('tratamientos.inferirDesdeDiagnostico');
+        Route::middleware('tipo_usuario:2')->group(function () {
+
+            Route::prefix('paciente')->name('paciente.')->group(function () {
+                Route::get('/diagnosticos/{diagnostico}', [PacienteDiagnosticoController::class, 'show'])
+                    ->name('diagnosticos.show');
+
+                Route::get('/tratamientos/{tratamiento}', [PacienteTratamientoController::class, 'show'])
+                    ->name('tratamientos.show');
+            });
+
+            // Solicitud de cita desde el dashboard del paciente
+            // (mantiene route('citas.store') como ya tienes en el partial)
+            Route::post('/citas', [CitaController::class, 'store'])
+                ->name('citas.store');
+        });
+
+        /**
+         * MEDICO (tipo_usuario_id=1)
+         */
+        Route::middleware('tipo_usuario:1')->group(function () {
+
+            // Historia clínica (si esto es solo para médico, déjalo aquí)
+            Route::get('/pacientes/{paciente}/historia-clinica', [PacienteController::class, 'historiaClinica'])
+                ->name('pacientes.historiaClinica');
+
+            // Inferencia diagnóstico (solo médico)
+            Route::get('/diagnosticos/inferir', [DiagnosticoController::class, 'inferirSelector'])
+                ->name('diagnosticos.inferirSelector');
+
+            Route::post('/diagnosticos/inferir/{pacienteId}', [DiagnosticoController::class, 'inferirDesdeSistema'])
+                ->name('diagnosticos.inferir');
+
+            // Inferencia tratamiento (solo médico)
+            Route::post('/tratamientos/inferir-desde-diagnostico/{diagnostico}', [TratamientoController::class, 'inferir_desde_diagnostico'])
+                ->name('tratamientos.inferirDesdeDiagnostico');
+
+            // Gestión citas (médico)
+            Route::get('/citas', [CitaController::class, 'index'])->name('citas.index');
+            Route::get('/citas/create', [CitaController::class, 'create'])->name('citas.create');
+            Route::post('/citas', [CitaController::class, 'store'])->name('citas.store'); // también para médico
+            Route::get('/citas/{cita}', [CitaController::class, 'show'])->name('citas.show');
+            Route::get('/citas/{cita}/edit', [CitaController::class, 'edit'])->name('citas.edit');
+            Route::put('/citas/{cita}', [CitaController::class, 'update'])->name('citas.update');
+            Route::patch('/citas/{cita}', [CitaController::class, 'update']);
+            Route::delete('/citas/{cita}', [CitaController::class, 'destroy'])->name('citas.destroy');
+
+            // Tratamientos: acciones especiales con policy
+            Route::post('/tratamientos/{tratamiento}/attach-linea', [TratamientoController::class, 'attach_medicamento'])
+                ->name('tratamientos.attachLinea')
+                ->middleware('can:update,tratamiento');
+
+            Route::delete('/tratamientos/{tratamiento}/detach-linea/{medicamento}', [TratamientoController::class, 'detach_medicamento'])
+                ->name('tratamientos.detachLinea')
+                ->middleware('can:update,tratamiento');
+
+            Route::patch('/tratamientos/{tratamiento}/cerrar-linea', [TratamientoController::class, 'cerrar_linea'])
+                ->name('tratamientos.cerrarLinea')
+                ->middleware('can:update,tratamiento');
+
+            // Diagnósticos: acciones especiales con abilities
+            Route::post('/diagnosticos/{diagnostico}/attach-sintoma', [DiagnosticoController::class, 'attach_sintoma'])
+                ->name('diagnosticos.attachSintoma')
+                ->middleware('can:attach_sintoma,diagnostico');
+
+            Route::delete('/diagnosticos/{diagnostico}/detach-sintoma/{sintoma}', [DiagnosticoController::class, 'detach_sintoma'])
+                ->name('diagnosticos.detachSintoma')
+                ->middleware('can:detach_sintoma,diagnostico');
+
+            Route::patch('/citas/{cita}/aceptar', [CitaController::class, 'aceptar'])->name('citas.aceptar');
+            Route::patch('/citas/{cita}/rechazar', [CitaController::class, 'rechazar'])->name('citas.rechazar');
+
+            // CRUD del médico (lo que ya tenías en resources)
+            Route::resources([
+                'especialidads' => EspecialidadController::class,
+                'medicos' => MedicoController::class,
+                'pacientes' => PacienteController::class,
+                'medicamentos' => MedicamentoController::class,
+                'trasplantes' => TrasplanteController::class,
+                'sintomas' => SintomaController::class,
+                'diagnosticos' => DiagnosticoController::class,
+                'tratamientos' => TratamientoController::class,
+                'organos' => OrganoController::class,
+                'estadisticas' => EstadisticaController::class, // ojo si esta clase se llama distinto
+                'pruebas' => PruebaController::class,
+                'reglas' => ReglaController::class,
+            ]);
+        });
+    });
+
+
+    /**
+     * ---------------------------
+     * ROL: PACIENTE (tipo_usuario_id=2)
+     * ---------------------------
+     */
+    Route::middleware(['tipo_usuario:2'])->group(function () {
+
+        Route::get('/dashboard/paciente', [HomeController::class, 'paciente'])
+            ->name('dashboard.paciente');
+
+        /**
+         * Vistas PACIENTE (read-only)
+         */
+        Route::prefix('paciente')->name('paciente.')->group(function () {
+            Route::get('/diagnosticos/{diagnostico}', [PacienteDiagnosticoController::class, 'show'])
+                ->name('diagnosticos.show');
+
+            Route::get('/tratamientos/{tratamiento}', [PacienteTratamientoController::class, 'show'])
+                ->name('tratamientos.show');
+        });
+
+        /**
+         * Citas: el paciente necesita al menos crear (store) y ver las suyas (index/show)
+         * Opciones:
+         * - Si mantienes CitaController como resource general de médico, aquí limitamos rutas.
+         */
+        Route::get('/citas', [CitaController::class, 'index'])->name('citas.index');
+        Route::get('/citas/{cita}', [CitaController::class, 'show'])->name('citas.show');
+        Route::post('/citas', [CitaController::class, 'store'])->name('citas.store');
     });
 
     /**
-     * Rutas propias (tratamientos) con policy update
+     * Historia clínica (común pero NO pública)
+     * Si quieres que SOLO médico acceda, muévela al grupo de médico.
+     * Si paciente debe ver la suya, crea otra ruta /paciente/historia.
      */
-    Route::post('/tratamientos/{tratamiento}/attach-linea', [TratamientoController::class, 'attach_medicamento'])
-        ->name('tratamientos.attachLinea')
-        ->middleware('can:update,tratamiento');
-
-    Route::delete('/tratamientos/{tratamiento}/detach-linea/{medicamento}', [TratamientoController::class, 'detach_medicamento'])
-        ->name('tratamientos.detachLinea')
-        ->middleware('can:update,tratamiento');
-
-    /**
-     * NUEVA: Cerrar línea de tratamiento (pivot fecha_fin_linea)
-     */
-    Route::patch('/tratamientos/{tratamiento}/cerrar-linea', [TratamientoController::class, 'cerrar_linea'])
-        ->name('tratamientos.cerrarLinea')
-        ->middleware('can:update,tratamiento');
-
-    /**
-     * Rutas propias (diagnósticos) con abilities específicas
-     */
-    Route::post('/diagnosticos/{diagnostico}/attach-sintoma', [DiagnosticoController::class, 'attach_sintoma'])
-        ->name('diagnosticos.attachSintoma')
-        ->middleware('can:attach_sintoma,diagnostico');
-
-    Route::delete('/diagnosticos/{diagnostico}/detach-sintoma/{sintoma}', [DiagnosticoController::class, 'detach_sintoma'])
-        ->name('diagnosticos.detachSintoma')
-        ->middleware('can:detach_sintoma,diagnostico');
-
-    /**
-     * Recursos (CRUD) también blindados
-     */
-    Route::resources([
-        'citas' => CitaController::class,
-        'especialidads' => EspecialidadController::class,
-        'medicos' => MedicoController::class,
-        'pacientes' => PacienteController::class,
-        'medicamentos' => MedicamentoController::class,
-        'trasplantes' => TrasplanteController::class,
-        'sintomas' => SintomaController::class,
-        'diagnosticos' => DiagnosticoController::class,
-        'tratamientos' => TratamientoController::class,
-        'organos' => OrganoController::class,
-        'estadisticas' => EstadisticaController::class,
-        'pruebas' => PruebaController::class,
-        'reglas' => ReglaController::class,
-    ]);
+    Route::get('/pacientes/{paciente}/historia-clinica', [PacienteController::class, 'historiaClinica'])
+        ->name('pacientes.historiaClinica');
 });
 
 require __DIR__ . '/auth.php';

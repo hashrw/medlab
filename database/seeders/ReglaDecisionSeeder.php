@@ -28,8 +28,8 @@ class ReglaDecisionSeeder extends Seeder
         $OID_HIG = $oid($ORG_HIG);
         $OID_PIEL = $oid($ORG_PIEL);
 
-        // Helper: devuelve alias canónico a partir del texto de sintomas.sintoma:
-        // alias = o{organo_id}_{slug(Str::ascii(sintoma))}
+        // Helper: devuelve alias canónico a partir del texto:
+        // alias = o{organo_id}_{slug(Str::ascii(texto))}
         $canon = function (string $textoSintoma, int $organoId): string {
             $base = $this->slug($textoSintoma);
             return 'o' . $organoId . '_' . $base;
@@ -49,19 +49,43 @@ class ReglaDecisionSeeder extends Seeder
             if (!$exists) {
                 throw new \RuntimeException(
                     "Alias canónico no encontrado: '{$alias}' (texto='{$textoSintoma}', organo_id={$organoId}). " .
-                    "Revisa que sintomas.sintoma coincida y que SintomaAliasSeeder se haya ejecutado."
+                    "Revisa que SintomaAliasSeeder se haya ejecutado y que los textos coincidan."
                 );
             }
 
             return $alias;
         };
 
+        // Resolver FK de infección (tu columna es 'nombre', no 'infeccion')
+        $infeccionId = function (string $nombre): int {
+            $id = DB::table('infeccions')->where('nombre', $nombre)->value('id');
+            if (!$id) {
+                throw new \RuntimeException("Infección no encontrada en infeccions.nombre: '{$nombre}'");
+            }
+            return (int) $id;
+        };
+
+        // Resolver FK de estado (columna 'estado')
+        $estadoId = function (string $estado): int {
+            $id = DB::table('estados')->where('estado', $estado)->value('id');
+            if (!$id) {
+                throw new \RuntimeException("Estado no encontrado en estados.estado: '{$estado}'");
+            }
+            return (int) $id;
+        };
+
+        // Convención: para diagnóstico inferido de EICH, por defecto:
+        // - Infección = N/A
+        // - Estado = Enfermedad Progresiva en severa; Enfermedad Estable en leve; "Otro" en moderada (ajústalo si prefieres)
+        $INF_NA = $infeccionId('N/A ');
+        $EST_PROGRESIVA = $estadoId('Enfermedad Progresiva');
+        $EST_ESTABLE = $estadoId('Enfermedad Estable');
+        $EST_OTRO = $estadoId('Otro');
+
         /*
         |--------------------------------------------------------------------------
         | REGLA SEVERA
         |--------------------------------------------------------------------------
-        | Nota: mantenemos score exacto como en tu versión (2).
-        | Si quieres >=2, cambia 'score' por 'score_min' en regla + servicio.
         */
         ReglaDecision::updateOrCreate(
             ['nombre' => 'EICH severa (GI score 2 + hígado score 2)'],
@@ -92,6 +116,8 @@ class ReglaDecisionSeeder extends Seeder
                     'tipo_enfermedad' => 'aguda',
                     'estado_injerto' => 'critico',
                     'grado_eich' => 'severa',
+                    'estado_id' => $EST_PROGRESIVA,
+                    'infeccion_id' => $INF_NA,
                     'observaciones' => 'EICH severa con afectación gastrointestinal y hepática.',
                 ]),
             ]
@@ -125,9 +151,11 @@ class ReglaDecisionSeeder extends Seeder
                     ],
                 ],
                 'diagnostico' => $this->diagnosticoBase([
-                    'tipo_enfermedad' => 'aguda ',
+                    'tipo_enfermedad' => 'aguda',
                     'estado_injerto' => 'inestable',
                     'grado_eich' => 'moderada',
+                    'estado_id' => $EST_OTRO,
+                    'infeccion_id' => $INF_NA,
                     'observaciones' => 'EICH moderada con afectación cutánea y gastrointestinal.',
                 ]),
             ]
@@ -142,7 +170,7 @@ class ReglaDecisionSeeder extends Seeder
             ['nombre' => 'EICH leve (piel score 1)'],
             [
                 'prioridad' => 30,
-                'tipo_recomendacion' => 'diagnostico',
+                'tipo_recomendacion' => 'Diagnóstico clínico compatible con EICH aguda leve. Requiere seguimiento clínico.',
                 'activo' => true,
                 'condiciones' => [
                     $ORG_PIEL => [
@@ -156,9 +184,10 @@ class ReglaDecisionSeeder extends Seeder
                     'tipo_enfermedad' => 'aguda',
                     'estado_injerto' => 'estable',
                     'grado_eich' => 'leve',
+                    'estado_id' => $EST_ESTABLE,
+                    'infeccion_id' => $INF_NA,
                     'observaciones' => 'EICH leve con afectación cutánea mínima.',
                 ]),
-
             ]
         );
 
@@ -178,6 +207,8 @@ class ReglaDecisionSeeder extends Seeder
                     'tipo_enfermedad' => 'aguda',
                     'estado_injerto' => 'estable',
                     'grado_eich' => 'no_concluyente',
+                    'estado_id' => $EST_ESTABLE,
+                    'infeccion_id' => $INF_NA,
                     'observaciones' => 'No se cumplen criterios suficientes para inferir EICH.',
                 ]),
             ]

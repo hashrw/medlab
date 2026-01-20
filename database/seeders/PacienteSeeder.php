@@ -21,8 +21,10 @@ class PacienteSeeder extends Seeder
         }
 
         // 5 users libres para vincular pacientes
+        // IMPORTANTE: filtrar por tipo_usuario_id = 2 (Paciente)
         $userIds = DB::table('users')
             ->whereNull('paciente_id')
+            ->where('tipo_usuario_id', 2) // 2 = Paciente (según tu User::getTipoUsuarioAttribute)
             ->orderBy('id')
             ->limit(5)
             ->pluck('id')
@@ -30,8 +32,10 @@ class PacienteSeeder extends Seeder
             ->toArray();
 
         if (count($userIds) < 5) {
-            throw new \RuntimeException("Se necesitan al menos 5 users con users.paciente_id NULL. Encontrados: " . count($userIds));
-        }
+            throw new \RuntimeException(
+                "Se necesitan al menos 5 users PACIENTE con users.paciente_id NULL (tipo_usuario_id=2). Encontrados: " . count($userIds)
+            );
+        }   
 
         // Nombres exactos de órganos (deben coincidir con organos.nombre)
         $ORG_GI = 'Tracto gastrointestinal';
@@ -95,9 +99,26 @@ class PacienteSeeder extends Seeder
             $enfermedadId = DB::table('enfermedads')->value('id');
         }
 
-        $insertPaciente = function (int $userId, array $sintomaIds, array $organScores, int $diasDesdeTrasplante, string $tag)
-            use ($faker, $hasOrganoPaciente, $hasPacienteEnfermedad, $enfermedadId)
-        : int {
+        $insertPaciente = function (
+            int $userId,
+            array $sintomaIds,
+            array $organScores,
+            int $diasDesdeTrasplante,
+            string $tag
+        ) use ($faker, $hasOrganoPaciente, $hasPacienteEnfermedad, $enfermedadId): int {
+
+            // BLINDAJE: asegurar que el user es paciente (tipo_usuario_id=2)
+            $u = DB::table('users')->select('id', 'tipo_usuario_id', 'paciente_id')->where('id', $userId)->first();
+            if (!$u) {
+                throw new \RuntimeException("PacienteSeeder: user {$userId} no existe.");
+            }
+            if ((int) $u->tipo_usuario_id !== 2) {
+                throw new \RuntimeException("PacienteSeeder: user {$userId} NO es paciente (tipo_usuario_id={$u->tipo_usuario_id}).");
+            }
+            if (!is_null($u->paciente_id)) {
+                throw new \RuntimeException("PacienteSeeder: user {$userId} ya tiene paciente_id={$u->paciente_id}.");
+            }
+
             $pacienteId = DB::table('pacientes')->insertGetId([
                 'nuhsa' => 'DIA' . $faker->unique()->numerify('##########'),
                 'fecha_nacimiento' => $faker->dateTimeBetween('-70 years', '-18 years')->format('Y-m-d'),
@@ -159,18 +180,6 @@ class PacienteSeeder extends Seeder
             return (int) $pacienteId;
         };
 
-        /*
-         | Reglas (según tu ReglaDecisionSeeder):
-         | - Severa: GI score 2 + hígado score 2 + síntomas GI (4) + hígado (3)
-         | - Moderada: GI score 1 + piel score 1 + síntomas GI (3) + piel (1)
-         | - Leve: piel score 1 + síntoma piel (1)
-         |
-         | Creamos 5 pacientes:
-         |   - 2 severa
-         |   - 2 moderada
-         |   - 1 leve
-         */
-
         // Síntomas exactos de tus reglas
         $sx_hig = [
             $sidFromText('Hiperbilirrubinemia', $OID_HIG),
@@ -228,7 +237,6 @@ class PacienteSeeder extends Seeder
             ],
         ];
 
-        // Crear
         foreach ($casos as $i => $c) {
             $userId = $userIds[$i];
 
@@ -240,7 +248,7 @@ class PacienteSeeder extends Seeder
                 $c['tag']
             );
 
-            echo "PacientesDianaInferenciaSeeder: creado paciente {$pid} ({$c['tag']}) enlazado a user {$userId}\n";
+            echo "PacienteSeeder: creado paciente {$pid} ({$c['tag']}) enlazado a user {$userId}\n";
         }
     }
 }

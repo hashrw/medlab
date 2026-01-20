@@ -8,8 +8,12 @@
     <div class="py-1">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
 
+        
+            @php $w = session('warning'); @endphp
             <x-flash-message type="success" />
+            @if($w !== 'diagnostico_ya_existe')
             <x-flash-message type="warning" />
+            @endif
             <x-flash-message type="error" />
 
             {{-- AVISO: diagnóstico ya existente (idempotencia) --}}

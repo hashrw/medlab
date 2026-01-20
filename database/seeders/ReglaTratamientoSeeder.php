@@ -35,7 +35,12 @@ class ReglaTratamientoSeeder extends Seeder
                             'nombre_linea' => 'Primera línea',
                             'medicamento_alias' => 'esteroides_topicos',
                             'fecha_ini_linea' => 'AUTO_TODAY',
+
+                            // Opción A: línea abierta por defecto
+                            'fecha_fin_linea' => null,
                             'duracion_linea' => 14,
+                            'cerrar_automaticamente' => false,
+
                             'tomas' => null,
                             'observaciones' => 'Tópico según órgano (piel/mucosas).',
                         ],
@@ -72,7 +77,12 @@ class ReglaTratamientoSeeder extends Seeder
                             'nombre_linea' => 'Primera línea',
                             'medicamento_alias' => 'metilprednisolona_40mg',
                             'fecha_ini_linea' => 'AUTO_TODAY',
+
+                            // Opción A: línea abierta por defecto
+                            'fecha_fin_linea' => null,
                             'duracion_linea' => 14,
+                            'cerrar_automaticamente' => false,
+
                             'tomas' => 1,
                             'observaciones' => 'Esteroide sistémico según protocolo.',
                         ],
@@ -109,7 +119,12 @@ class ReglaTratamientoSeeder extends Seeder
                             'nombre_linea' => 'Primera línea',
                             'medicamento_alias' => 'metilprednisolona_40mg',
                             'fecha_ini_linea' => 'AUTO_TODAY',
+
+                            // Opción A: línea abierta por defecto
+                            'fecha_fin_linea' => null,
                             'duracion_linea' => 14,
+                            'cerrar_automaticamente' => false,
+
                             'tomas' => 1,
                             'observaciones' => 'Seguimiento estrecho.',
                         ],

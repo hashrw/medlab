@@ -47,10 +47,9 @@ class Paciente extends Model
      --------------------------------------------------------------*/
     public function tratamientos()
     {
-        return $this->belongsToMany(Tratamiento::class)
-            ->using(PacienteTratamiento::class)
-            ->withPivot('paciente_id', 'tratamiento_id');
+        return $this->hasMany(Tratamiento::class, 'paciente_id');
     }
+    
 
     /*--------------------------------------------------------------
      | ÓRGANOS

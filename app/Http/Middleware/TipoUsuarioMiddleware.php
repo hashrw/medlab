@@ -17,6 +17,10 @@ class TipoUsuarioMiddleware
     {
         $user = $request->user();
 
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
         abort_unless($user && (int) $user->tipo_usuario_id === (int) $tipo, 403);
 
         return $next($request);

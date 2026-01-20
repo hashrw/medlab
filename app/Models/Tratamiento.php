@@ -66,7 +66,7 @@ class Tratamiento extends Model
         }
 
         $hayAbierta = $lineas->contains(function ($m) {
-            return empty($m->pivot->fecha_fin_linea);
+            return is_null($m->pivot->fecha_fin_linea);
         });
 
         return $hayAbierta ? 'activo' : 'cerrado';
@@ -97,7 +97,7 @@ class Tratamiento extends Model
         }
 
         // si hay alguna abierta -> no hay fecha fin global
-        $hayAbierta = $lineas->contains(fn($m) => empty($m->pivot->fecha_fin_linea));
+        $hayAbierta = $lineas->contains(fn($m) => is_null($m->pivot->fecha_fin_linea));
         if ($hayAbierta) {
             return null;
         }
@@ -130,7 +130,7 @@ class Tratamiento extends Model
         }
 
         $ultima = $lineas
-            ->filter(fn($m) => !empty($m->pivot->fecha_fin_linea))
+            ->filter(fn($m) => !is_null($m->pivot->fecha_fin_linea))
             ->sortByDesc(fn($m) => $m->pivot->fecha_fin_linea)
             ->first();
 

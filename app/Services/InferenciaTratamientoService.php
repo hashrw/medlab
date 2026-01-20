@@ -61,12 +61,12 @@ class InferenciaTratamientoService
 
             // 2) Crear tratamiento nuevo
             $tratamiento = Tratamiento::create([
-                'tratamiento'      => $tData['tratamiento'],
+                'tratamiento' => $tData['tratamiento'],
                 'fecha_asignacion' => now()->toDateString(),
-                'descripcion'      => $tData['descripcion'] ?? null,
-                'paciente_id'      => $pacienteId,
-                'medico_id'        => $medicoId,
-                'diagnostico_id'   => $diagnostico->id,
+                'descripcion' => $tData['descripcion'] ?? null,
+                'paciente_id' => $pacienteId,
+                'medico_id' => $medicoId,
+                'diagnostico_id' => $diagnostico->id,
             ]);
 
             // 3) Adjuntar líneas
@@ -169,18 +169,23 @@ class InferenciaTratamientoService
         $dur = array_key_exists('duracion_linea', $linea) ? (int) $linea['duracion_linea'] : null;
 
         $fin = $linea['fecha_fin_linea'] ?? null;
-        if (!$fin && $dur) {
+
+        // Opción A: NO autocerrar por duración.
+        // Solo cerramos si la regla trae fecha_fin_linea explícita (no null) o un flag de autocierre.
+        $autoCerrar = (bool) ($linea['cerrar_automaticamente'] ?? false);
+
+        if ($autoCerrar && !$fin && $dur) {
             $fin = Carbon::parse($ini)->addDays($dur)->toDateString();
         }
 
         $tratamiento->lineasTratamiento()->attach($medId, [
-            'fecha_ini_linea'  => $ini,
-            'duracion_linea'   => $dur,
-            'duracion_total'   => null,
-            'fecha_fin_linea'  => $fin,
+            'fecha_ini_linea' => $ini,
+            'duracion_linea' => $dur,
+            'duracion_total' => null,
+            'fecha_fin_linea' => $fin,
             'fecha_resp_linea' => $linea['fecha_resp_linea'] ?? null,
-            'observaciones'    => $linea['observaciones'] ?? null,
-            'tomas'            => $linea['tomas'] ?? null,
+            'observaciones' => $linea['observaciones'] ?? null,
+            'tomas' => $linea['tomas'] ?? null,
         ]);
     }
 

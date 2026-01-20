@@ -122,11 +122,12 @@ class TratamientoController extends Controller
     {
         $this->authorize('update', $tratamiento);
 
+        $tratamiento->loadMissing(['paciente.usuarioAcceso', 'lineasTratamiento']);
+
         return view('tratamientos.edit', [
             'tratamiento' => $tratamiento,
-            'medicos' => Medico::with('user')->get(),
-            'pacientes' => Paciente::with('usuarioAcceso')->get(),
-            'medicamentos' => Medicamento::all(),
+            'pacientes' => [], // ya no lo usamos en edit
+            'pacienteSeleccionado' => $tratamiento->paciente,
         ]);
     }
 
@@ -174,7 +175,6 @@ class TratamientoController extends Controller
             abort(403);
         }
 
-        // 1) Si ya existe tratamiento para diagnóstico -> aviso + link
         $existente = Tratamiento::query()
             ->where('diagnostico_id', $diagnostico->id)
             ->latest('id')
@@ -187,7 +187,6 @@ class TratamientoController extends Controller
                 ->with('tratamiento_existente_id', $existente->id);
         }
 
-        // 2) Inferir normal
         $trat = $this->inferenciaTratamientoService->inferirDesdeDiagnostico($diagnostico, $user->medico->id);
 
         if (!$trat) {
@@ -206,15 +205,20 @@ class TratamientoController extends Controller
         $this->validateWithBag('attach', $request, [
             'medicamento_id' => 'required|exists:medicamentos,id',
             'fecha_ini_linea' => 'required|date',
-            'fecha_fin_linea' => 'required|date|after:fecha_ini_linea',
+            'fecha_fin_linea' => 'nullable|date|after:fecha_ini_linea',
             'fecha_resp_linea' => 'required|date|after:fecha_ini_linea',
             'observaciones' => 'nullable|string',
             'tomas' => 'required|numeric|min:0',
-            // duracion_linea ya NO se valida ni se pide: se calcula
         ]);
 
-        $duracionLinea = Carbon::parse($request->fecha_fin_linea)
-            ->diffInDays(Carbon::parse($request->fecha_ini_linea));
+        $fechaIni = Carbon::parse($request->fecha_ini_linea);
+
+        // Si fecha_fin_linea viene null, NO calculamos duración (línea abierta)
+        $duracionLinea = null;
+        if ($request->filled('fecha_fin_linea')) {
+            $fechaFin = Carbon::parse($request->fecha_fin_linea);
+            $duracionLinea = $fechaFin->diffInDays($fechaIni);
+        }
 
         $tratamiento->lineasTratamiento()->attach($request->medicamento_id, [
             'fecha_ini_linea' => $request->fecha_ini_linea,
@@ -225,7 +229,9 @@ class TratamientoController extends Controller
             'duracion_linea' => $duracionLinea,
         ]);
 
-        return redirect()->route('tratamientos.edit', $tratamiento->id);
+        return redirect()
+            ->to(route('tratamientos.edit', $tratamiento->id) . '#lineas-tratamiento')
+            ->with('success_linea', 'Línea añadida correctamente.');
     }
 
     public function detach_medicamento(Tratamiento $tratamiento, Medicamento $medicamento)
@@ -234,7 +240,9 @@ class TratamientoController extends Controller
 
         $tratamiento->lineasTratamiento()->detach($medicamento->id);
 
-        return redirect()->route('tratamientos.edit', $tratamiento->id);
+        return redirect()
+            ->to(route('tratamientos.edit', $tratamiento->id) . '#lineas-tratamiento')
+            ->with('success_linea', 'Línea de tratamiento eliminada correctamente.');
     }
 
     public function cerrar_linea(Request $request, Tratamiento $tratamiento)
@@ -248,41 +256,37 @@ class TratamientoController extends Controller
 
         $medicamentoId = (int) $request->medicamento_id;
 
-        // Si no llega fecha, por defecto hoy (cierre operativo)
         $fechaFin = $request->filled('fecha_fin_linea')
             ? Carbon::parse($request->fecha_fin_linea)->toDateString()
             : now()->toDateString();
 
-        // Traer la fila pivot existente para recalcular duración
         $pivot = $tratamiento->lineasTratamiento()
             ->wherePivot('medicamento_id', $medicamentoId)
             ->first();
 
         if (!$pivot) {
-            return back()->with('error', 'No se encontró la línea de tratamiento para ese medicamento.');
+            return back()->with('error_linea', 'No se encontró la línea de tratamiento para ese medicamento.');
         }
 
         $fechaIni = $pivot->pivot->fecha_ini_linea;
 
         if (!$fechaIni) {
-            return back()->with('error', 'La línea no tiene fecha_ini_linea; no se puede cerrar de forma consistente.');
+            return back()->with('error_linea', 'La línea no tiene fecha_ini_linea; no se puede cerrar de forma consistente.');
         }
 
         if (Carbon::parse($fechaFin)->lt(Carbon::parse($fechaIni))) {
-            return back()->with('error', 'fecha_fin_linea no puede ser anterior a fecha_ini_linea.');
+            return back()->with('error_linea', 'fecha_fin_linea no puede ser anterior a fecha_ini_linea.');
         }
 
         $duracionLinea = Carbon::parse($fechaFin)->diffInDays(Carbon::parse($fechaIni));
 
-        // Update del pivot (tu pivot es medicamento_tratamiento)
         $tratamiento->lineasTratamiento()->updateExistingPivot($medicamentoId, [
             'fecha_fin_linea' => $fechaFin,
             'duracion_linea' => $duracionLinea,
         ]);
 
         return redirect()
-            ->route('tratamientos.edit', $tratamiento->id)
-            ->with('success', 'Línea de tratamiento cerrada correctamente.');
+            ->to(route('tratamientos.edit', $tratamiento->id) . '#lineas-tratamiento')
+            ->with('success_linea', 'Línea de tratamiento cerrada correctamente.');
     }
-
 }

@@ -2,38 +2,63 @@
 
 namespace App\Http\Requests\Cita;
 
-use App\Models\Cita;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class StoreCitaRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
-        return $this->user()->can('create', Cita::class);
+        return auth()->check() && (auth()->user()->es_paciente || auth()->user()->es_medico);
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        if($this->user()->es_paciente)
+        $user = $this->user();
+
+        $motivos = [
+            'Consulta sobre diagnóstico',
+            'Consulta sobre tratamiento',
+            'Consulta sobre resultados de pruebas',
+            'Revisión / seguimiento',
+            'Otro',
+        ];
+
+        if ($user->es_paciente) {
             return [
-                'fecha_hora' => 'required|date|after:yesterday',
-                'medico_id' => 'required|exists:medicos,id',
-                'paciente_id' => ['required', 'exists:pacientes,id', Rule::in($this->user()->paciente->id)]
+                'motivo' => ['required', 'string', Rule::in($motivos)],
+                'motivo_detalle' => ['nullable', 'string', 'max:2000', 'required_if:motivo,Otro'],
+                'preferencia_fecha_hora' => ['nullable', 'date'],
+
+                // Blindaje: el paciente no escribe columnas de gestión
+                'fecha_hora' => ['prohibited'],
+                'medico_id' => ['prohibited'],
+                'paciente_id' => ['prohibited'],
+                'estado' => ['prohibited'],
+                'comentario_medico' => ['prohibited'],
+                'respondida_at' => ['prohibited'],
             ];
-            
+        }
+
+        // Médico crea cita real (backoffice)
         return [
-            'fecha_hora' => 'required|date|after:yesterday',
-            'medico_id' => 'required|exists:medicos,id',
-            'paciente_id' => 'required|exists:pacientes,id'
+            'fecha_hora' => ['required', 'date'],
+            'medico_id' => ['required', 'exists:medicos,id'],
+            'paciente_id' => ['required', 'exists:pacientes,id'],
+
+            'estado' => ['nullable', 'string', Rule::in(['pendiente', 'aceptada', 'rechazada', 'cancelada'])],
+
+            'motivo' => ['nullable', 'string', 'max:120'],
+            'motivo_detalle' => ['nullable', 'string', 'max:2000'],
+            'preferencia_fecha_hora' => ['nullable', 'date'],
+            'comentario_medico' => ['nullable', 'string', 'max:2000'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'motivo_detalle.required_if' => 'Indica el detalle del motivo si has seleccionado "Otro".',
         ];
     }
 }

@@ -7,21 +7,31 @@ use Illuminate\Database\Eloquent\Model;
 
 class Cita extends Model
 {
-    protected $fillable = ['fecha_hora', 'medico_id', 'paciente_id'];
-
-    protected $casts = [
-        'fecha_hora' => 'datetime:Y-m-d H:i',
+    protected $fillable = [
+        'fecha_hora',
+        'medico_id',
+        'paciente_id',
+        'estado',
+        'motivo',
+        'motivo_detalle',
+        'preferencia_fecha_hora',
+        'comentario_medico',
+        'respondida_at',
     ];
 
-    public function medico(){
+    protected $casts = [
+        'fecha_hora' => 'datetime',
+        'preferencia_fecha_hora' => 'datetime',
+        'respondida_at' => 'datetime',
+    ];
+
+    public function medico()
+    {
         return $this->belongsTo(Medico::class);
     }
-
-    public function paciente(){
+    public function paciente()
+    {
         return $this->belongsTo(Paciente::class);
     }
-
-    /*public function medicamentos(){
-        return $this->belongsToMany(Medicamento::class)->using(CitaMedicamento::class)->withPivot('tomas_dia', 'comentarios', 'inicio', 'fin');
-    }*/
 }
+

@@ -103,7 +103,9 @@ class PacienteController extends Controller
             'tratamientos',
             'sintomas',
             'pruebas.tipo_prueba',
-            'organos'
+            'organos',
+            'tratamientos.lineasTratamiento',
+            'tratamientos.diagnostico',
         ]);
 
         return view('pacientes.show', compact('paciente'));

@@ -43,7 +43,20 @@ class HomeController extends Controller
 
     public function paciente(Request $request)
     {
-        return view('dashboard.paciente');
+        $section = $request->get('section', 'datos'); // datos | cita
+
+        $paciente = auth()->user()->paciente()->with([
+            'trasplantes',
+            'diagnosticos',
+            'tratamientos',
+            'pruebas',
+            'organos',
+            'sintomas'
+        ])->firstOrFail();
+
+        return view('dashboard.paciente', compact('paciente', 'section'));
     }
+
+
 
 }
