@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex items-center justify-between">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Citas (Bandeja médico)
+                Citas
             </h2>
 
             <a href="{{ route('citas.create') }}"
@@ -80,7 +80,7 @@
                                     $pref = $cita->preferencia_fecha_hora ? $cita->preferencia_fecha_hora->format('d/m/Y H:i') : '-';
 
                                     $motivoTxt = $cita->motivo ?? '-';
-                                    if ($cita->motivo === 'otro' && !empty($cita->motivo_detalle)) {
+                                    if ($cita->motivo === 'Otro' && !empty($cita->motivo_detalle)) {
                                         $motivoTxt = 'Otro: ' . $cita->motivo_detalle;
                                     }
 
@@ -150,7 +150,7 @@
                                             @if($isPendiente)
                                                 {{-- ACEPTAR --}}
                                                 <button type="button"
-                                                        onclick="openAceptarModal({{ $cita->id }}, '{{ e($pref !== '-' ? $pref : '') }}')"
+                                                        onclick="openAceptarModal({{ $cita->id }})"
                                                         class="inline-flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded">
                                                     Aceptar
                                                 </button>

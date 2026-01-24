@@ -9,6 +9,8 @@ use App\Models\Medico;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Cita;
+use Illuminate\Support\Facades\Auth;
 
 class MedicoController extends Controller
 {
@@ -26,7 +28,7 @@ class MedicoController extends Controller
      * Show the form for creating a new resource.
      */
 
-      
+
     public function create()
     {
         $this->authorize('create', Medico::class);
@@ -87,7 +89,7 @@ class MedicoController extends Controller
         $medico->fill($request->validated());
         $medico->save();
         session()->flash('success', 'Médico modificado correctamente. Si nos da tiempo haremos este mensaje internacionalizable y parametrizable');
-        if($request->user()->es_administrador)
+        if ($request->user()->es_administrador)
             return redirect()->route('medicos.index');
         return redirect()->route('citas.index');
     }
@@ -98,10 +100,26 @@ class MedicoController extends Controller
     public function destroy(Medico $medico)
     {
         $this->authorize('delete', $medico);
-        if($medico->delete() && $medico->user->delete())
+        if ($medico->delete() && $medico->user->delete())
             session()->flash('success', 'Médico borrado correctamente. Si nos da tiempo haremos este mensaje internacionalizable y parametrizable');
         else
             session()->flash('warning', 'El médico no pudo borrarse. Es probable que se deba a que tenga asociada información como citas que dependen de él.');
         return redirect()->route('medicos.index');
     }
+
+    /*public function citas_pendientes_count()
+    {
+        $medicoId = Auth::user()->medico->id;
+
+        $citasPendientes = Cita::query()->where('medico_id', $medicoId)->where('estado', 'pendiente')->count();
+        $ultimasPendientes = Cita::query()->with('paciente.user', 'paciente.usuarioAcceso')->where('medico_id', $medicoId)->where('estado', 'pendiente')->orderByDesc('created_at')->limit(5)->get();
+
+        return view('dashboard.medico', [
+           // 'stats' => $stats,
+           // 'ultimos' => $ultimos,
+            'citasPendientesCount' => $citasPendientes,
+            'citasPendientesTop' => $ultimasPendientes,
+        ]);
+
+    }*/
 }

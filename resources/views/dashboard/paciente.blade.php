@@ -17,10 +17,7 @@
                 @endif
             </div>
         </div>
-
-        <x-flash-message type="success" />
-        <x-flash-message type="warning" />
-        <x-flash-message type="error" />
+        
     </x-slot>
 
     @php

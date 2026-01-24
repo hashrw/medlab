@@ -13,97 +13,158 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rules;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
     /**
-     * Display the registration view.
+     * Selector (si lo mantienes).
+     * Ojo: luego lo cerraremos (admin/backoffice). Por ahora solo UI.
      */
     public function create(): View
     {
         return view('auth.register');
     }
 
-    public function create_medico()
+    public function create_medico(): View
     {
-        $especialidads = Especialidad::all();
-        return view('auth.register-medico', ['especialidads' => $especialidads]);
-    }
+        $especialidads = Especialidad::orderBy('nombre')->get();
 
-    private function getReglasValidacionRegistroMedico(){
-        return [
-            'fecha_contratacion' => 'required|date',
-            'vacunado' => 'required|boolean',
-            'sueldo' => 'required|numeric',
-            'especialidad_id' => 'required|exists:especialidads,id'
-        ];
-    }
-
-    private function getReglasValidacionRegistroPaciente(){
-        return ['nuhsa' => ['required', 'string', 'max:12', 'min:12', new Nuhsa]];
-    }
-
-    private function getReglasValidacionRegistro(Request $request){
-        $reglasValidacionRegistro = [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|confirmed|min:8',
-            'tipo_usuario_id' => 'required|numeric'
-        ];
-        if(intval($request->tipo_usuario_id) == 1)
-            //Médico
-            return array_merge($reglasValidacionRegistro, $this->getReglasValidacionRegistroMedico());
-        if(intval($request->tipo_usuario_id) == 2)
-            //Paciente
-            return array_merge($reglasValidacionRegistro, $this->getReglasValidacionRegistroPaciente());
-    }
-
-    private function crearUsuarioBase(Request $request): User
-    {
-        return User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
+        return view('auth.register-medico', [
+            'especialidads' => $especialidads,
         ]);
     }
 
-    private function crearMedico(Request $request, User $user){
-        $medico = new Medico($request->all());
-        $medico->user_id = $user->id;
-        $medico->save();
+    public function create_paciente(): View
+    {
+        $medicos = Medico::with('user')->orderBy('id')->get();
+
+        return view('auth.register-paciente', [
+            'medicos' => $medicos,
+        ]);
     }
 
-    private function crearPaciente(Request $request, User $user){
-        $paciente = new Paciente($request->all());
-        $paciente->user_id = $user->id;
-        $paciente->save();
+    private function reglasBase(Request $request): array
+    {
+        return [
+            'tipo_usuario_id' => ['required', 'in:1,2'],
+            'name' => ['required', 'string', 'max:255'],
+            'apellidos' => ['required', 'string', 'max:255'],
+            'telefono' => ['nullable', 'string', 'max:50'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'password' => ['required', 'string', 'confirmed', 'min:8'],
+        ];
     }
 
-    private function crearSubclaseUserSegunTipoUsuario(Request $request, User $user){
-        if(intval($request->tipo_usuario_id) == 1)
-            $this->crearMedico($request, $user);
-        elseif(intval($request->tipo_usuario_id) == 2){
-            $this->crearPaciente($request, $user);
+    private function reglasMedico(): array
+    {
+        return [
+            'especialidad_id' => ['required', 'exists:especialidads,id'],
+            'residente' => ['required', 'boolean'],
+        ];
+    }
+
+    private function reglasPaciente(): array
+    {
+        return [
+            'nuhsa' => ['required', 'string', 'size:12', new Nuhsa],
+            'fecha_nacimiento' => ['required', 'date'],
+            'sexo' => ['required', 'in:M,F,O'],
+            'medico_id' => ['nullable', 'exists:medicos,id'],
+        ];
+    }
+
+    private function reglas(Request $request): array
+    {
+        $base = $this->reglasBase($request);
+
+        $tipo = (int) $request->input('tipo_usuario_id');
+        if ($tipo === 1) {
+            return array_merge($base, $this->reglasMedico());
         }
 
+        if ($tipo === 2) {
+            return array_merge($base, $this->reglasPaciente());
+        }
+
+        // Nunca debería llegar por el in:1,2, pero lo dejamos claro.
+        throw ValidationException::withMessages([
+            'tipo_usuario_id' => 'Tipo de usuario no válido.',
+        ]);
     }
 
     /**
      * Handle an incoming registration request.
-     *
-     * @throws \Illuminate\Validation\ValidationException
      */
     public function store(Request $request): RedirectResponse
     {
-        $request->validate($this->getReglasValidacionRegistro($request));
-        $user = $this->crearUsuarioBase($request);
-        $this->crearSubclaseUserSegunTipoUsuario($request, $user);
-        $user->fresh();
+        $validated = $request->validate($this->reglas($request));
+
+        $tipo = (int) $validated['tipo_usuario_id'];
+
+        $user = DB::transaction(function () use ($validated, $tipo) {
+
+            if ($tipo === 2) {
+                // PACIENTE: primero ficha clínica, luego user vinculando paciente_id.
+                $paciente = new Paciente();
+                $paciente->nuhsa = $validated['nuhsa'];
+                $paciente->fecha_nacimiento = $validated['fecha_nacimiento'];
+                $paciente->sexo = $validated['sexo'];
+
+                // medico_id existe en tu DB por lo que has mostrado (belongsTo). Si es nullable, perfecto.
+                if (!empty($validated['medico_id'])) {
+                    $paciente->medico_id = (int) $validated['medico_id'];
+                }
+
+                $paciente->save();
+
+                $user = User::create([
+                    'name' => $validated['name'],
+                    'apellidos' => $validated['apellidos'],
+                    'telefono' => $validated['telefono'] ?? null,
+                    'email' => $validated['email'],
+                    'password' => Hash::make($validated['password']),
+                    'tipo_usuario_id' => 2,
+                    'paciente_id' => $paciente->id,
+                ]);
+
+                return $user->fresh();
+            }
+
+            // MEDICO: primero user, luego medico con user_id.
+            $user = User::create([
+                'name' => $validated['name'],
+                'apellidos' => $validated['apellidos'],
+                'telefono' => $validated['telefono'] ?? null,
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'tipo_usuario_id' => 1,
+            ]);
+
+            Medico::create([
+                'user_id' => $user->id,
+                'especialidad_id' => (int) $validated['especialidad_id'],
+                'residente' => (bool) $validated['residente'],
+            ]);
+
+            return $user->fresh();
+        });
+
         event(new Registered($user));
         Auth::login($user);
+
+        // Redirección coherente por rol (si prefieres HOME, cámbialo).
+        if ($user->es_medico) {
+            return redirect()->route('dashboard.medico');
+        }
+
+        if ($user->es_paciente) {
+            return redirect()->route('dashboard.paciente');
+        }
+
         return redirect(RouteServiceProvider::HOME);
     }
 }

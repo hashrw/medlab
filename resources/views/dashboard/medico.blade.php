@@ -57,19 +57,12 @@
             </div>
         </div>
 
-        {{-- Inferir diagnóstico (atajo) --}}
-        <a href="{{ route('diagnosticos.inferirSelector') }}"
-           class="bg-white shadow-md rounded-lg p-6 border border-purple-200 hover:border-purple-400 hover:bg-purple-50 transition">
-            <div class="flex items-start justify-between gap-4">
-                <div>
-                    <h3 class="text-lg font-semibold text-gray-800">Inferir diagnóstico</h3>
-                    <p class="text-sm text-gray-600">
-                        Atajo para lanzar inferencia sin entrar primero en la ficha.
-                    </p>
-                </div>
-                <i class="fas fa-diagnoses text-purple-600 text-2xl"></i>
-            </div>
-        </a>
+        {{-- Mis Citas --}}
+        @include('dashboard.medico.partials.citas_widget', [
+    'citasPendientesCount' => $citasPendientesCount ?? 0,
+    'citasPendientesTop' => $citasPendientesTop ?? collect(),
+])
+
     </div>
 
     {{-- Últimos registros --}}

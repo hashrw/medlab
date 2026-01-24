@@ -31,8 +31,6 @@ class User extends Authenticatable
         'password' => 'hashed',
     ];
 
-    protected $guarded = ['email'];
-
     /*--------------------------------------------------------------
      | RELACIÓN: Usuario → Paciente clínico
      --------------------------------------------------------------*/

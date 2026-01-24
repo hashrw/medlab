@@ -15,35 +15,47 @@ class CitaController extends Controller
 {
     public function index(Request $request)
     {
+        //dd('llego');
         $this->authorize('viewAny', Cita::class);
 
         $user = Auth::user();
 
         if ($user->es_medico) {
-            $q = $user->medico->citas()->getQuery();
+            $medicoId = $user->medico->id;
 
-            $q->orderByRaw("CASE WHEN estado = 'pendiente' THEN 0 ELSE 1 END")
-              ->orderByDesc('created_at');
+            $q = Cita::query()
+                ->where(function ($w) use ($medicoId) {
+                    $w->where('estado', 'pendiente')
+                        ->whereNull('medico_id');
+                })
+                ->orWhere('medico_id', $medicoId);
 
             if ($request->filled('estado')) {
                 $q->where('estado', $request->estado);
             }
 
+            $q->orderByRaw("CASE WHEN estado = 'pendiente' THEN 0 ELSE 1 END")
+                ->orderByDesc('created_at');
+
             $citas = $q->paginate(25)->withQueryString();
-            return view('citas.index', compact('citas'));
+
+            return view('citas.index_medico', compact('citas'));
         }
 
         if ($user->es_paciente) {
-            $citas = $user->paciente->citas()
+            $citas = Cita::query()
+                ->where('paciente_id', $user->paciente->id)
                 ->orderByDesc('created_at')
                 ->paginate(25);
 
-            return view('citas.index', compact('citas'));
+            return view('citas.index_paciente', compact('citas'));
         }
 
         $citas = Cita::orderByDesc('created_at')->paginate(25);
         return view('citas.index', compact('citas'));
     }
+
+
 
     public function create()
     {
@@ -71,16 +83,18 @@ class CitaController extends Controller
 
     public function store(StoreCitaRequest $request)
     {
+        //dd('ENTRA A STORE@Controller',$request->all());
         $this->authorize('create', Cita::class);
 
         $user = Auth::user();
         $data = $request->validated();
+        // dd('VALIDATED', $data, 'USER', Auth::user()->only(['id','tipo_usuario_id']));
 
         if ($user->es_paciente) {
             // Solicitud: el paciente no fija cita real ni médico
             $data = [
                 'paciente_id' => $user->paciente->id,
-                'medico_id' => null,
+                'medico_id' => $user->paciente->medico_id,
                 'fecha_hora' => null,
                 'estado' => 'pendiente',
                 'motivo' => $data['motivo'] ?? null,
@@ -238,5 +252,23 @@ class CitaController extends Controller
 
         session()->flash('success', 'Solicitud rechazada.');
         return redirect()->route('citas.index');
+    }
+
+    public function asignarMedico(Request $request, Paciente $paciente)
+    {
+        $user = $request->user();
+
+        // mínimo: solo médico (ajusta si hay admin)
+        abort_unless($user && $user->es_medico, 403);
+
+        $request->validate([
+            'medico_id' => ['required', 'exists:medicos,id'],
+        ]);
+
+        $paciente->update([
+            'medico_id' => $request->medico_id,
+        ]);
+
+        return back()->with('success', 'Médico asignado correctamente.');
     }
 }

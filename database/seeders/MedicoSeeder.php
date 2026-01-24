@@ -4,24 +4,31 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 
 class MedicoSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     *
-     * @return void
-     */
-    public function run()
+    public function run(): void
     {
-        DB::table('medicos')->insert([
-            
+        DB::table('medicos')->upsert(
             [
-                'residente' => true,
-                'especialidad_id' => 2,
-                'user_id' => 1
-            ]
-        ]);
+                [
+                    'user_id' => 1,
+                    'residente' => true,
+                    'especialidad_id' => 2,
+                ],
+                [
+                    'user_id' => 2,
+                    'residente' => true,
+                    'especialidad_id' => 2,
+                ],
+                [
+                    'user_id' => 3,
+                    'residente' => false,
+                    'especialidad_id' => 2,
+                ],
+            ],
+            ['user_id'],                 // clave única
+            ['residente', 'especialidad_id'] // campos a actualizar si ya existe
+        );
     }
 }

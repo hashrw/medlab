@@ -7,6 +7,7 @@ use App\Models\Paciente;
 use App\Models\Diagnostico;
 use App\Models\Tratamiento;
 use App\Models\Prueba;
+use App\Models\Cita;
 use Illuminate\Support\Facades\Auth;
 
 class HomeController extends Controller
@@ -38,25 +39,51 @@ class HomeController extends Controller
             'pruebas' => Prueba::latest('id')->limit(5)->get(),
         ];
 
-        return view('dashboard.medico', compact('stats', 'ultimos'));
+        $user = Auth::user();
+
+        // BLINDAJE: dashboard médico solo si tiene perfil medico
+        if (!$user || !$user->medico) {
+            abort(403, 'El usuario no tiene perfil de médico.');
+        }
+
+        $medicoId = $user->medico->id;
+
+        $citasPendientesCount = Cita::query()
+            ->where('medico_id', $medicoId)
+            ->where('estado', 'pendiente')
+            ->count();
+
+        $citasPendientesTop = Cita::query()
+            ->with(['paciente.usuarioAcceso'])
+            ->where('medico_id', $medicoId)
+            ->where('estado', 'pendiente')
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        return view('dashboard.medico', compact(
+            'stats',
+            'ultimos',
+            'citasPendientesCount',
+            'citasPendientesTop'
+        ));
     }
+
 
     public function paciente(Request $request)
     {
-        $section = $request->get('section', 'datos'); // datos | cita
+        $paciente = Auth::user()->paciente;
 
-        $paciente = auth()->user()->paciente()->with([
-            'trasplantes',
-            'diagnosticos',
-            'tratamientos',
-            'pruebas',
-            'organos',
-            'sintomas'
-        ])->firstOrFail();
+        $ultimasCitas = $paciente->citas()
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
 
-        return view('dashboard.paciente', compact('paciente', 'section'));
+        $pendientesCount = $paciente->citas()
+            ->where('estado', 'pendiente')
+            ->count();
+
+        return view('dashboard.paciente', compact('paciente', 'ultimasCitas', 'pendientesCount'));
     }
-
-
 
 }

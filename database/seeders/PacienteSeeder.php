@@ -14,7 +14,7 @@ class PacienteSeeder extends Seeder
         $faker = Faker::create('es_ES');
 
         // Requisitos mínimos
-        foreach (['pacientes', 'users', 'sintomas', 'sintoma_aliases', 'organos'] as $t) {
+        foreach (['pacientes', 'users', 'sintomas', 'sintoma_aliases', 'organos', 'medicos'] as $t) {
             if (!Schema::hasTable($t)) {
                 throw new \RuntimeException("Falta tabla requerida: {$t}");
             }
@@ -24,7 +24,7 @@ class PacienteSeeder extends Seeder
         // IMPORTANTE: filtrar por tipo_usuario_id = 2 (Paciente)
         $userIds = DB::table('users')
             ->whereNull('paciente_id')
-            ->where('tipo_usuario_id', 2) // 2 = Paciente (según tu User::getTipoUsuarioAttribute)
+            ->where('tipo_usuario_id', 2) // 2 = Paciente
             ->orderBy('id')
             ->limit(5)
             ->pluck('id')
@@ -35,7 +35,18 @@ class PacienteSeeder extends Seeder
             throw new \RuntimeException(
                 "Se necesitan al menos 5 users PACIENTE con users.paciente_id NULL (tipo_usuario_id=2). Encontrados: " . count($userIds)
             );
-        }   
+        }
+
+        // Médicos disponibles para asignación (round-robin)
+        $medicoIds = DB::table('medicos')
+            ->orderBy('id')
+            ->pluck('id')
+            ->map(fn ($v) => (int) $v)
+            ->toArray();
+
+        if (count($medicoIds) < 1) {
+            throw new \RuntimeException("PacienteSeeder: se necesita al menos 1 médico en tabla medicos.");
+        }
 
         // Nombres exactos de órganos (deben coincidir con organos.nombre)
         $ORG_GI = 'Tracto gastrointestinal';
@@ -101,6 +112,7 @@ class PacienteSeeder extends Seeder
 
         $insertPaciente = function (
             int $userId,
+            int $medicoId,
             array $sintomaIds,
             array $organScores,
             int $diasDesdeTrasplante,
@@ -119,7 +131,14 @@ class PacienteSeeder extends Seeder
                 throw new \RuntimeException("PacienteSeeder: user {$userId} ya tiene paciente_id={$u->paciente_id}.");
             }
 
+            // BLINDAJE: médico existe
+            $m = DB::table('medicos')->where('id', $medicoId)->value('id');
+            if (!$m) {
+                throw new \RuntimeException("PacienteSeeder: medico {$medicoId} no existe.");
+            }
+
             $pacienteId = DB::table('pacientes')->insertGetId([
+                'medico_id' => $medicoId,
                 'nuhsa' => 'DIA' . $faker->unique()->numerify('##########'),
                 'fecha_nacimiento' => $faker->dateTimeBetween('-70 years', '-18 years')->format('Y-m-d'),
                 'peso' => $faker->randomFloat(2, 50, 120),
@@ -239,16 +258,18 @@ class PacienteSeeder extends Seeder
 
         foreach ($casos as $i => $c) {
             $userId = $userIds[$i];
+            $medicoId = $medicoIds[$i % count($medicoIds)];
 
             $pid = $insertPaciente(
                 $userId,
+                $medicoId,
                 $c['sintomas'],
                 $c['scores'],
                 $c['dias'],
                 $c['tag']
             );
 
-            echo "PacienteSeeder: creado paciente {$pid} ({$c['tag']}) enlazado a user {$userId}\n";
+            echo "PacienteSeeder: creado paciente {$pid} ({$c['tag']}) enlazado a user {$userId} y medico {$medicoId}\n";
         }
     }
 }

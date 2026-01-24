@@ -6,267 +6,141 @@
                     <a href="{{ route('citas.index') }}">Citas</a>
                     <svg class="fill-current w-3 h-3 mx-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
                         <path
-                            d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z"/>
+                            d="M285.476 272.971L91.132 467.314c-9.373 9.373-24.569 9.373-33.941 0l-22.667-22.667c-9.357-9.357-9.375-24.522-.04-33.901L188.505 256 34.484 101.255c-9.335-9.379-9.317-24.544.04-33.901l22.667-22.667c9.373-9.373 24.569-9.373 33.941 0L285.475 239.03c9.373 9.372 9.373 24.568.001 33.941z" />
                     </svg>
                 </li>
                 <li>
-                    <a href="#" class="text-gray-500" aria-current="page">Editar cita</a>
+                    <span class="text-gray-500" aria-current="page">Editar cita</span>
                 </li>
             </ol>
         </nav>
+
+        <x-flash-message type="success" />
+        <x-flash-message type="warning" />
+        <x-flash-message type="error" />
     </x-slot>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+    @php
+        $pacienteNombre = $cita->paciente?->user?->name
+            ?? $cita->paciente?->usuarioAcceso?->name
+            ?? ('Paciente #' . ($cita->paciente_id ?? '-'));
+
+        $pacienteNuhsa = $cita->paciente?->nuhsa ?? null;
+
+        $medicoNombre = $cita->medico?->user?->name ?? '—';
+        $medicoEspecialidad = $cita->medico?->especialidad?->nombre ?? null;
+
+        $estadoActual = old('estado', $cita->estado ?? 'pendiente');
+
+        // datetime-local: valor en Y-m-d\TH:i
+        $fechaHoraValue = old('fecha_hora');
+        if ($fechaHoraValue === null && $cita->fecha_hora) {
+            $fechaHoraValue = $cita->fecha_hora->format('Y-m-d\TH:i');
+        }
+
+        $prefValue = old('preferencia_fecha_hora');
+        if ($prefValue === null && $cita->preferencia_fecha_hora) {
+            $prefValue = $cita->preferencia_fecha_hora->format('Y-m-d\TH:i');
+        }
+    @endphp
+
+    <div class="py-8">
+        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                    Información de la cita
-                </div>
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <!-- Errores de validación en servidor -->
-                    <x-input-error class="mb-4" :messages="$errors->all()"/>
-                    <form method="POST" action="{{ route('citas.update', $cita->id) }}">
-                        @csrf
-                        @method('put')
-                        <div class="mt-4">
-                            <x-input-label for="fecha_contratacion" :value="__('Fecha y hora')"/>
 
-                            <x-text-input id="fecha_hora" class="block mt-1 w-full"
-                                          type="datetime-local"
-                                          name="fecha_hora"
-                                          :value="$cita->fecha_hora->format('Y-m-d\TH:i:s')"
-                                          required/>
-                        </div>
-
-                        <div class="mt-4">
-                            <x-input-label for="paciente_id" :value="__('Paciente')"/>
-
-                            @isset($paciente)
-                                <x-text-input id="paciente_id" class="block mt-1 w-full"
-                                              type="hidden"
-                                              name="paciente_id"
-                                              :value="$paciente->id"
-                                              required/>
-                                <x-text-input class="block mt-1 w-full"
-                                              type="text"
-                                              disabled
-                                              value="{{$paciente->user->name}} ({{$paciente->nuhsa}})"
-                                />
-                            @else
-                                <x-select id="paciente_id" name="paciente_id" required>
-                                    <option value="">{{__('Elige un paciente')}}</option>
-                                    @foreach ($pacientes as $paciente)
-                                        <option value="{{$paciente->id}}"
-                                                @if ($cita->paciente_id == $paciente->id) selected @endif>{{$paciente->user->name}}
-                                            ({{$paciente->nuhsa}})
-                                        </option>
-                                    @endforeach
-                                </x-select>
-                            @endisset
-                        </div>
-
-                        <div class="mt-4">
-                            <x-input-label for="medico_id" :value="__('Médico')"/>
-
-                            @isset($medico)
-                                <x-text-input id="medico_id" class="block mt-1 w-full"
-                                              type="hidden"
-                                              name="medico_id"
-                                              :value="$medico->id"
-                                              required/>
-                                <x-text-input class="block mt-1 w-full"
-                                              type="text"
-                                              disabled
-                                              value="{{$medico->user->name}} ({{$medico->especialidad->nombre}})"
-                                />
-                            @else
-                                <x-select id="medico_id" name="medico_id" required>
-                                    <option value="">{{__('Elige un médico')}}</option>
-                                    @foreach ($medicos as $medico)
-                                        <option value="{{$medico->id}}"
-                                                @if ($cita->medico_id == $medico->id) selected @endif>{{$medico->user->name}}
-                                            ({{$medico->especialidad->nombre}})
-                                        </option>
-                                    @endforeach
-                                </x-select>
-                            @endisset
-                        </div>
-
-                        <div class="flex items-center justify-end mt-4">
-                            <x-danger-button type="button">
-                                <a href={{route('citas.index')}}>
-                                    {{ __('Cancelar') }}
-                                </a>
-                            </x-danger-button>
-                            <x-primary-button class="ml-4">
-                                {{ __('Guardar') }}
-                            </x-primary-button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                    Prescripciones actuales
-                </div>
-                <div class="p-6 bg-white border-b border-gray-200">
-                    <table class="min-w-max w-full table-auto">
-                        <thead>
-                        <tr class="bg-gray-200 text-gray-900 uppercase text-sm leading-normal">
-                            <th class="py-3 px-6 text-left">Medicamento</th>
-                            <th class="py-3 px-6 text-left">Inicio</th>
-                            <th class="py-3 px-6 text-left">Fin</th>
-                            <th class="py-3 px-6 text-left">Tomas/día</th>
-                            <th class="py-3 px-6 text-left">Comentarios</th>
-                            <th class="py-3 px-6 text-center">Acciones</th>
-                        </tr>
-                        </thead>
-                        <tbody class="text-gray-600 text-sm font-light">
-                        @foreach ($cita->medicamentos as $medicamento)
-                            <tr class="border-b border-gray-200 hover:bg-gray-100">
-                                <td class="py-3 px-6 text-left whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <span
-                                            class="font-medium">{{$medicamento->nombre}} ({{$medicamento->miligramos}} {{__('mg')}})</span>
-                                    </div>
-                                </td>
-                                <td class="py-3 px-6 text-center whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <span
-                                            class="font-medium">{{$medicamento->pivot->inicio->format('d/m/Y')}} </span>
-                                    </div>
-                                </td>
-                                <td class="py-3 px-6 text-center whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <span class="font-medium">{{$medicamento->pivot->fin->format('d/m/Y')}} </span>
-                                    </div>
-                                </td>
-                                <td class="py-3 px-6 text-center whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <span class="font-medium">{{$medicamento->pivot->tomas_dia}} </span>
-                                    </div>
-                                </td>
-                                <td class="py-3 px-6 text-center whitespace-nowrap">
-                                    <div class="flex items-center">
-                                        <span class="font-medium">{{$medicamento->pivot->comentarios}} </span>
-                                    </div>
-                                </td>
-                                <td class="py-3 px-6 text-center">
-                                    <div class="flex item-center justify-center">
-
-                                        <div class="w-4 mr-2 transform hover:text-purple-500 hover:scale-110">
-                                            <form id="detach-form-{{$cita->id}}-{{$medicamento->id}}" method="POST"
-                                                  action="{{ route('citas.detachMedicamento', [$cita->id, $medicamento->id]) }}">
-                                                @csrf
-                                                @method('delete')
-                                                <a class="cursor-pointer"
-                                                   onclick="getElementById('detach-form-{{$cita->id}}-{{$medicamento->id}}').submit();">
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                                         viewBox="0 0 24 24" stroke="currentColor">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                              stroke-width="2"
-                                                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                                    </svg>
-                                                </a>
-                                            </form>
-
-                                        </div>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
-
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @if(!Auth::user()->es_paciente)
-        <div class="py-12">
-            <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-                <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="font-semibold text-lg px-6 py-4 bg-white border-b border-gray-200">
-                        Añadir prescripción
+                <div class="px-6 py-4 bg-white border-b border-gray-200">
+                    <div class="font-semibold text-lg text-gray-800">
+                        Editar cita #{{ $cita->id }}
                     </div>
-                    <div class="p-6 bg-white border-b border-gray-200">
-                        <!-- Errores de validación en servidor. Fíjate cómo accedo al bag "attach" que hemos realizado en el método attach_medicamento de CitaController con validateWithBag -->
-                        <x-input-error class="mb-4" :messages="$errors->attach->all()"/>
-                        <form method="POST" action="{{ route('citas.attachMedicamento', [$cita->id]) }}">
-                            @csrf
-                            <div class="mt-4">
-                                <x-input-label for="medicamento_id" :value="__('Medicamento')"/>
+                </div>
 
-                                <x-select id="medicamento_id" name="medicamento_id" required>
-                                    <option value="">{{__('Elige un medicamento')}}</option>
-                                    @foreach ($medicamentos as $medicamento)
-                                        <option value="{{$medicamento->id}}"
-                                                @if (old('medicamento_id') == $medicamento->id) selected @endif>{{$medicamento->nombre}}
-                                            ({{$medicamento->miligramos}} {{__('mg.')}})
-                                        </option>
-                                    @endforeach
-                                </x-select>
+                <div class="p-6 bg-white border-b border-gray-200">
+                    <x-input-error class="mb-4" :messages="$errors->all()" />
+
+                    <form method="POST" action="{{ route('citas.update', $cita->id) }}" class="space-y-5">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                            <div class="md:col-span-2">
+                                <div class="text-xs text-gray-500">Paciente</div>
+                                <div class="text-sm text-gray-900 font-medium">
+                                    {{ $pacienteNombre }}@if($pacienteNuhsa) ({{ $pacienteNuhsa }})@endif
+                                </div>
                             </div>
 
-                            <div class="mt-4">
-                                <x-input-label for="inicio" :value="__('Inicio del tratamiento')"/>
-
-                                <x-text-input id="inicio" class="block mt-1 w-full"
-                                              type="date"
-                                              name="inicio"
-                                              :value="old('inicio')"
-                                              required/>
-                            </div>
-
-                            <div class="mt-4">
-                                <x-input-label for="fin" :value="__('Fin del tratamiento')"/>
-
-                                <x-text-input id="fin" class="block mt-1 w-full"
-                                              type="date"
-                                              name="fin"
-                                              :value="old('fin')"
-                                              required/>
-                            </div>
-
-                            <div class="mt-4">
-                                <x-input-label for="tomas_dia" :value="__('Tomas al día')"/>
-
-
-                                <x-select id="tomas_dia" name="tomas_dia" required>
-                                    <option value="">{{__('Elige una opción')}}</option>
-                                    @for($i = 1; $i <= 12; $i++)
-                                        <option :value="$i" @if (old('tomas_dia') == $i) selected @endif>{{$i}}</option>
-                                    @endfor
-                                </x-select>
+                            <div class="md:col-span-2">
+                                <div class="text-xs text-gray-500">Médico</div>
+                                <div class="text-sm text-gray-900 font-medium">
+                                    {{ $medicoNombre }}@if($medicoEspecialidad) ({{ $medicoEspecialidad }})@endif
+                                </div>
                             </div>
 
                             <div>
-                                <x-input-label for="comentarios" :value="__('Comentarios')"/>
-
-                                <x-text-input id="comentarios" class="block mt-1 w-full" type="text" name="comentarios"
-                                              :value="old('name')"/>
+                                <x-input-label for="estado" :value="__('Estado')" />
+                                <select id="estado" name="estado" class="mt-1 block w-full border-gray-300 rounded">
+                                    @foreach (['pendiente', 'aceptada', 'rechazada', 'cancelada'] as $st)
+                                        <option value="{{ $st }}" @selected($estadoActual === $st)>
+                                            {{ ucfirst($st) }}
+                                        </option>
+                                    @endforeach
+                                </select>
                             </div>
 
-                            <div class="flex items-center justify-end mt-4">
-                                <x-danger-button type="button">
-                                    <a href={{route('medicos.index')}}>
-                                        {{ __('Cancelar') }}
-                                    </a>
-                                </x-danger-button>
-                                <x-primary-button class="ml-4">
-                                    {{ __('Guardar') }}
-                                </x-primary-button>
+                            <div>
+                                <x-input-label for="fecha_hora" :value="__('Fecha y hora (cita)')" />
+                                <input id="fecha_hora" class="block mt-1 w-full border-gray-300 rounded"
+                                    type="datetime-local" name="fecha_hora" value="{{ $fechaHoraValue ?? '' }}">
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Puede estar vacía si sigue en pendiente.
+                                </div>
                             </div>
-                        </form>
-                    </div>
+
+                            <div>
+                                <x-input-label for="preferencia_fecha_hora" :value="__('Preferencia paciente (opcional)')" />
+                                <input id="preferencia_fecha_hora" class="block mt-1 w-full border-gray-300 rounded"
+                                    type="datetime-local" name="preferencia_fecha_hora" value="{{ $prefValue ?? '' }}">
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <x-input-label for="motivo" :value="__('Motivo')" />
+                                <input id="motivo" class="block mt-1 w-full border-gray-300 rounded" type="text"
+                                    name="motivo" maxlength="120" value="{{ old('motivo', $cita->motivo ?? '') }}">
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <x-input-label for="motivo_detalle" :value="__('Detalle del motivo (opcional)')" />
+                                <textarea id="motivo_detalle" name="motivo_detalle" rows="4"
+                                    class="block mt-1 w-full border-gray-300 rounded"
+                                    maxlength="2000">{{ old('motivo_detalle', $cita->motivo_detalle ?? '') }}</textarea>
+                            </div>
+
+                            <div class="md:col-span-2">
+                                <x-input-label for="comentario_medico" :value="__('Comentario al paciente (opcional)')" />
+                                <textarea id="comentario_medico" name="comentario_medico" rows="3"
+                                    class="block mt-1 w-full border-gray-300 rounded"
+                                    maxlength="2000">{{ old('comentario_medico', $cita->comentario_medico ?? '') }}</textarea>
+                            </div>
+
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-2">
+                            <a href="{{ route('citas.show', $cita->id) }}"
+                                class="inline-flex items-center px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-50">
+                                Cancelar
+                            </a>
+
+                            <button type="submit"
+                                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                                Guardar
+                            </button>
+                        </div>
+
+                    </form>
                 </div>
+
             </div>
         </div>
-    @endif
+    </div>
 </x-medico-layout>

@@ -34,6 +34,13 @@ class Paciente extends Model
         return $this->hasOne(User::class, 'paciente_id');
     }
 
+    // App\Models\Paciente.php
+    public function medico()
+    {
+        return $this->belongsTo(Medico::class);
+    }
+
+
     /*--------------------------------------------------------------
      | TRASPLANTES
      --------------------------------------------------------------*/
@@ -49,7 +56,7 @@ class Paciente extends Model
     {
         return $this->hasMany(Tratamiento::class, 'paciente_id');
     }
-    
+
 
     /*--------------------------------------------------------------
      | ÓRGANOS
@@ -83,6 +90,11 @@ class Paciente extends Model
     public function pruebas()
     {
         return $this->hasMany(Prueba::class);
+    }
+
+    public function citas()
+    {
+        return $this->hasMany(Cita::class);
     }
 
 

@@ -1,4 +1,17 @@
 <aside class="sidebar w-64 bg-white shadow-md h-screen">
+    @php
+        $enInicio = request()->routeIs('dashboard.medico');
+
+        $enFlujoPaciente =
+            request()->routeIs('pacientes.*')
+            || request()->routeIs('pacientes.historiaClinica')
+            || request()->routeIs('diagnosticos.inferirSelector')
+            || request()->routeIs('diagnosticos.inferir')
+            || request()->routeIs('tratamientos.inferirDesdeDiagnostico');
+
+        $enFlujoCitas = request()->routeIs('citas.*');
+    @endphp
+
     <nav class="py-4 flex flex-col justify-between h-full">
         <div>
             <div class="mb-6 px-4">
@@ -11,96 +24,64 @@
                     </div>
                 </div>
 
-                {{-- ACCIÓN CLÍNICA --}}
-                <h3 class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-3">
-                    Acción clínica
-                </h3>
-
+                {{-- INICIO (SIEMPRE VISIBLE) --}}
                 <ul class="space-y-1 mb-6">
                     <li>
                         <a href="{{ route('dashboard.medico') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50
-                           {{ request()->routeIs('dashboard.medico') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
+                           class="sidebar-link flex items-center px-3 py-2 rounded-md
+                           {{ $enInicio ? 'bg-blue-100 text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                             <i class="fas fa-home w-5 mr-2"></i>
                             <span>Inicio clínico</span>
                         </a>
                     </li>
-
-                    {{-- ÚNICO entry point al flujo clínico 
-                    <li>
-                        <a href="{{ route('pacientes.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50
-                           {{ request()->routeIs('pacientes.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
-                            <i class="fas fa-search w-5 mr-2"></i>
-                            <span>Buscar paciente</span>
-                        </a>
-                    </li>--}}
                 </ul>
 
-                {{-- SEGUIMIENTO --}}
+                {{-- ACCIÓN CLÍNICA (SOLO SI HAY CONTEXTO ACTIVO) --}}
+                @if($enFlujoPaciente || $enFlujoCitas)
+                    <h3 class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-3">
+                        Acción clínica
+                    </h3>
+
+                    <ul class="space-y-1 mb-8">
+                        @if($enFlujoPaciente)
+                            <li>
+                                <div class="flex items-center px-3 py-2 rounded-md bg-blue-100 text-blue-600 font-semibold">
+                                    <i class="fas fa-stethoscope w-5 mr-2"></i>
+                                    <span>Buscar paciente (motor e inferencia)</span>
+                                </div>
+                            </li>
+                        @endif
+
+                        @if($enFlujoCitas)
+                            <li>
+                                <div class="flex items-center px-3 py-2 rounded-md bg-blue-100 text-blue-600 font-semibold">
+                                    <i class="fas fa-calendar-alt w-5 mr-2"></i>
+                                    <span>Gestión de citas</span>
+                                </div>
+                            </li>
+                        @endif
+                    </ul>
+                @endif
+
+                {{-- DATOS CLÍNICOS Y SEGUIMIENTO (MÓDULOS FUTUROS) --}}
                 <h3 class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-3">
-                    Seguimiento
-                </h3>
-
-                <ul class="space-y-1 mb-6">
-                    <li>
-                        <a href="{{ route('diagnosticos.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50
-                           {{ request()->routeIs('diagnosticos.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
-                            <i class="fas fa-file-medical w-5 mr-2"></i>
-                            <span>Diagnósticos</span>
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="{{ route('tratamientos.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50
-                           {{ request()->routeIs('tratamientos.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
-                            <i class="fas fa-pills w-5 mr-2"></i>
-                            <span>Tratamientos</span>
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="{{ route('estadisticas.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50
-                           {{ request()->routeIs('estadisticas.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
-                            <i class="fas fa-chart-line w-5 mr-2"></i>
-                            <span>Métricas clínicas</span>
-                        </a>
-                    </li>
-                </ul>
-
-                {{-- DATOS CLÍNICOS (si los quieres como catálogo) --}}
-                <h3 class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-3">
-                    Datos clínicos
+                    Datos clínicos y seguimiento
                 </h3>
 
                 <ul class="space-y-1">
                     <li>
-                        <a href="{{ route('pruebas.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50
-                           {{ request()->routeIs('pruebas.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
-                            <i class="fas fa-vials w-5 mr-2"></i>
-                            <span>Pruebas</span>
+                        <a href="#"
+                           class="flex items-center px-3 py-2 rounded-md text-gray-400 cursor-not-allowed">
+                            <i class="fas fa-chart-line w-5 mr-2"></i>
+                            <span>Módulo 1 (pendiente)</span>
                         </a>
                     </li>
 
                     <li>
-                        <a href="{{ route('trasplantes.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50
-                           {{ request()->routeIs('trasplantes.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
-                            <i class="fas fa-calendar-check w-5 mr-2"></i>
-                            <span>Trasplantes</span>
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="{{ route('sintomas.index') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50
-                           {{ request()->routeIs('sintomas.*') ? 'bg-blue-100 text-blue-600 font-semibold' : '' }}">
-                            <i class="fas fa-heartbeat w-5 mr-2"></i>
-                            <span>Síntomas</span>
+                        <a href="#"
+                           class="flex items-center px-3 py-2 rounded-md text-gray-400 cursor-not-allowed">
+                            <i class="fas fa-database w-5 mr-2"></i>
+                            <span>Módulo 2 (pendiente)</span>
                         </a>
                     </li>
                 </ul>

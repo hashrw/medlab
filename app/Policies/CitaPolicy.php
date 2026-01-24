@@ -32,7 +32,7 @@ class CitaPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->es_medico;
     }
 
     public function view(User $user, Cita $cita): bool
