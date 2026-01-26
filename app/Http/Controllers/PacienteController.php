@@ -6,6 +6,8 @@ use App\Http\Requests\Paciente\StorePacienteRequest;
 use App\Http\Requests\Paciente\UpdatePacienteRequest;
 use App\Models\Paciente;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+
 
 class PacienteController extends Controller
 {
@@ -66,12 +68,13 @@ class PacienteController extends Controller
         return view('pacientes.create');
     }
 
-
     public function store(StorePacienteRequest $request)
     {
         $this->authorize('create', Paciente::class);
 
-        Paciente::create($request->validated());
+        DB::transaction(function () use ($request) {
+            Paciente::create($request->validated());
+        });
 
         session()->flash('success', 'Paciente creado correctamente.');
 
@@ -123,7 +126,9 @@ class PacienteController extends Controller
     {
         $this->authorize('update', $paciente);
 
-        $paciente->update($request->validated());
+        DB::transaction(function () use ($request, $paciente) {
+            $paciente->update($request->validated());
+        });
 
         session()->flash('success', 'Paciente modificado correctamente.');
 

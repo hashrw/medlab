@@ -12,6 +12,7 @@ class DatabaseSeeder extends Seeder
 
             // 1) Usuarios y maestros básicos
             UserSeeder::class,
+            AdminSeeder::class,,
             EspecialidadSeeder::class,
             EstadoSeeder::class,
             ComienzoCronicaSeeder::class,

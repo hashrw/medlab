@@ -16,9 +16,10 @@ class HomeController extends Controller
     {
         $user = $request->user();
 
-        return match (true) {
-            (int) $user->tipo_usuario_id === 1 => redirect()->route('dashboard.medico'),
-            (int) $user->tipo_usuario_id === 2 => redirect()->route('dashboard.paciente'),
+        return match ($user->tipo_usuario_id) {
+            1 => redirect()->route('dashboard.medico'),
+            2 => redirect()->route('dashboard.paciente'),
+            3 => redirect()->route('dashboard.admin'),
             default => abort(403),
         };
     }

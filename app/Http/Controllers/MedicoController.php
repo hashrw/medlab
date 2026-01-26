@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Cita;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 
 class MedicoController extends Controller
 {
@@ -36,26 +38,21 @@ class MedicoController extends Controller
         return view('medicos/create', ['especialidads' => $especialidads]);
     }
 
-    private function createUser(Request $request)
+    private function createUser(StoreMedicoRequest $request): User
     {
-        $user = new User($request->validated());
-        $user->save();
-        return $user;
+        return User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'apellidos' => $request->apellidos ?? null,
+            'telefono' => $request->telefono ?? null,
+            'password' => Hash::make($request->password),
+            'tipo_usuario_id' => 1, // MÉDICO
+        ]);
     }
+
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreMedicoRequest $request)
-    {
-        $this->authorize('create', Medico::class);
-        // TODO: La creación de user y médico debería hacerse transaccionalmente. ¿Demasiado avanzado?
-        $user = $this->createUser($request);
-        $medico = new Medico($request->validated());
-        $medico->user_id = $user->id;
-        $medico->save();
-        session()->flash('success', 'Médico creado correctamente. Si nos da tiempo haremos este mensaje internacionalizable y parametrizable');
-        return redirect()->route('medicos.index');
-    }
 
     /**
      * Display the specified resource.
@@ -80,19 +77,68 @@ class MedicoController extends Controller
     /**
      * Update the specified resource in storage.
      */
+
+    public function store(StoreMedicoRequest $request)
+    {
+        $this->authorize('create', Medico::class);
+
+        DB::transaction(function () use ($request) {
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'apellidos' => $request->apellidos,
+                'telefono' => $request->telefono,
+                'password' => Hash::make($request->password),
+                'tipo_usuario_id' => 1, // MÉDICO
+            ]);
+
+            Medico::create([
+                'user_id' => $user->id,
+                'residente' => $request->residente,
+                'especialidad_id' => $request->especialidad_id,
+            ]);
+        });
+
+        session()->flash('success', 'Médico creado correctamente.');
+
+        return redirect()->route('medicos.index');
+    }
+
     public function update(UpdateMedicoRequest $request, Medico $medico)
     {
-        // TODO: La edición de user y médico debería hacerse transaccionalmente. ¿Demasiado avanzado?
-        $user = $medico->user;
-        $user->fill($request->validated());
-        $user->save();
-        $medico->fill($request->validated());
-        $medico->save();
-        session()->flash('success', 'Médico modificado correctamente. Si nos da tiempo haremos este mensaje internacionalizable y parametrizable');
-        if ($request->user()->es_administrador)
-            return redirect()->route('medicos.index');
-        return redirect()->route('citas.index');
+        $this->authorize('update', $medico);
+
+        DB::transaction(function () use ($request, $medico) {
+
+            // MÉDICO
+            $medico->update([
+                'residente' => $request->residente,
+                'especialidad_id' => $request->especialidad_id,
+            ]);
+
+            // USER
+            $user = $medico->user;
+
+            $user->name = $request->name;
+            $user->apellidos = $request->apellidos ?? $user->apellidos;
+            $user->telefono = $request->telefono ?? $user->telefono;
+
+            if ($request->filled('password')) {
+                $user->password = Hash::make($request->password);
+            }
+
+            $user->save();
+        });
+
+        session()->flash('success', 'Médico modificado correctamente.');
+
+        return $request->user()->es_administrador
+            ? redirect()->route('medicos.index')
+            : redirect()->route('citas.index');
     }
+
+
 
     /**
      * Remove the specified resource from storage.
@@ -105,6 +151,11 @@ class MedicoController extends Controller
         else
             session()->flash('warning', 'El médico no pudo borrarse. Es probable que se deba a que tenga asociada información como citas que dependen de él.');
         return redirect()->route('medicos.index');
+
+        /*DB::transaction(function () use ($medico) {
+    $medico->delete();
+    $medico->user->delete();});*/
+
     }
 
     /*public function citas_pendientes_count()

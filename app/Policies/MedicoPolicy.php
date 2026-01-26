@@ -4,28 +4,22 @@ namespace App\Policies;
 
 use App\Models\Medico;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class MedicoPolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
     public function viewAny(User $user): bool
     {
         return $user->es_administrador;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Medico $medico): bool
     {
         return $user->es_administrador;
     }
 
     /**
-     * Determine whether the user can create models.
+     * Crear médico
+     * - SOLO ADMIN
      */
     public function create(User $user): bool
     {
@@ -33,15 +27,18 @@ class MedicoPolicy
     }
 
     /**
-     * Determine whether the user can update the model.
+     * Actualizar médico
+     * - SOLO ADMIN
+     * (el médico NO se auto-edita su perfil clínico)
      */
     public function update(User $user, Medico $medico): bool
     {
-        return $user->es_administrador || ($medico->user_id == $user->id);
+        return $user->es_administrador;
     }
 
     /**
-     * Determine whether the user can delete the model.
+     * Eliminar médico
+     * - SOLO ADMIN
      */
     public function delete(User $user, Medico $medico): bool
     {
