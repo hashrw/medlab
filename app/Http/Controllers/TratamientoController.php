@@ -67,9 +67,18 @@ class TratamientoController extends Controller
         $user = Auth::user();
 
         if ($user->es_medico) {
+            $medicoId = $user->medico?->id;
+            if (!$medicoId) {
+                abort(403);
+            }
+
             return view('tratamientos.create', [
                 'medico' => $user->medico,
-                'pacientes' => Paciente::all(),
+                'pacientes' => Paciente::query()
+                    ->with('usuarioAcceso')
+                    ->where('medico_id', $medicoId)
+                    ->orderByDesc('id')
+                    ->get(),
             ]);
         }
 
@@ -81,13 +90,15 @@ class TratamientoController extends Controller
         }
 
         return view('tratamientos.create', [
-            'pacientes' => Paciente::all(),
+            'pacientes' => Paciente::with('usuarioAcceso')->orderByDesc('id')->get(),
             'medicos' => Medico::with('user')->get(),
         ]);
     }
 
     public function store(StoreTratamientoRequest $request)
     {
+        $this->authorize('create', Tratamiento::class);
+
         $data = $request->validated();
         $user = Auth::user();
 
@@ -97,6 +108,14 @@ class TratamientoController extends Controller
 
         if ($user->es_medico) {
             $data['medico_id'] = $user->medico->id;
+
+            if (!empty($data['paciente_id'])) {
+                $paciente = Paciente::find((int) $data['paciente_id']);
+                if (!$paciente) {
+                    abort(404);
+                }
+                $this->authorize('view', $paciente);
+            }
         }
 
         if ($user->es_paciente) {
@@ -113,9 +132,13 @@ class TratamientoController extends Controller
     {
         $this->authorize('view', $tratamiento);
 
-        $pacientes = Paciente::with('usuarioAcceso')->get();
+        $tratamiento->loadMissing([
+            'paciente.usuarioAcceso',
+            'medico.user',
+            'lineasTratamiento',
+        ]);
 
-        return view('tratamientos.show', compact('tratamiento', 'pacientes'));
+        return view('tratamientos.show', compact('tratamiento'));
     }
 
     public function edit(Tratamiento $tratamiento)
@@ -126,7 +149,7 @@ class TratamientoController extends Controller
 
         return view('tratamientos.edit', [
             'tratamiento' => $tratamiento,
-            'pacientes' => [], // ya no lo usamos en edit
+            'pacientes' => [],
             'pacienteSeleccionado' => $tratamiento->paciente,
         ]);
     }
@@ -141,6 +164,8 @@ class TratamientoController extends Controller
         if (empty($data['fecha_asignacion'])) {
             $data['fecha_asignacion'] = $tratamiento->fecha_asignacion ?? now()->toDateString();
         }
+
+        unset($data['medico_id'], $data['paciente_id']);
 
         if ($user->es_medico) {
             $data['medico_id'] = $tratamiento->medico_id;
@@ -174,6 +199,8 @@ class TratamientoController extends Controller
         if (!$user->es_medico) {
             abort(403);
         }
+
+        $this->authorize('view', $diagnostico);
 
         $existente = Tratamiento::query()
             ->where('diagnostico_id', $diagnostico->id)
@@ -213,7 +240,6 @@ class TratamientoController extends Controller
 
         $fechaIni = Carbon::parse($request->fecha_ini_linea);
 
-        // Si fecha_fin_linea viene null, NO calculamos duración (línea abierta)
         $duracionLinea = null;
         if ($request->filled('fecha_fin_linea')) {
             $fechaFin = Carbon::parse($request->fecha_fin_linea);

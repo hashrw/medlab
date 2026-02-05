@@ -14,10 +14,12 @@
                 <div class="p-6 bg-blue-800 text-white flex justify-between items-center">
                     <h3 class="text-lg font-semibold">Lista de Trasplantes</h3>
 
-                    <a href="{{ route('trasplantes.create') }}"
-                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                        + Nuevo Trasplante
-                    </a>
+                    @can('create', \App\Models\Trasplante::class)
+                        <a href="{{ route('trasplantes.create') }}"
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                            + Nuevo Trasplante
+                        </a>
+                    @endcan
                 </div>
 
                 {{-- FILTRO CLÍNICO SUPERIOR --}}

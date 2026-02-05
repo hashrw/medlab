@@ -46,7 +46,7 @@
                         </svg>
                     </div>
                     <div class="text-xl font-normal  max-w-full flex-initial">
-                        {{ session('warning') }}
+                       {{--  {{ session('warning') }} --}}
                     </div>
                 </div>
             @endif
@@ -62,7 +62,7 @@
                         </svg>
                     </div>
                     <div class="text-l font-normal  max-w-full flex-initial">
-                        {{ session('success') }}
+                        {{-- {{ session('success') }} --}}
                     </div>
                 </div>
             @endif
@@ -70,4 +70,5 @@
         </main>
     </div>
 </body>
+
 </html>

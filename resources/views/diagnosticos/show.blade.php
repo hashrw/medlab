@@ -5,23 +5,23 @@
         </h2>
 
         <x-flash-message type="success" />
-        @unless(session('tratamiento_existente_id')) 
+        @unless(session('tratamiento_existente_id'))
             <x-flash-message type="warning" />
         @endunless
         <x-flash-message type="error" />
+
         @if(session('tratamiento_existente_id'))
-    <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded flex items-center justify-between">
-        <div class="text-sm text-yellow-900">
-            Ya existe un tratamiento asociado a este diagnóstico.
-        </div>
+            <div class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded flex items-center justify-between">
+                <div class="text-sm text-yellow-900">
+                    Ya existe un tratamiento asociado a este diagnóstico.
+                </div>
 
-        <a href="{{ route('tratamientos.show', session('tratamiento_existente_id')) }}"
-           class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
-            Abrir ficha del tratamiento
-        </a>
-    </div>
-@endif
-
+                <a href="{{ route('tratamientos.show', session('tratamiento_existente_id')) }}"
+                   class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
+                    Abrir ficha del tratamiento
+                </a>
+            </div>
+        @endif
     </x-slot>
 
     <div class="py-1">
@@ -54,46 +54,39 @@
                         </p>
 
                         @if($paciente)
-                        <p class="text-blue-100 mt-1">
-                            Paciente:
-                            <span class="font-semibold">
-                            {{ $paciente->nuhsa ?? ('Paciente #' . $paciente->id) }}
-                        </span>
-                    </p>
-                    @endif
-
+                            <p class="text-blue-100 mt-1">
+                                Paciente:
+                                <span class="font-semibold">
+                                    {{ $paciente->nuhsa ?? ('Paciente #' . $paciente->id) }}
+                                </span>
+                            </p>
+                        @endif
                     </div>
 
                     <div class="flex space-x-4 text-lg">
                         @if($diagnostico->regla_decision_id)
-                        <form method="POST" action="{{ route('tratamientos.inferirDesdeDiagnostico', $diagnostico) }}">
-                            @csrf
-                            <button type="button" onclick ="openTratamientoWizard()" class="hover:text-green-300" title="Iniciar tratamiento">
-                                <i class="fas fa-notes-medical"></i>
-                            </button>
-                        </form>
+                            <form method="POST" action="{{ route('tratamientos.inferirDesdeDiagnostico', $diagnostico) }}">
+                                @csrf
+                                <button type="button" onclick="openTratamientoWizard()" class="hover:text-green-300" title="Iniciar tratamiento">
+                                    <i class="fas fa-notes-medical"></i>
+                                </button>
+                            </form>
                         @endif
 
-                       {{--  @if($paciente)
+                        {{--  @if($paciente)
                             <a href="{{ route('pacientes.show', $paciente->id) }}" class="hover:text-gray-200" title="Volver al paciente">
                                 <i class="fas fa-arrow-left"></i>
-                            </a> --}} 
+                            </a> --}}
                         @php $backUrl = session('diagnosticos_back_url'); @endphp
 
-@if($backUrl)
-    <a href="{{ $backUrl }}" class="hover:text-gray-200" title="Volver">
-        <i class="fas fa-arrow-left"></i>
-    </a>
-@elseif($paciente)
-    <a href="{{ route('pacientes.show', $paciente->id) }}" class="hover:text-gray-200" title="Volver al paciente">
-        <i class="fas fa-arrow-left"></i>
-    </a>
-@else
-    <a href="{{ route('diagnosticos.index') }}" class="hover:text-gray-200" title="Volver a diagnósticos">
-        <i class="fas fa-arrow-left"></i>
-    </a>
-@endif
-
+                        @if($backUrl)
+                            <a href="{{ $backUrl }}" class="hover:text-gray-200" title="Volver">
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
+                        @elseif($paciente)
+                            <a href="{{ route('pacientes.show', $paciente->id) }}" class="hover:text-gray-200" title="Volver al paciente">
+                                <i class="fas fa-arrow-left"></i>
+                            </a>
                         @else
                             <a href="{{ route('diagnosticos.index') }}" class="hover:text-gray-200" title="Volver a diagnósticos">
                                 <i class="fas fa-arrow-left"></i>
@@ -270,65 +263,66 @@
     </div>
 
     @if($diagnostico->regla_decision_id)
-<div id="modal-tratamiento-wizard"
-     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden">
+        <div id="modal-tratamiento-wizard"
+             class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden">
 
-        <div class="px-6 py-4 bg-blue-700 text-white flex justify-between items-center">
-            <div>
-                <h3 class="text-lg font-semibold">Iniciar tratamiento</h3>
-                <p class="text-xs text-blue-100">
-                    Se inferirá el tratamiento a partir del diagnóstico actual.
-                </p>
+                <div class="px-6 py-4 bg-blue-700 text-white flex justify-between items-center">
+                    <div>
+                        <h3 class="text-lg font-semibold">Iniciar tratamiento</h3>
+                        <p class="text-xs text-blue-100">
+                            Se inferirá el tratamiento a partir del diagnóstico actual.
+                        </p>
+                    </div>
+
+                    <button type="button"
+                            onclick="closeTratamientoWizard()"
+                            class="text-white hover:text-gray-200 text-xl leading-none">
+                        &times;
+                    </button>
+                </div>
+
+                <div class="px-6 py-4 space-y-4 text-sm text-gray-800">
+                    <div class="border rounded p-3 bg-gray-50">
+                        <p><strong>Diagnóstico:</strong> {{ $diagnostico->tipo_enfermedad ?? '-' }}</p>
+                        <p><strong>Grado:</strong> {{ $diagnostico->grado_eich ?? '-' }}</p>
+                        <p><strong>Regla:</strong> {{ $diagnostico->regla?->nombre ?? '-' }}</p>
+                    </div>
+
+                    <p class="text-gray-700">
+                        Al confirmar, el sistema creará un tratamiento y lo mostrará en su ficha.
+                    </p>
+                </div>
+
+                <div class="px-6 py-3 bg-gray-50 flex justify-end gap-2">
+                    <button type="button"
+                            onclick="closeTratamientoWizard()"
+                            class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">
+                        Cancelar
+                    </button>
+
+                    <form method="POST" action="{{ route('tratamientos.inferirDesdeDiagnostico', $diagnostico) }}">
+                        @csrf
+                        <button type="submit"
+                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">
+                            Confirmar e iniciar
+                        </button>
+                    </form>
+                </div>
             </div>
-
-            <button type="button"
-                onclick="closeTratamientoWizard()"
-                class="text-white hover:text-gray-200 text-xl leading-none">
-                &times;
-            </button>
         </div>
 
-        <div class="px-6 py-4 space-y-4 text-sm text-gray-800">
-            <div class="border rounded p-3 bg-gray-50">
-                <p><strong>Diagnóstico:</strong> {{ $diagnostico->tipo_enfermedad ?? '-' }}</p>
-                <p><strong>Grado:</strong> {{ $diagnostico->grado_eich ?? '-' }}</p>
-                <p><strong>Regla:</strong> {{ $diagnostico->regla?->nombre ?? '-' }}</p>
-            </div>
+        <script>
+            function openTratamientoWizard() {
+                const m = document.getElementById('modal-tratamiento-wizard');
+                if (m) m.classList.remove('hidden');
+            }
 
-            <p class="text-gray-700">
-                Al confirmar, el sistema creará un tratamiento y lo mostrará en su ficha.
-            </p>
-        </div>
-
-        <div class="px-6 py-3 bg-gray-50 flex justify-end gap-2">
-            <button type="button"
-                onclick="closeTratamientoWizard()"
-                class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">
-                Cancelar
-            </button>
-
-            <form method="POST" action="{{ route('tratamientos.inferirDesdeDiagnostico', $diagnostico) }}">
-                @csrf
-                <button type="submit"
-                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">
-                    Confirmar e iniciar
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
-
-<script>
-    function openTratamientoWizard() {
-        const m = document.getElementById('modal-tratamiento-wizard');
-        if (m) m.classList.remove('hidden');
-    }
-
-    function closeTratamientoWizard() {
-        const m = document.getElementById('modal-tratamiento-wizard');
-        if (m) m.classList.add('hidden');
-    }
-</script>
+            function closeTratamientoWizard() {
+                const m = document.getElementById('modal-tratamiento-wizard');
+                if (m) m.classList.add('hidden');
+            }
+        </script>
+    @endif
 
 </x-medico-layout>

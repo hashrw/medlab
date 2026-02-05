@@ -15,20 +15,24 @@
                 <i class="fas fa-eye"></i>
             </a>
 
-            <a href="{{ route('pacientes.edit', $paciente->id) }}" class="text-yellow-600 hover:text-yellow-700"
-                title="Editar">
-                <i class="fas fa-edit"></i>
-            </a>
+            @can('update', $paciente)
+                <a href="{{ route('pacientes.edit', $paciente->id) }}" class="text-yellow-600 hover:text-yellow-700"
+                    title="Editar">
+                    <i class="fas fa-edit"></i>
+                </a>
+            @endcan
 
-            <form method="POST" action="{{ route('pacientes.destroy', $paciente->id) }}"
-                onsubmit="return confirm('¿Eliminar este paciente?')">
-                @csrf
-                @method('DELETE')
+            @can('delete', $paciente)
+                <form method="POST" action="{{ route('pacientes.destroy', $paciente->id) }}"
+                    onsubmit="return confirm('¿Eliminar este paciente?')">
+                    @csrf
+                    @method('DELETE')
 
-                <button type="submit" class="text-red-600 hover:text-red-800">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </form>
+                    <button type="submit" class="text-red-600 hover:text-red-800" title="Eliminar">
+                        <i class="fas fa-trash-alt"></i>
+                    </button>
+                </form>
+            @endcan
 
         </div>
     </div>
@@ -65,18 +69,21 @@
         </p>
 
         {{-- IMC con accessor --}}
-        @if($paciente->imc)
+        @if(!is_null($paciente->imc))
             <p>
                 <span class="font-semibold">IMC:</span>
 
+                @php $cat = $paciente->imc_categoria; @endphp
+
                 <span class="
-                                px-2 py-1 rounded-full text-xs
-                                @if($paciente->imc_categoria == 'Normal') bg-green-100 text-green-700
-                                @elseif($paciente->imc_categoria == 'Sobrepeso') bg-yellow-100 text-yellow-700
-                                @elseif(str_starts_with($paciente->imc_categoria, 'Obesidad')) bg-red-100 text-red-700
-                                @endif
-                            ">
-                    {{ $paciente->imc }} — {{ $paciente->imc_categoria }}
+                        px-2 py-1 rounded-full text-xs
+                        @if($cat === 'Normal') bg-green-100 text-green-700
+                        @elseif($cat === 'Sobrepeso') bg-yellow-100 text-yellow-700
+                        @elseif(is_string($cat) && str_starts_with($cat, 'Obesidad')) bg-red-100 text-red-700
+                        @else bg-gray-100 text-gray-700
+                        @endif
+                    ">
+                    {{ number_format((float) $paciente->imc, 1, '.', '') }} — {{ $cat ?? 'No clasificado' }}
                 </span>
             </p>
         @else
@@ -93,7 +100,5 @@
                 Ver ficha completa →
             </a>
         </div>
-
     </div>
-
 </div>

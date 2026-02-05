@@ -17,73 +17,54 @@
                 </div>
 
                 {{-- CONTENIDO --}}
-                <div class="overflow-x-auto p-6">
-                    <table class="min-w-full border border-gray-200 rounded-md">
-                        <thead class="bg-blue-50 text-gray-700 text-sm font-semibold">
-                            <tr>
-                                <th class="py-2 px-3 text-left border-b">Tratamiento</th>
-                                <th class="py-2 px-3 text-left border-b">Fecha</th>
-                                <th class="py-2 px-3 text-left border-b">Duración</th>
+                <div class="p-6">
 
-                                @if(Auth::user()->es_medico)
-                                    <th class="py-2 px-3 text-left border-b">Paciente</th>
-                                @endif
+                    @if($tratamientos->isEmpty())
+                        <div class="py-10 text-center text-gray-600">
+                            No hay tratamientos registrados.
+                        </div>
+                    @else
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-                                @if(Auth::user()->es_paciente)
-                                    <th class="py-2 px-3 text-left border-b">Médico</th>
-                                @endif
-
-                                <th class="py-2 px-3 text-left border-b">Líneas</th>
-                                <th class="py-2 px-3 text-center border-b">Acciones</th>
-                            </tr>
-                        </thead>
-
-                        <tbody class="text-gray-700 text-sm">
                             @foreach($tratamientos as $tratamiento)
-                                <tr class="hover:bg-blue-50 transition">
+                                @php
+                                    // fecha_asignacion puede venir como string: parse seguro
+                                    $fechaAsignacion = null;
+                                    if (!empty($tratamiento->fecha_asignacion)) {
+                                        try {
+                                            $fechaAsignacion = \Illuminate\Support\Carbon::parse($tratamiento->fecha_asignacion);
+                                        } catch (\Exception $e) {
+                                            $fechaAsignacion = null;
+                                        }
+                                    }
 
-                                    {{-- Nombre --}}
-                                    <td class="py-3 px-4 border-b font-semibold text-gray-900">
-                                        {{ $tratamiento->tratamiento }}
-                                    </td>
+                                    $duracionTotal = $tratamiento->duracion_total;
+                                    $lineasCount = $tratamiento->lineasTratamiento?->count() ?? 0;
 
-                                    {{-- Fecha --}}
-                                    <td class="py-3 px-4 border-b">
-                                        {{ $tratamiento->fecha_asignacion
-                                            ? $tratamiento->fecha_asignacion->format('d/m/Y')
-                                            : 'Sin fecha' }}
-                                    </td>
+                                    $paciente = $tratamiento->paciente;
+                                    $pacienteNombre = optional(optional($paciente)->usuarioAcceso)->name ?? 'Paciente sin usuario';
+                                    $pacienteNuhsa = optional($paciente)->nuhsa ?? '-';
 
-                                    {{-- Duración --}}
-                                    <td class="py-3 px-4 border-b">
-                                        {{ $tratamiento->duracion_total }} días
-                                    </td>
+                                    $medicoNombre = optional(optional(optional($tratamiento->medico)->user))->name ?? '-';
+                                @endphp
 
-                                    {{-- Paciente (solo médicos) --}}
-                                    @if(Auth::user()->es_medico)
-                                        <td class="py-3 px-4 border-b">
-                                            {{ ($tratamiento->paciente->usuarioAcceso->name ?? 'Paciente sin usuario') }}
-                                            ({{ $tratamiento->paciente->nuhsa }})
-                                        </td>
-                                    @endif
+                                <div class="bg-white border rounded-xl shadow hover:shadow-lg transition p-5">
 
-                                    {{-- Médico (solo pacientes) --}}
-                                    @if(Auth::user()->es_paciente)
-                                        <td class="py-3 px-4 border-b">
-                                            {{ $tratamiento->medico->user->name }}
-                                        </td>
-                                    @endif
+                                    {{-- CABECERA CARD --}}
+                                    <div class="flex justify-between items-start border-b pb-3 mb-3">
+                                        <div class="pr-3">
+                                            <h4 class="font-semibold text-blue-800 leading-snug">
+                                                {{ $tratamiento->tratamiento ?? '-' }}
+                                            </h4>
 
-                                    {{-- Líneas --}}
-                                    <td class="py-3 px-4 border-b">
-                                        {{ $tratamiento->lineasTratamiento->count() }}
-                                    </td>
+                                            <div class="mt-1 text-xs text-gray-600">
+                                                <span class="font-semibold">Fecha:</span>
+                                                {{ $fechaAsignacion ? $fechaAsignacion->format('d/m/Y') : 'Sin fecha' }}
+                                            </div>
+                                        </div>
 
-                                    {{-- ACCIONES --}}
-                                    <td class="py-3 px-4 border-b text-center">
-                                        <div class="flex justify-center space-x-3">
-
-                                            {{-- Ver --}}
+                                        {{-- ACCIONES --}}
+                                        <div class="flex space-x-3 text-gray-600">
                                             <a href="{{ route('tratamientos.show', $tratamiento->id) }}"
                                                class="text-blue-600 hover:text-blue-800"
                                                title="Ver">
@@ -91,14 +72,12 @@
                                             </a>
 
                                             @if(Auth::user()->es_medico)
-                                                {{-- Editar --}}
                                                 <a href="{{ route('tratamientos.edit', $tratamiento->id) }}"
                                                    class="text-yellow-600 hover:text-yellow-700"
                                                    title="Editar">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
 
-                                                {{-- Eliminar --}}
                                                 <form method="POST"
                                                       action="{{ route('tratamientos.destroy', $tratamiento->id) }}"
                                                       onsubmit="return confirm('¿Eliminar este tratamiento?')">
@@ -113,17 +92,56 @@
                                                 </form>
                                             @endif
                                         </div>
-                                    </td>
+                                    </div>
 
-                                </tr>
+                                    {{-- CUERPO CARD --}}
+                                    <div class="space-y-2 text-sm text-gray-700">
+
+                                        <p>
+                                            <span class="font-semibold">Duración total:</span>
+                                            {{ is_null($duracionTotal) ? '-' : ((int) $duracionTotal . ' días') }}
+                                        </p>
+
+                                        <p>
+                                            <span class="font-semibold">Líneas:</span>
+                                            {{ $lineasCount }}
+                                        </p>
+
+                                        @if(Auth::user()->es_medico)
+                                            <p>
+                                                <span class="font-semibold">Paciente:</span>
+                                                {{ $pacienteNombre }}
+                                                <span class="text-gray-500">({{ $pacienteNuhsa }})</span>
+                                            </p>
+                                        @endif
+
+                                        @if(Auth::user()->es_paciente)
+                                            <p>
+                                                <span class="font-semibold">Médico:</span>
+                                                {{ $medicoNombre }}
+                                            </p>
+                                        @endif
+
+                                        {{-- CTA --}}
+                                        <div class="pt-2">
+                                            <a href="{{ route('tratamientos.show', $tratamiento->id) }}"
+                                               class="text-blue-600 hover:text-blue-800 text-sm font-semibold">
+                                                Abrir ficha →
+                                            </a>
+                                        </div>
+
+                                    </div>
+
+                                </div>
                             @endforeach
-                        </tbody>
-                    </table>
 
-                    {{-- Paginación --}}
-                    <div class="p-4">
-                        {{ $tratamientos->links() }}
-                    </div>
+                        </div>
+
+                        {{-- PAGINACIÓN --}}
+                        <div class="pt-6">
+                            {{ $tratamientos->links() }}
+                        </div>
+                    @endif
 
                 </div>
             </div>

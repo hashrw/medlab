@@ -18,7 +18,8 @@ class Paciente extends Model
         'fecha_nacimiento',
         'peso',
         'altura',
-        'sexo'
+        'sexo',
+        'medico_id',
     ];
 
     protected $casts = [

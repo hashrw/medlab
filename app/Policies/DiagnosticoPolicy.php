@@ -4,97 +4,130 @@ namespace App\Policies;
 
 use App\Models\Diagnostico;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class DiagnosticoPolicy
 {
-
-    //Métodos privados de la clase
-    private function esDiagnosticoPropioDeMedico(User $user, Diagnostico $diagnostico): bool
+    /**
+     * Fuente de verdad (medico dueño): diagnostico->paciente->medico_id
+     * Nota: diagnosticos.paciente_id es nullable, así que hay que proteger nulls.
+     */
+    private function esDiagnosticoDePacienteAsignadoAMedico(User $user, Diagnostico $diagnostico): bool
     {
-        return $user->es_medico && $diagnostico->medico_id == $user->medico->id;
+        if (!$user->es_medico) {
+            return false;
+        }
+
+        $medicoId = $user->medico?->id;
+        if (!$medicoId) {
+            return false;
+        }
+
+        $paciente = $diagnostico->paciente; // asume relación belongsTo en Diagnostico
+        if (!$paciente) {
+            return false;
+        }
+
+        return (int) $paciente->medico_id === (int) $medicoId;
     }
 
     private function esDiagnosticoPropioDePaciente(User $user, Diagnostico $diagnostico): bool
     {
-        return $user->es_paciente && $diagnostico->paciente_id == $user->paciente->id;
-    }
+        if (!$user->es_paciente) {
+            return false;
+        }
 
-    private function esDiagnosticoPropio(User $user, Diagnostico $diagnostico): bool
-    {
-        return $this->esDiagnosticoPropioDeMedico($user, $diagnostico) || $this->esDiagnosticoPropioDePaciente($user, $diagnostico);
+        $pacienteId = $user->paciente?->id;
+        if (!$pacienteId) {
+            return false;
+        }
+
+        return (int) $diagnostico->paciente_id === (int) $pacienteId;
     }
 
     /**
      * Determina si el usuario puede ver cualquier modelo de Diagnostico.
+     * Nota: si el paciente no tiene listado en UI, esto no se usa; pero no rompe.
      */
     public function viewAny(User $user): bool
     {
-        // Solo administradores y médicos pueden listar diagnósticos
-        return $user->es_administrador || $user->es_medico;
+        return $user->es_administrador || $user->es_medico || $user->es_paciente;
     }
 
     /**
-     * Determina si el usuario puede ver un modelo específico de Diagnostico.
+     * Ver un diagnóstico concreto.
      */
     public function view(User $user, Diagnostico $diagnostico): bool
     {
-        // Solo administradores y médicos pueden ver diagnósticos
-        return $user->es_administrador || $user->es_medico;
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        if ($this->esDiagnosticoDePacienteAsignadoAMedico($user, $diagnostico)) {
+            return true;
+        }
+
+        if ($this->esDiagnosticoPropioDePaciente($user, $diagnostico)) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
-     * Determina si el usuario puede crear modelos de Diagnostico.
+     * Crear diagnósticos.
+     * La pertenencia (paciente asignado) se valida al elegir paciente en controller,
+     * porque aquí no existe el Diagnostico aún.
      */
     public function create(User $user): bool
     {
-        // Solo administradores y médicos pueden crear diagnósticos
         return $user->es_administrador || $user->es_medico;
     }
 
     /**
-     * Determina si el usuario puede actualizar un modelo de Diagnostico.
+     * Actualizar un diagnóstico.
      */
     public function update(User $user, Diagnostico $diagnostico): bool
     {
-        // Solo administradores y médicos pueden actualizar diagnósticos
-        return $user->es_administrador || $user->es_medico;
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        return $this->esDiagnosticoDePacienteAsignadoAMedico($user, $diagnostico);
     }
 
-    public function attach_sintoma(User $user, Diagnostico $diagnostico)
+    public function attach_sintoma(User $user, Diagnostico $diagnostico): bool
     {
-        return $user->es_administrador || $this->esDiagnosticoPropioDeMedico($user, $diagnostico);
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        return $this->esDiagnosticoDePacienteAsignadoAMedico($user, $diagnostico);
     }
 
-    public function detach_sintoma(User $user, Diagnostico $diagnostico)
+    public function detach_sintoma(User $user, Diagnostico $diagnostico): bool
     {
-        return $user->es_administrador || $this->esDiagnosticoPropioDeMedico($user, $diagnostico);
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        return $this->esDiagnosticoDePacienteAsignadoAMedico($user, $diagnostico);
     }
 
     /**
-     * Determina si el usuario puede eliminar un modelo de Diagnostico.
+     * Eliminar diagnósticos.
      */
     public function delete(User $user, Diagnostico $diagnostico): bool
     {
-        // Solo administradores pueden eliminar diagnósticos
         return $user->es_administrador;
     }
 
-    /**
-     * Determina si el usuario puede restaurar un modelo de Diagnostico.
-     */
     public function restore(User $user, Diagnostico $diagnostico): bool
     {
-        // Solo administradores pueden restaurar diagnósticos
         return $user->es_administrador;
     }
 
-    /**
-     * Determina si el usuario puede eliminar permanentemente un modelo de Diagnostico.
-     */
     public function forceDelete(User $user, Diagnostico $diagnostico): bool
     {
-        // Solo administradores pueden eliminar permanentemente diagnósticos
         return $user->es_administrador;
     }
 }

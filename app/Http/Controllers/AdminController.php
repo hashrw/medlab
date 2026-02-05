@@ -3,13 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Models\Especialidad;
 use App\Models\Medico;
 use App\Models\Paciente;
+use App\Models\Especialidad;
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Requests\Admin\StorePacienteBackofficeRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+
 
 class AdminController extends Controller
 {
@@ -42,8 +44,8 @@ class AdminController extends Controller
 
     /**
      * Formulario de alta de médico.
-     * Necesitamos especialidades para el select.
-     */
+     * Necesitamos especialidades para el select.*/
+
     public function createMedico()
     {
         $especialidades = Especialidad::orderBy('nombre')->get();
@@ -57,70 +59,50 @@ class AdminController extends Controller
      * Guardar paciente:
      * 1) Validamos
      * 2) Creamos PACIENTE
-     * 3) Creamos USER con tipo_usuario_id=2 y paciente_id apuntando al paciente
+     * 3) Creamos USER con tipo_usuario_id=2 y paciente_id apuntando al paciente.
      *
      * Importante:
      * - Lo hacemos en transacción para que NO queden datos a medias.
      */
-    public function storePaciente(Request $request)
+    public function storePaciente(StorePacienteBackofficeRequest $request)
     {
-        // 1) Validación (lo mínimo razonable, sin magia)
-        $request->validate([
-            'tipo_usuario_id' => ['required', 'in:2'],
-
-            'name' => ['required', 'string', 'max:255'],
-            'apellidos' => ['nullable', 'string', 'max:255'],
-            'telefono' => ['nullable', 'string', 'max:50'],
-
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-
-            'nuhsa' => ['required', 'string', 'size:12'],
-            'fecha_nacimiento' => ['nullable', 'date'],
-            'sexo' => ['nullable', 'in:M,F,O'],
-            'peso' => ['nullable', 'numeric', 'min:0'],
-            'altura' => ['nullable', 'numeric', 'min:0'],
-            'medico_id' => ['nullable', 'exists:medicos,id'],
-        ]);
-
-        // 2) Transacción
-        DB::beginTransaction();
+        $validated = $request->validated();
 
         try {
-            // 2.1) Crear paciente clínico
-            $paciente = new Paciente();
-            $paciente->nuhsa = $request->nuhsa;
-            $paciente->fecha_nacimiento = $request->fecha_nacimiento;
-            $paciente->sexo = $request->sexo;
-            $paciente->peso = $request->peso;
-            $paciente->altura = $request->altura;
-            $paciente->medico_id = $request->medico_id; // puede ser null
-            $paciente->save();
+            DB::transaction(function () use ($validated) {
+                // 1) Crear paciente (ya viene medico_id validado)
+                $paciente = new Paciente();
+                $paciente->nuhsa = $validated['nuhsa'];
+                $paciente->fecha_nacimiento = $validated['fecha_nacimiento'];
+                $paciente->sexo = $validated['sexo'];
+                $paciente->peso = $validated['peso'] ?? null;
+                $paciente->altura = $validated['altura'] ?? null;
+                $paciente->medico_id = $validated['medico_id'];
+                $paciente->save();
 
-            // 2.2) Crear usuario de acceso y enlazarlo al paciente
-            $user = new User();
-            $user->name = $request->name;
-            $user->apellidos = $request->apellidos;
-            $user->telefono = $request->telefono;
-            $user->email = $request->email;
-            $user->password = Hash::make($request->password);
+                // 2) Crear usuario de acceso y enlazarlo
+                $user = new User();
+                $user->name = $validated['name'];
+                $user->apellidos = $validated['apellidos'] ?? null;
+                $user->telefono = $validated['telefono'] ?? null;
+                $user->email = $validated['email'];
+                $user->password = Hash::make($validated['password']);
 
-            $user->tipo_usuario_id = 2;          // paciente
-            $user->paciente_id = $paciente->id;  // enlace fuerte
-            $user->save();
-
-            DB::commit();
+                $user->tipo_usuario_id = 2;           // paciente
+                $user->paciente_id = $paciente->id;   // enlace fuerte
+                $user->save();
+            });
 
             return redirect()
                 ->route('admin.usuarios.createPaciente')
-                ->with('success', 'Paciente creado correctamente.');
-
-        } catch (\Throwable $e) {
-            DB::rollBack();
-
-            return back()
-                ->withInput()
-                ->withErrors(['error' => 'Error al crear paciente: ' . $e->getMessage()]);
+                ->with('success', 'Usuario paciente creado correctamente.');
+        } /*catch (\Throwable $e) {
+           return back()
+               ->withInput()
+               ->withErrors(['error' => 'Error al crear usuario: ' . $e->getMessage()]);
+       }*/ 
+               catch (\Throwable $e) {
+            dd($e->getMessage(), $e->getTraceAsString());
         }
     }
 

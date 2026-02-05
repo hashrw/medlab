@@ -9,7 +9,7 @@
     $esInferido = !empty($tratamiento?->diagnostico_id);
 
     // Resolver paciente fijo: prioridad a lo que pasa el controller, si no al tratamiento cargado
-    $pacienteFijo = $pacienteSeleccionado ?: ($tratamiento->paciente ?? null);
+    $pacienteFijo = $pacienteSeleccionado ?: ($tratamiento?->paciente ?? null);
 @endphp
 
 <div class="p-6 bg-white border-t border-gray-200">
@@ -39,7 +39,7 @@
                         name="tratamiento"
                         type="text"
                         class="w-full bg-transparent border-0 focus:ring-0"
-                        :value="old('tratamiento', $tratamiento->tratamiento ?? '')"
+                        :value="old('tratamiento', $tratamiento?->tratamiento ?? '')"
                         :readonly="$esInferido"
                         :disabled="$esInferido"
                         required
@@ -59,7 +59,7 @@
                         name="fecha_asignacion"
                         type="date"
                         class="w-full bg-transparent border-0 focus:ring-0"
-                        :value="old('fecha_asignacion', isset($tratamiento) ? $tratamiento->fecha_asignacion?->format('Y-m-d') : '')"
+                        :value="old('fecha_asignacion', $tratamiento?->fecha_asignacion?->format('Y-m-d') ?? '')"
                         :readonly="$esInferido"
                         :disabled="$esInferido"
                         required
@@ -94,7 +94,7 @@
 
                             @foreach($pacientes as $p)
                                 <option value="{{ $p->id }}"
-                                    @selected(old('paciente_id', $tratamiento->paciente_id ?? '') == $p->id)>
+                                    @selected(old('paciente_id', $tratamiento?->paciente_id ?? '') == $p->id)>
                                     {{ ($p->usuarioAcceso->name ?? 'Paciente sin usuario') }} ({{ $p->nuhsa }})
                                 </option>
                             @endforeach
@@ -119,7 +119,7 @@
                         class="w-full bg-transparent border-0 focus:ring-0 resize-none h-48"
                         :readonly="$esInferido"
                         :disabled="$esInferido"
-                        required>{{ old('descripcion', $tratamiento->descripcion ?? '') }}</x-text-area>
+                        required>{{ old('descripcion', $tratamiento?->descripcion ?? '') }}</x-text-area>
                 </div>
             </div>
         </div>

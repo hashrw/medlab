@@ -4,70 +4,93 @@ namespace App\Policies;
 
 use App\Models\Trasplante;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class TrasplantePolicy
 {
-    /**
-     * Determine whether the user can view any models.
-     */
+    private function esTrasplanteDePacienteAsignadoAMedico(User $user, Trasplante $trasplante): bool
+    {
+        if (!$user->es_medico) {
+            return false;
+        }
+
+        $medicoId = $user->medico?->id;
+        if (!$medicoId) {
+            return false;
+        }
+
+        $paciente = $trasplante->paciente; // requiere belongsTo en Trasplante
+        if (!$paciente) {
+            return false;
+        }
+
+        return (int) $paciente->medico_id === (int) $medicoId;
+    }
+
+    private function esTrasplantePropioDePaciente(User $user, Trasplante $trasplante): bool
+    {
+        if (!$user->es_paciente) {
+            return false;
+        }
+
+        $pacienteId = $user->paciente?->id;
+        if (!$pacienteId) {
+            return false;
+        }
+
+        return (int) $trasplante->paciente_id === (int) $pacienteId;
+    }
+
     public function viewAny(User $user): bool
     {
-        // Solo administradores y médicos pueden listar trasplantes
-        return $user->es_administrador || $user->es_medico;
+        // Si mañana añades listado paciente, ya está soportado.
+        return $user->es_administrador || $user->es_medico || $user->es_paciente;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
     public function view(User $user, Trasplante $trasplante): bool
     {
-        // Solo administradores y médicos pueden ver trasplantes
-        return $user->es_administrador || $user->es_medico;
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        if ($this->esTrasplanteDePacienteAsignadoAMedico($user, $trasplante)) {
+            return true;
+        }
+
+        if ($this->esTrasplantePropioDePaciente($user, $trasplante)) {
+            return true;
+        }
+
+        return false;
     }
 
-    /**
-     * Determine whether the user can create models.
-     */
     public function create(User $user): bool
     {
-        // Solo administradores y médicos pueden crear trasplantes
+        // P0: admin o médico. Paciente no, salvo que lo abras explícitamente.
         return $user->es_administrador || $user->es_medico;
     }
 
-    /**
-     * Determine whether the user can update the model.
-     */
     public function update(User $user, Trasplante $trasplante): bool
     {
-        // Solo administradores y médicos pueden actualizar trasplantes
-        return $user->es_administrador || $user->es_medico;
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        return $this->esTrasplanteDePacienteAsignadoAMedico($user, $trasplante);
     }
 
-    /**
-     * Determine whether the user can delete the model.
-     */
     public function delete(User $user, Trasplante $trasplante): bool
     {
-        // administradores y medicos pueden eliminar trasplantes
-        return $user->es_administrador || $user->es_medico;
+        // Solo admin (si quieres que médico borre, me lo dices).
+        return $user->es_administrador;
     }
 
-    /**
-     * Determine whether the user can restore the model.
-     */
     public function restore(User $user, Trasplante $trasplante): bool
     {
-        // administradores y medicos pueden restaurar trasplantes
-        return $user->es_administrador || $user->es_medico;
+        return $user->es_administrador;
     }
 
-    /**
-     * Determine whether the user can permanently delete the model.
-     */
     public function forceDelete(User $user, Trasplante $trasplante): bool
     {
-        // administradores y medicos pueden eliminar permanentemente trasplantes
-        return $user->es_administrador || $user->es_medico;
+        return $user->es_administrador;
     }
 }

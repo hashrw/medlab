@@ -27,9 +27,22 @@
                 </div>
 
                 <div class="p-6">
-                    <form method="POST" action="{{ route('pacientes.store') }}">
-                        @include('pacientes._form')
-                    </form>
+                    @can('create', \App\Models\Paciente::class)
+                        <form method="POST" action="{{ route('pacientes.store') }}">
+                            @include('pacientes._form')
+                        </form>
+                    @else
+                        <div class="border border-yellow-200 bg-yellow-50 text-yellow-900 rounded-lg p-4 text-sm">
+                            No tienes permisos para crear pacientes.
+                        </div>
+
+                        <div class="mt-4">
+                            <a href="{{ route('pacientes.index') }}"
+                               class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                                Volver a pacientes
+                            </a>
+                        </div>
+                    @endcan
                 </div>
             </div>
         </div>

@@ -8,20 +8,20 @@
     <div class="py-1">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
 
-        
-            @php $w = session('warning'); @endphp
-            <x-flash-message type="success" />
-            @if($w !== 'diagnostico_ya_existe')
-            <x-flash-message type="warning" />
-            @endif
-            <x-flash-message type="error" />
-
-            {{-- AVISO: diagnóstico ya existente (idempotencia) --}}
             @php
                 $w = session('warning');
                 $ctx = session('flash_ctx', []);
             @endphp
 
+            <x-flash-message type="success" />
+
+            @if($w && $w !== 'diagnostico_ya_existe')
+                <x-flash-message type="warning" />
+            @endif
+
+            <x-flash-message type="error" />
+
+            {{-- AVISO: diagnóstico ya existente (idempotencia) --}}
             @if($w === 'diagnostico_ya_existe' && !empty($ctx['diagnostico_id']))
                 <div class="mb-4 border border-yellow-200 bg-yellow-50 text-yellow-900 rounded-lg p-4 flex items-start justify-between gap-4">
                     <div class="text-sm">
@@ -79,22 +79,26 @@
                             </a>
                         @endif
 
-                        <a href="{{ route('pacientes.edit', $paciente->id) }}"
-                           class="hover:text-yellow-300"
-                           title="Editar">
-                            <i class="fas fa-edit"></i>
-                        </a>
+                        @can('update', $paciente)
+                            <a href="{{ route('pacientes.edit', $paciente->id) }}"
+                               class="hover:text-yellow-300"
+                               title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                        @endcan
 
-                        <form method="POST"
-                              action="{{ route('pacientes.destroy', $paciente->id) }}"
-                              onsubmit="return confirm('¿Eliminar este paciente?')">
-                            @csrf
-                            @method('DELETE')
+                        @can('delete', $paciente)
+                            <form method="POST"
+                                  action="{{ route('pacientes.destroy', $paciente->id) }}"
+                                  onsubmit="return confirm('¿Eliminar este paciente?')">
+                                @csrf
+                                @method('DELETE')
 
-                            <button type="submit" class="hover:text-red-300 align-top" title="Eliminar">
-                                <i class="fas fa-trash-alt"></i>
-                            </button>
-                        </form>
+                                <button type="submit" class="hover:text-red-300 align-top" title="Eliminar">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        @endcan
                     </div>
                 </div>
 
@@ -195,7 +199,7 @@
                                         @foreach($paciente->diagnosticos as $diagnostico)
                                             <tr>
                                                 <td class="px-3 py-2">
-                                                    {{ optional($diagnostico->fecha_diagnostico)->format('d/m/Y') ?? '-' }}
+                                                    {{ $diagnostico->fecha_diagnostico ? \Carbon\Carbon::parse($diagnostico->fecha_diagnostico)->format('d/m/Y') : '-' }}
                                                 </td>
                                                 <td class="px-3 py-2">
                                                     {{ $diagnostico->tipo_enfermedad ?? '-' }}
@@ -246,7 +250,7 @@
                                                 <p class="text-xs text-blue-100">
                                                     Paciente: {{ $paciente->nombre }} |
                                                     Fecha:
-                                                    {{ optional($diagnostico->fecha_diagnostico)->format('d/m/Y') ?? '-' }}
+                                                    {{ $diagnostico->fecha_diagnostico ? \Carbon\Carbon::parse($diagnostico->fecha_diagnostico)->format('d/m/Y') : '-' }}
                                                 </p>
                                             </div>
 
@@ -389,7 +393,7 @@
                                             <li class="border-b pb-2">
                                                 <p>
                                                     <strong>Fecha:</strong>
-                                                    {{ $trasplante->fecha_trasplante?->format('d/m/Y') ?? '-' }}
+                                                    {{ $trasplante->fecha_trasplante ? \Carbon\Carbon::parse($trasplante->fecha_trasplante)->format('d/m/Y') : '-' }}
                                                 </p>
                                                 <p>
                                                     <strong>Tipo:</strong> {{ $trasplante->tipo_trasplante ?? '-' }}
@@ -420,7 +424,7 @@
                                             <li class="border-b pb-2">
                                                 <p>
                                                     <strong>Fecha:</strong>
-                                                    {{ $prueba->fecha?->format('d/m/Y') ?? '-' }}
+                                                    {{ $prueba->fecha ? \Carbon\Carbon::parse($prueba->fecha)->format('d/m/Y') : '-' }}
                                                 </p>
                                                 <p>
                                                     <strong>Prueba:</strong> {{ $prueba->nombre }}
@@ -484,7 +488,7 @@
                                 <p class="text-sm text-gray-700">
                                     Fecha:
                                     <strong>
-                                        {{ optional($ultimoInferido->fecha_diagnostico)->format('d/m/Y') ?? '-' }}
+                                        {{ $ultimoInferido->fecha_diagnostico ? \Carbon\Carbon::parse($ultimoInferido->fecha_diagnostico)->format('d/m/Y') : '-' }}
                                     </strong>
                                     –
                                     Grado:

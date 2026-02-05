@@ -17,11 +17,11 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->softDeletes();
-            $table->string('nuhsa');
-            $table->double('peso');
-            $table->date('fecha_nacimiento')->nullable();
-            $table->double('altura');
-            $table->string('sexo')->nullable();
+            $table->string('nuhsa')->unique();
+            $table->double('peso')->nullable();
+            $table->date('fecha_nacimiento');
+            $table->double('altura')->nullable();
+            $table->string('sexo')->nullable();;
             //relación con Diagnósticos y Tratamientos
             
         });

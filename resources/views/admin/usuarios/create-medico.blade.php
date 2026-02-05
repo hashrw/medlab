@@ -18,55 +18,94 @@
 
     <div class="py-6">
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
-
             <div class="bg-white border rounded-lg p-6 shadow-sm">
+
                 <div class="text-lg font-semibold text-gray-800">Identidad de acceso</div>
                 <p class="text-sm text-gray-600 mt-1">
                     Se crea un usuario de acceso (login) y se vincula al perfil médico.
                 </p>
 
-                <x-input-error class="mt-4" :messages="$errors->all()" />
-
-                <form method="POST" action="{{ route('admin.usuarios.storeMedico') }}" class="mt-6 space-y-6">
+                <form method="POST"
+                      action="{{ route('admin.usuarios.storeMedico') }}"
+                      class="mt-6 space-y-6">
                     @csrf
 
                     <input type="hidden" name="tipo_usuario_id" value="1">
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                         <div>
                             <x-input-label for="name" :value="__('Nombre')" />
-                            <x-text-input id="name" class="block mt-1 w-full"
-                                          type="text" name="name" value="{{ old('name') }}" required />
+                            <x-text-input
+                                id="name"
+                                class="block mt-1 w-full max-w-sm"
+                                type="text"
+                                name="name"
+                                value="{{ old('name') }}"
+                                required
+                            />
+                            <x-input-error class="mt-2" :messages="$errors->get('name')" />
                         </div>
 
                         <div>
                             <x-input-label for="apellidos" :value="__('Apellidos')" />
-                            <x-text-input id="apellidos" class="block mt-1 w-full"
-                                          type="text" name="apellidos" value="{{ old('apellidos') }}" />
+                            <x-text-input
+                                id="apellidos"
+                                class="block mt-1 w-full max-w-sm"
+                                type="text"
+                                name="apellidos"
+                                value="{{ old('apellidos') }}"
+                            />
+                            <x-input-error class="mt-2" :messages="$errors->get('apellidos')" />
                         </div>
 
                         <div>
                             <x-input-label for="email" :value="__('Email (login)')" />
-                            <x-text-input id="email" class="block mt-1 w-full"
-                                          type="email" name="email" value="{{ old('email') }}" required />
+                            <x-text-input
+                                id="email"
+                                class="block mt-1 w-full max-w-sm"
+                                type="email"
+                                name="email"
+                                value="{{ old('email') }}"
+                                required
+                            />
+                            <x-input-error class="mt-2" :messages="$errors->get('email')" />
                         </div>
 
                         <div>
                             <x-input-label for="telefono" :value="__('Teléfono')" />
-                            <x-text-input id="telefono" class="block mt-1 w-full"
-                                          type="text" name="telefono" value="{{ old('telefono') }}" />
+                            <x-text-input
+                                id="telefono"
+                                class="block mt-1 w-full max-w-sm"
+                                type="text"
+                                name="telefono"
+                                value="{{ old('telefono') }}"
+                            />
+                            <x-input-error class="mt-2" :messages="$errors->get('telefono')" />
                         </div>
 
                         <div>
                             <x-input-label for="password" :value="__('Contraseña inicial')" />
-                            <x-text-input id="password" class="block mt-1 w-full"
-                                          type="password" name="password" required />
+                            <x-text-input
+                                id="password"
+                                class="block mt-1 w-full max-w-sm"
+                                type="password"
+                                name="password"
+                                required
+                            />
+                            <x-input-error class="mt-2" :messages="$errors->get('password')" />
                         </div>
 
                         <div>
                             <x-input-label for="password_confirmation" :value="__('Confirmar contraseña')" />
-                            <x-text-input id="password_confirmation" class="block mt-1 w-full"
-                                          type="password" name="password_confirmation" required />
+                            <x-text-input
+                                id="password_confirmation"
+                                class="block mt-1 w-full max-w-sm"
+                                type="password"
+                                name="password_confirmation"
+                                required
+                            />
+                            <x-input-error class="mt-2" :messages="$errors->get('password_confirmation')" />
                         </div>
                     </div>
 
@@ -75,25 +114,37 @@
                     <div class="text-lg font-semibold text-gray-800">Perfil profesional</div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
                         <div>
                             <x-input-label for="especialidad_id" :value="__('Especialidad')" />
-                            <x-select id="especialidad_id" name="especialidad_id" required>
+                            <x-select
+                                id="especialidad_id"
+                                name="especialidad_id"
+                                class="mt-1 w-full max-w-sm"
+                                required>
                                 <option value="">Selecciona</option>
                                 @foreach($especialidades as $e)
-                                    <option value="{{ $e->id }}" @selected((string)old('especialidad_id') === (string)$e->id)>
+                                    <option value="{{ $e->id }}"
+                                        @selected((string)old('especialidad_id') === (string)$e->id)>
                                         {{ $e->nombre }}
                                     </option>
                                 @endforeach
                             </x-select>
+                            <x-input-error class="mt-2" :messages="$errors->get('especialidad_id')" />
                         </div>
 
                         <div>
                             <x-input-label for="residente" :value="__('Residente')" />
-                            <x-select id="residente" name="residente" required>
+                            <x-select
+                                id="residente"
+                                name="residente"
+                                class="mt-1 w-full max-w-sm"
+                                required>
                                 <option value="">Selecciona</option>
                                 <option value="1" @selected(old('residente') === '1')>Sí</option>
                                 <option value="0" @selected(old('residente') === '0')>No</option>
                             </x-select>
+                            <x-input-error class="mt-2" :messages="$errors->get('residente')" />
                         </div>
                     </div>
 
@@ -108,7 +159,6 @@
                         </button>
                     </div>
                 </form>
-
             </div>
         </div>
     </div>

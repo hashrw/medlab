@@ -8,26 +8,31 @@ use App\Models\Paciente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-
 class PacienteController extends Controller
 {
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Paciente::class);
+
         $query = Paciente::query()->with('usuarioAcceso');
 
-        // FILTRO POR NOMBRE (basado en User.name)
+        if ($request->user()?->es_medico) {
+            $medicoId = $request->user()?->medico?->id;
+            abort_unless($medicoId, 403);
+
+            $query->where('medico_id', $medicoId);
+        }
+
         if ($request->filled('nombre')) {
             $query->whereHas('usuarioAcceso', function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->nombre . '%');
             });
         }
 
-        // FILTRO POR SEXO
         if ($request->filled('sexo')) {
             $query->where('sexo', $request->sexo);
         }
 
-        // FILTRO POR EDAD
         if ($request->filled('edad_min') || $request->filled('edad_max')) {
             $query->where(function ($q) use ($request) {
                 if ($request->filled('edad_min')) {
@@ -39,7 +44,6 @@ class PacienteController extends Controller
             });
         }
 
-        // FILTRO POR IMC
         if ($request->filled('imc')) {
             switch ($request->imc) {
                 case 'normal':
@@ -61,10 +65,10 @@ class PacienteController extends Controller
         return view('pacientes.index', compact('pacientes'));
     }
 
-
     public function create()
     {
         $this->authorize('create', Paciente::class);
+
         return view('pacientes.create');
     }
 
@@ -81,18 +85,14 @@ class PacienteController extends Controller
         return redirect()->route('pacientes.index');
     }
 
-
     public function show(Paciente $paciente)
     {
-        $prev = url()->previous();
+        $this->authorize('view', $paciente);
 
+        $prev = url()->previous();
         $self = route('pacientes.show', $paciente->id);
 
-        // Si el previous es la propia ficha, no se guarda nada
         if ($prev !== $self) {
-
-            // Evitar bucle si venimos desde diagnosticos.show o tratamientos.show,
-            // no sobreescribir el back_url del paciente con esa URL
             $vieneDeResultado = str_contains($prev, '/diagnosticos/')
                 || str_contains($prev, '/tratamientos/');
 
@@ -100,6 +100,7 @@ class PacienteController extends Controller
                 session(['pacientes_back_url' => $prev]);
             }
         }
+
         $paciente->load([
             'usuarioAcceso',
             'trasplantes',
@@ -114,13 +115,12 @@ class PacienteController extends Controller
         return view('pacientes.show', compact('paciente'));
     }
 
-
     public function edit(Paciente $paciente)
     {
         $this->authorize('update', $paciente);
+
         return view('pacientes.edit', compact('paciente'));
     }
-
 
     public function update(UpdatePacienteRequest $request, Paciente $paciente)
     {
@@ -135,13 +135,11 @@ class PacienteController extends Controller
         return redirect()->route('pacientes.index');
     }
 
-
     public function destroy(Paciente $paciente)
     {
         $this->authorize('delete', $paciente);
 
         $paciente->delete();
-
         session()->flash('success', 'Paciente borrado correctamente.');
 
         return redirect()->route('pacientes.index');

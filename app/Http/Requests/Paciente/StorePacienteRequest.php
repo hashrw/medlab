@@ -17,14 +17,31 @@ class StorePacienteRequest extends FormRequest
     {
         return [
             // PACIENTE
-            'nuhsa'             => ['required', 'string', 'size:12', new Nuhsa],
-            'fecha_nacimiento'  => ['required', 'date'],
-            'sexo'              => ['required', 'in:M,F'],
-            'peso'              => ['nullable', 'numeric', 'min:1', 'max:500'],
-            'altura'            => ['nullable', 'numeric', 'min:30', 'max:300'],
+            'nuhsa' => ['required', 'string', 'size:12', new Nuhsa],
+            'fecha_nacimiento' => ['required', 'date'],
+            'sexo' => ['required', 'in:M,F'],
+            'peso' => ['nullable', 'numeric', 'min:1', 'max:500'],
+            'altura' => ['nullable', 'numeric', 'min:30', 'max:300'],
 
             // ASIGNACIÓN
-            'medico_id'         => ['required', 'exists:medicos,id'],
+            'medico_id' => ['required', 'exists:medicos,id'],
         ];
     }
+
+    protected function prepareForValidation(): void
+    {
+        $nuhsa = $this->input('nuhsa');
+
+        if ($nuhsa !== null) {
+            $nuhsa = strtoupper(trim($nuhsa));
+            $nuhsa = preg_replace('/[\s\-]/', '', $nuhsa);
+
+            if (preg_match('/^\d{10}$/', $nuhsa)) {
+                $nuhsa = 'AN' . $nuhsa;
+            }
+
+            $this->merge(['nuhsa' => $nuhsa]);
+        }
+    }
+
 }

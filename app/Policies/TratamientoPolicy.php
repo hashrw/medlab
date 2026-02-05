@@ -4,95 +4,102 @@ namespace App\Policies;
 
 use App\Models\Tratamiento;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class TratamientoPolicy
 {
-    // Métodos privados para verificar propiedad
-    private function esTratamientoPropioDeMedico(User $user, Tratamiento $tratamiento): bool
+    /**
+     * Fuente de verdad (medico dueño): tratamiento->paciente->medico_id
+     * Nota: proteger nulls (relaciones inexistentes).
+     */
+    private function esTratamientoDePacienteAsignadoAMedico(User $user, Tratamiento $tratamiento): bool
     {
-        return $user->es_medico && $tratamiento->medico_id == $user->medico->id;
+        if (!$user->es_medico) {
+            return false;
+        }
+
+        $medicoId = $user->medico?->id;
+        if (!$medicoId) {
+            return false;
+        }
+
+        $paciente = $tratamiento->paciente; // asume belongsTo en Tratamiento
+        if (!$paciente) {
+            return false;
+        }
+
+        return (int) $paciente->medico_id === (int) $medicoId;
     }
 
     private function esTratamientoPropioDePaciente(User $user, Tratamiento $tratamiento): bool
     {
-        return $user->es_paciente && $tratamiento->paciente_id == $user->paciente->id;
-    }
+        if (!$user->es_paciente) {
+            return false;
+        }
 
-    private function esTratamientoPropio(User $user, Tratamiento $tratamiento): bool
-    {
-        return $this->esTratamientoPropioDeMedico($user, $tratamiento) || $this->esTratamientoPropioDePaciente($user, $tratamiento);
+        $pacienteId = $user->paciente?->id;
+        if (!$pacienteId) {
+            return false;
+        }
+
+        return (int) $tratamiento->paciente_id === (int) $pacienteId;
     }
 
     /**
-     * Determina si el usuario puede ver cualquier modelo de Tratamiento.
+     * Listar tratamientos.
+     * Si el paciente tiene listado en UI, permitimos viewAny también al paciente,
+     * pero la query en controller debe ir filtrada (P0.5).
      */
     public function viewAny(User $user): bool
     {
-        /*dd([
-            'user_id' => $user->id,
-            'es_admin' => $user->es_administrador,
-            'es_medico' => $user->es_medico,
-            'es_paciente' => $user->es_paciente,
-        ]);*/
-        return $user->es_administrador || $user->es_medico;
+        return $user->es_administrador || $user->es_medico || $user->es_paciente;
     }
 
-    /**
-     * Determina si el usuario puede ver un modelo específico de Tratamiento.
-     */
     public function view(User $user, Tratamiento $tratamiento): bool
     {
-        return $user->es_administrador || $user->es_medico || $this->esTratamientoPropio($user, $tratamiento);
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        if ($this->esTratamientoDePacienteAsignadoAMedico($user, $tratamiento)) {
+            return true;
+        }
+
+        if ($this->esTratamientoPropioDePaciente($user, $tratamiento)) {
+            return true;
+        }
+
+        return false;
     }
 
-    /**
-     * Determina si el usuario puede crear modelos de Tratamiento.
-     */
     public function create(User $user): bool
     {
         return $user->es_administrador || $user->es_medico;
     }
 
-    /**
-     * Determina si el usuario puede actualizar un modelo de Tratamiento.
-     */
     public function update(User $user, Tratamiento $tratamiento): bool
     {
-        /*dd([
-            'user_id' => $user->id,
-            'es_admin' => $user->es_administrador,
-            'es_medico' => $user->es_medico,
-            'es_paciente' => $user->es_paciente,
-            'tratamiento_id' => $tratamiento->id,
-            'tratamiento_medico_id' => $tratamiento->medico_id,
-            'tratamiento_paciente_id' => $tratamiento->paciente_id,
-            'clase_usuario' => get_class($user),
-        ]);*/
+        if ($user->es_administrador) {
+            return true;
+        }
 
-        return $user->es_administrador || $user->es_medico;
-        //$this->esTratamientoPropioDeMedico($user, $tratamiento);
+        return $this->esTratamientoDePacienteAsignadoAMedico($user, $tratamiento);
     }
 
-    /**
-     * Determina si el usuario puede eliminar un modelo de Tratamiento.
-     */
     public function delete(User $user, Tratamiento $tratamiento): bool
     {
-        return $user->es_administrador || $user->es_medico;
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        // Recomendación P0: médico NO global
+        return $this->esTratamientoDePacienteAsignadoAMedico($user, $tratamiento);
     }
 
-    /**
-     * Determina si el usuario puede restaurar un modelo de Tratamiento.
-     */
     public function restore(User $user, Tratamiento $tratamiento): bool
     {
         return $user->es_administrador;
     }
 
-    /**
-     * Determina si el usuario puede eliminar permanentemente un modelo de Tratamiento.
-     */
     public function forceDelete(User $user, Tratamiento $tratamiento): bool
     {
         return $user->es_administrador;

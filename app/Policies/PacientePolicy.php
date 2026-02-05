@@ -9,8 +9,9 @@ class PacientePolicy
 {
     /**
      * Listado de pacientes
-     * - Admin
-     * - Médico
+     * - Admin: sí
+     * - Médico: sí (pero el filtrado "mis pacientes" se aplica en el controller)
+     * - Paciente: no (normalmente no lista pacientes)
      */
     public function viewAny(User $user): bool
     {
@@ -19,13 +20,37 @@ class PacientePolicy
 
     /**
      * Ver ficha de paciente
-     * - Admin
-     * - Médico
-     * - (Paciente propio se controla fuera)
+     * - Admin: sí
+     * - Médico: SOLO si el paciente está asignado (paciente.medico_id = medico.id)
+     * - Paciente: SOLO si es su propia ficha (read-only)
      */
     public function view(User $user, Paciente $paciente): bool
     {
-        return $user->es_administrador || $user->es_medico;
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        if ($user->es_medico) {
+            $medicoId = $user->medico?->id;
+
+            if (!$medicoId) {
+                return false;
+            }
+
+            return (int) $paciente->medico_id === (int) $medicoId;
+        }
+
+        if ($user->es_paciente) {
+            $pacienteId = $user->paciente?->id;
+
+            if (!$pacienteId) {
+                return false;
+            }
+
+            return (int) $paciente->id === (int) $pacienteId;
+        }
+
+        return false;
     }
 
     /**
@@ -39,11 +64,23 @@ class PacientePolicy
 
     /**
      * Actualizar paciente
-     * - SOLO ADMIN
+     * - SOLO ADMIN (si quieres permitir edición clínica por médico, esto se cambia)
      */
     public function update(User $user, Paciente $paciente): bool
     {
-        return $user->es_administrador;
+
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        if ($user->es_medico) {
+            $medicoId = $user->medico?->id;
+            if (!$medicoId) {
+                return false;
+            }
+            return (int) $paciente->medico_id === (int) $medicoId;
+        }
+        return false;
     }
 
     /**

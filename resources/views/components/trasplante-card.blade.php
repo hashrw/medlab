@@ -59,25 +59,29 @@
 
         {{-- ACCIONES --}}
         <div class="pt-2 flex justify-end space-x-4 text-gray-600">
-            <a href="{{ route('trasplantes.show', $t->id) }}" class="text-blue-600 hover:text-blue-800" title="Ver">
-                <i class="fas fa-eye"></i>
-            </a>
+            @can('view', $t)
+                <a href="{{ route('trasplantes.show', $t->id) }}" class="text-blue-600 hover:text-blue-800" title="Ver">
+                    <i class="fas fa-eye"></i>
+                </a>
+            @endcan
 
-            @if(Auth::user()->es_medico)
+            @can('update', $t)
                 <a href="{{ route('trasplantes.edit', $t->id) }}" class="text-yellow-600 hover:text-yellow-700"
                     title="Editar">
                     <i class="fas fa-edit"></i>
                 </a>
+            @endcan
 
+            @can('delete', $t)
                 <form method="POST" action="{{ route('trasplantes.destroy', $t->id) }}"
                     onsubmit="return confirm('¿Eliminar?')">
                     @csrf
                     @method('DELETE')
-                    <button class="text-red-600 hover:text-red-800">
+                    <button class="text-red-600 hover:text-red-800" title="Eliminar">
                         <i class="fas fa-trash-alt"></i>
                     </button>
                 </form>
-            @endif
+            @endcan
         </div>
     </div>
 </div>

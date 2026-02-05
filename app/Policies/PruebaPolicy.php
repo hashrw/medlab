@@ -2,72 +2,97 @@
 
 namespace App\Policies;
 
-use App\Models\prueba;
+use App\Models\Prueba;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
 
 class PruebaPolicy
 {
+    private function esPruebaDePacienteAsignadoAMedico(User $user, Prueba $prueba): bool
+    {
+        if (!$user->es_medico) {
+            return false;
+        }
+
+        $medicoId = $user->medico?->id;
+        if (!$medicoId) {
+            return false;
+        }
+
+        $paciente = $prueba->paciente; // asume relación belongsTo en Prueba
+        if (!$paciente) {
+            return false;
+        }
+
+        return (int) $paciente->medico_id === (int) $medicoId;
+    }
+
+    private function esPruebaPropiaDePaciente(User $user, Prueba $prueba): bool
+    {
+        if (!$user->es_paciente) {
+            return false;
+        }
+
+        $pacienteId = $user->paciente?->id;
+        if (!$pacienteId) {
+            return false;
+        }
+
+        return (int) $prueba->paciente_id === (int) $pacienteId;
+    }
+
     /**
-     * Determina si el usuario puede ver cualquier modelo de prueba.
+     * Listar pruebas (si existe vista/listado).
+     * La seguridad real también exige filtrar queries en controllers (P0.5).
      */
     public function viewAny(User $user): bool
     {
-        // Solo administradores y médicos pueden listar pruebas
-        return $user->es_administrador || $user->es_medico;
+        return $user->es_administrador || $user->es_medico || $user->es_paciente;
     }
 
-    /**
-     * Determina si el usuario puede ver un modelo específico de prueba.
-     */
     public function view(User $user, Prueba $prueba): bool
     {
-        // Solo administradores y médicos pueden ver pruebas
-        return $user->es_administrador || $user->es_medico;
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        if ($this->esPruebaDePacienteAsignadoAMedico($user, $prueba)) {
+            return true;
+        }
+
+        if ($this->esPruebaPropiaDePaciente($user, $prueba)) {
+            return true;
+        }
+
+        return false;
     }
 
-    /**
-     * Determina si el usuario puede crear modelos de prueba.
-     */
     public function create(User $user): bool
     {
-        // Solo administradores y médicos pueden crear pruebas
+        // Pertenencia se valida en controller (paciente asignado) al crear.
         return $user->es_administrador || $user->es_medico;
     }
 
-    /**
-     * Determina si el usuario puede actualizar un modelo de prueba.
-     */
     public function update(User $user, Prueba $prueba): bool
     {
-        // Solo administradores y médicos pueden actualizar pruebas
-        return $user->es_administrador || $user->es_medico;
+        if ($user->es_administrador) {
+            return true;
+        }
+
+        return $this->esPruebaDePacienteAsignadoAMedico($user, $prueba);
     }
 
-    /**
-     * Determina si el usuario puede eliminar un modelo de prueba.
-     */
     public function delete(User $user, Prueba $prueba): bool
     {
-        // Solo administradores pueden eliminar pruebas
         return $user->es_administrador;
     }
 
-    /**
-     * Determina si el usuario puede restaurar un modelo de prueba.
-     */
     public function restore(User $user, Prueba $prueba): bool
     {
-        // Solo administradores pueden restaurar pruebas
         return $user->es_administrador;
     }
 
-    /**
-     * Determina si el usuario puede eliminar permanentemente un modelo de prueba.
-     */
     public function forceDelete(User $user, Prueba $prueba): bool
     {
-        // Solo administradores pueden eliminar permanentemente pruebas
         return $user->es_administrador;
     }
 }

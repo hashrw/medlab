@@ -15,20 +15,16 @@ class CitaController extends Controller
 {
     public function index(Request $request)
     {
-        //dd('llego');
         $this->authorize('viewAny', Cita::class);
 
         $user = Auth::user();
 
         if ($user->es_medico) {
-            $medicoId = $user->medico->id;
+            $medicoId = $user->medico?->id;
+            abort_unless($medicoId, 403);
 
             $q = Cita::query()
-                ->where(function ($w) use ($medicoId) {
-                    $w->where('estado', 'pendiente')
-                        ->whereNull('medico_id');
-                })
-                ->orWhere('medico_id', $medicoId);
+                ->where('medico_id', $medicoId);
 
             if ($request->filled('estado')) {
                 $q->where('estado', $request->estado);
@@ -43,57 +39,75 @@ class CitaController extends Controller
         }
 
         if ($user->es_paciente) {
+            $pacienteId = $user->paciente?->id;
+            abort_unless($pacienteId, 403);
+
             $citas = Cita::query()
-                ->where('paciente_id', $user->paciente->id)
+                ->where('paciente_id', $pacienteId)
                 ->orderByDesc('created_at')
                 ->paginate(25);
 
             return view('citas.index_paciente', compact('citas'));
         }
 
+        // Admin
         $citas = Cita::orderByDesc('created_at')->paginate(25);
         return view('citas.index', compact('citas'));
     }
-
-
 
     public function create()
     {
         $this->authorize('create', Cita::class);
 
-        $medicos = Medico::all();
-        $pacientes = Paciente::all();
+        $user = Auth::user();
 
-        if (Auth::user()->es_medico) {
+        if ($user->es_medico) {
+            $medicoId = $user->medico?->id;
+            abort_unless($medicoId, 403);
+
+            // P0: solo mis pacientes
+            $pacientes = Paciente::query()
+                ->with('usuarioAcceso')
+                ->where('medico_id', $medicoId)
+                ->orderByDesc('id')
+                ->get();
+
             return view('citas.create', [
-                'medico' => Auth::user()->medico,
+                'medico' => $user->medico,
                 'pacientes' => $pacientes,
             ]);
         }
 
-        if (Auth::user()->es_paciente) {
+        if ($user->es_paciente) {
+            // Si el paciente tiene médico asignado, no necesitas Medico::all()
+            $medicoAsignado = $user->paciente?->medico;
+
             return view('citas.create', [
-                'paciente' => Auth::user()->paciente,
-                'medicos' => $medicos,
+                'paciente' => $user->paciente,
+                'medicos' => $medicoAsignado ? collect([$medicoAsignado->load('user')]) : collect([]),
             ]);
         }
 
-        return view('citas.create', ['pacientes' => $pacientes, 'medicos' => $medicos]);
+        // Admin
+        return view('citas.create', [
+            'pacientes' => Paciente::with('usuarioAcceso')->orderByDesc('id')->get(),
+            'medicos' => Medico::with('user')->get(),
+        ]);
     }
 
     public function store(StoreCitaRequest $request)
     {
-        //dd('ENTRA A STORE@Controller',$request->all());
         $this->authorize('create', Cita::class);
 
         $user = Auth::user();
         $data = $request->validated();
-        // dd('VALIDATED', $data, 'USER', Auth::user()->only(['id','tipo_usuario_id']));
 
         if ($user->es_paciente) {
-            // Solicitud: el paciente no fija cita real ni médico
+            $pacienteId = $user->paciente?->id;
+            abort_unless($pacienteId, 403);
+
             $data = [
-                'paciente_id' => $user->paciente->id,
+                'paciente_id' => $pacienteId,
                 'medico_id' => $user->paciente->medico_id,
                 'fecha_hora' => null,
                 'estado' => 'pendiente',
@@ -108,11 +122,24 @@ class CitaController extends Controller
             return redirect()->route('dashboard.paciente', ['tab' => 'cita']);
         }
 
-        // Médico crea cita “real”
         if ($user->es_medico) {
+            $medicoId = $user->medico?->id;
+            abort_unless($medicoId, 403);
+
+            // P0: el médico solo crea citas para sus pacientes
+            if (!empty($data['paciente_id'])) {
+                $paciente = Paciente::find((int) $data['paciente_id']);
+                abort_unless($paciente, 404);
+                $this->authorize('view', $paciente);
+            } else {
+                abort(422, 'paciente_id es obligatorio para crear cita como médico.');
+            }
+
+            $data['medico_id'] = $medicoId;
             $data['estado'] = $data['estado'] ?? 'aceptada';
         }
 
+        // Admin: tal cual
         Cita::create($data);
 
         session()->flash('success', 'Cita creada correctamente.');
@@ -129,32 +156,45 @@ class CitaController extends Controller
     {
         $this->authorize('update', $cita);
 
-        $medicamentos = Medicamento::all();
-        $medicos = Medico::all();
-        $pacientes = Paciente::all();
+        $user = Auth::user();
 
-        if (Auth::user()->es_medico) {
+        // P0: quitar fugas globales
+        $medicamentos = Medicamento::all();
+
+        if ($user->es_medico) {
+            $medicoId = $user->medico?->id;
+            abort_unless($medicoId, 403);
+
+            $pacientes = Paciente::query()
+                ->with('usuarioAcceso')
+                ->where('medico_id', $medicoId)
+                ->orderByDesc('id')
+                ->get();
+
             return view('citas.edit', [
                 'cita' => $cita,
-                'medico' => Auth::user()->medico,
+                'medico' => $user->medico,
                 'pacientes' => $pacientes,
                 'medicamentos' => $medicamentos,
             ]);
         }
 
-        if (Auth::user()->es_paciente) {
+        if ($user->es_paciente) {
+            $medicoAsignado = $user->paciente?->medico;
+
             return view('citas.edit', [
                 'cita' => $cita,
-                'paciente' => Auth::user()->paciente,
-                'medicos' => $medicos,
+                'paciente' => $user->paciente,
+                'medicos' => $medicoAsignado ? collect([$medicoAsignado->load('user')]) : collect([]),
                 'medicamentos' => $medicamentos,
             ]);
         }
 
+        // Admin
         return view('citas.edit', [
             'cita' => $cita,
-            'pacientes' => $pacientes,
-            'medicos' => $medicos,
+            'pacientes' => Paciente::with('usuarioAcceso')->orderByDesc('id')->get(),
+            'medicos' => Medico::with('user')->get(),
             'medicamentos' => $medicamentos,
         ]);
     }
@@ -163,7 +203,14 @@ class CitaController extends Controller
     {
         $this->authorize('update', $cita);
 
-        $cita->fill($request->validated());
+        $data = $request->validated();
+
+        // P0: evitar reasignaciones por update (medico/paciente no deben cambiar medico_id/paciente_id)
+        if (Auth::user()->es_medico || Auth::user()->es_paciente) {
+            unset($data['medico_id'], $data['paciente_id']);
+        }
+
+        $cita->fill($data);
         $cita->save();
 
         session()->flash('success', 'Cita modificada correctamente.');
@@ -188,7 +235,6 @@ class CitaController extends Controller
         $this->authorize('update', $cita);
 
         $this->validateWithBag('attach', $request, [
-            // FIX: medicamentos, no medicos
             'medicamento_id' => 'required|exists:medicamentos,id',
             'inicio' => 'required|date',
             'fin' => 'required|date|after:inicio',
@@ -218,6 +264,14 @@ class CitaController extends Controller
     {
         $this->authorize('update', $cita);
 
+        $user = Auth::user();
+        abort_unless($user->es_medico, 403);
+
+        // Refuerzo: no aceptar citas de otro médico
+        if ($cita->medico_id !== null && (int) $cita->medico_id !== (int) $user->medico->id) {
+            abort(403);
+        }
+
         $request->validate([
             'fecha_hora' => ['required', 'date'],
             'comentario_medico' => ['nullable', 'string', 'max:2000'],
@@ -228,7 +282,7 @@ class CitaController extends Controller
             'fecha_hora' => $request->fecha_hora,
             'comentario_medico' => $request->comentario_medico,
             'respondida_at' => now(),
-            'medico_id' => Auth::user()->medico->id,
+            'medico_id' => $user->medico->id,
         ]);
 
         session()->flash('success', 'Solicitud aceptada.');
@@ -239,6 +293,14 @@ class CitaController extends Controller
     {
         $this->authorize('update', $cita);
 
+        $user = Auth::user();
+        abort_unless($user->es_medico, 403);
+
+        // Refuerzo: no rechazar citas de otro médico
+        if ($cita->medico_id !== null && (int) $cita->medico_id !== (int) $user->medico->id) {
+            abort(403);
+        }
+
         $request->validate([
             'comentario_medico' => ['nullable', 'string', 'max:2000'],
         ]);
@@ -247,7 +309,7 @@ class CitaController extends Controller
             'estado' => 'rechazada',
             'comentario_medico' => $request->comentario_medico,
             'respondida_at' => now(),
-            'medico_id' => Auth::user()->medico->id,
+            'medico_id' => $user->medico->id,
         ]);
 
         session()->flash('success', 'Solicitud rechazada.');
@@ -258,8 +320,8 @@ class CitaController extends Controller
     {
         $user = $request->user();
 
-        // mínimo: solo médico (ajusta si hay admin)
-        abort_unless($user && $user->es_medico, 403);
+        // P0: esto NO puede ser médico. Solo admin.
+        abort_unless($user && $user->es_administrador, 403);
 
         $request->validate([
             'medico_id' => ['required', 'exists:medicos,id'],

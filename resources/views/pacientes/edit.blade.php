@@ -28,12 +28,32 @@
                 </div>
 
                 <div class="p-6">
-                    <form method="POST" action="{{ route('pacientes.update', $paciente->id) }}">
-                        @csrf
-                        @method('PUT')
+                    @can('update', $paciente)
+                        <form method="POST" action="{{ route('pacientes.update', $paciente->id) }}">
+                            @csrf
+                            @method('PUT')
 
-                        @include('pacientes._form', ['paciente' => $paciente])
-                    </form>
+                            @include('pacientes._form', ['paciente' => $paciente])
+                        </form>
+                    @else
+                        <div class="border border-yellow-200 bg-yellow-50 text-yellow-900 rounded-lg p-4 text-sm">
+                            No tienes permisos para editar este paciente.
+                        </div>
+
+                        <div class="mt-4 flex gap-3">
+                            @can('view', $paciente)
+                                <a href="{{ route('pacientes.show', $paciente->id) }}"
+                                   class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                                    Volver a la ficha
+                                </a>
+                            @endcan
+
+                            <a href="{{ route('pacientes.index') }}"
+                               class="inline-block bg-gray-700 hover:bg-gray-800 text-white px-4 py-2 rounded">
+                                Volver a pacientes
+                            </a>
+                        </div>
+                    @endcan
                 </div>
 
             </div>

@@ -56,20 +56,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
         // Backoffice: altas (User + Perfil)
         Route::prefix('admin/usuarios')->name('admin.usuarios.')->group(function () {
 
-            // Landing (opcional) si lo usas
             Route::get('/crear', [AdminController::class, 'create'])
-                ->name('create'); // -> view('admin.usuarios.create')
+                ->name('create');
 
             // Alta paciente
             Route::get('/crear-paciente', [AdminController::class, 'createPaciente'])
-                ->name('createPaciente'); // -> view('admin.usuarios.create-paciente')
+                ->name('createPaciente');
 
             Route::post('/paciente', [AdminController::class, 'storePaciente'])
                 ->name('storePaciente');
 
             // Alta médico
             Route::get('/crear-medico', [AdminController::class, 'createMedico'])
-                ->name('createMedico'); // -> view('admin.usuarios.create-medico')
+                ->name('createMedico');
 
             Route::post('/medico', [AdminController::class, 'storeMedico'])
                 ->name('storeMedico');
@@ -101,12 +100,39 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/tratamientos/inferir-desde-diagnostico/{diagnostico}', [TratamientoController::class, 'inferir_desde_diagnostico'])
             ->name('tratamientos.inferirDesdeDiagnostico');
 
-        // Citas (médico)
-        Route::resource('citas', CitaController::class)->except(['store']); // store común
+        /*
+        |----------------------------------------------------------------------
+        | Líneas de tratamiento (solo médico)
+        |----------------------------------------------------------------------
+        | Estas rutas son necesarias porque la vista tratamientos/edit.blade.php
+        | llama a route('tratamientos.cerrarLinea', ...). Si faltan, revienta.
+        */
+        Route::post('/tratamientos/{tratamiento}/lineas', [TratamientoController::class, 'attach_linea'])
+            ->name('tratamientos.attachLinea');
+
+        Route::delete('/tratamientos/{tratamiento}/lineas/{linea}', [TratamientoController::class, 'detach_linea'])
+            ->name('tratamientos.detachLinea');
+
+        Route::patch('/tratamientos/{tratamiento}/cerrar-linea', [TratamientoController::class, 'cerrar_linea'])
+            ->name('tratamientos.cerrarLinea');
+
+        // Citas (médico) -> store va aparte (COMÚN)
+        Route::resource('citas', CitaController::class)->except(['store']);
         Route::patch('/citas/{cita}/aceptar', [CitaController::class, 'aceptar'])->name('citas.aceptar');
         Route::patch('/citas/{cita}/rechazar', [CitaController::class, 'rechazar'])->name('citas.rechazar');
 
-        // CRUD (catálogo clínico)
+        /*
+        |--------------------------------------------------------------------------
+        | CRUD (catálogo clínico) bajo rol MÉDICO
+        |--------------------------------------------------------------------------
+        | NOTA (recordatorio pendiente de revisión):
+        | Ahora mismo este bloque expone resources bajo rol MÉDICO para catálogos que,
+        | en un diseño típico, no deberían ser CRUD completos por médico (p.ej. medicos,
+        | especialidades, etc.). Aunque las Policies bloqueen acciones, la ruta existe.
+        |
+        | Pendiente: decidir qué resources deben quedarse aquí, cuáles mover a ADMIN,
+        | y cuáles dejar read-only según el flujo clínico real.
+        */
         Route::resources([
             'especialidads' => EspecialidadController::class,
             'medicos'       => MedicoController::class,
@@ -148,8 +174,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     |--------------------------------------------------------------------------
     | CITA STORE (COMÚN: médico crea / paciente solicita)
     |--------------------------------------------------------------------------
+    | Se protege por middleware tipo_usuario:1,2 (confirmas que soporta listas).
+    | La autorización fina sigue siendo responsabilidad de Policy + FormRequest.
     */
-    Route::post('/citas', [CitaController::class, 'store'])->name('citas.store');
+    Route::post('/citas', [CitaController::class, 'store'])
+        ->middleware('tipo_usuario:1,2')
+        ->name('citas.store');
 });
 
 require __DIR__ . '/auth.php';
