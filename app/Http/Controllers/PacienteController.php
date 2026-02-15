@@ -4,9 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Paciente\StorePacienteRequest;
 use App\Http\Requests\Paciente\UpdatePacienteRequest;
-use App\Models\Paciente;
-use Illuminate\Http\Request;
+use App\Http\Requests\Paciente\StorePacienteSintomaRequest;
 use Illuminate\Support\Facades\DB;
+use App\Models\Paciente;
+use App\Models\Sintoma;
+use Illuminate\Http\Request;
+use App\Models\Organo;
+use App\Http\Requests\Paciente\StorePacienteOrganoScoreRequest;
+
 
 class PacienteController extends Controller
 {
@@ -103,17 +108,59 @@ class PacienteController extends Controller
 
         $paciente->load([
             'usuarioAcceso',
-            'trasplantes',
+
+            // Orden por fecha (ajusta el nombre del campo si no es "fecha")
+            'trasplantes' => fn($q) => $q->orderByDesc('fecha_trasplante'),
+
+            // Tratamientos
             'tratamientos',
-            'sintomas',
-            'pruebas.tipo_prueba',
-            'organos',
             'tratamientos.lineasTratamiento',
             'tratamientos.diagnostico',
+
+            // Síntomas (tu comentario dice "filtra activo=true": eso NO lo hace el load por sí solo,
+            // depende de cómo esté definida la relación en el modelo)
+            'sintomas',
+
+            // Pruebas: ordenar por fecha y cargar tipo_prueba
+            'pruebas' => fn($q) => $q->orderByDesc('fecha'),
+            'pruebas.tipo_prueba',
+
+            // Órganos
+            'organos',
+
+            // Diagnósticos
+            'diagnosticos.origen',
+            'diagnosticos.regla',
+            // OJO: NO cargar 'diagnosticos.enfermedad' si NO existe relación.
+            'diagnosticos.sintomas.organo',
         ]);
 
-        return view('pacientes.show', compact('paciente'));
+        /*dd(
+            $paciente->trasplantes()
+                ->orderByDesc('fecha_trasplante')
+                ->pluck('fecha_trasplante')
+        );*/
+
+        $tieneSintomasActivos = $paciente->sintomas->isNotEmpty();
+
+        $sintomasCatalogo = Sintoma::query()
+            ->with('organo:id,nombre')
+            ->orderBy('organo_id')
+            ->orderBy('sintoma')
+            ->get(['id', 'sintoma', 'manif_clinica', 'organo_id']);
+
+        $organosCatalogo = Organo::query()
+            ->orderBy('nombre')
+            ->get(['id', 'nombre']);
+
+        return view('pacientes.show', compact(
+            'paciente',
+            'tieneSintomasActivos',
+            'sintomasCatalogo',
+            'organosCatalogo'
+        ));
     }
+
 
     public function edit(Paciente $paciente)
     {
@@ -144,4 +191,76 @@ class PacienteController extends Controller
 
         return redirect()->route('pacientes.index');
     }
+
+
+    public function storeSintomas(StorePacienteSintomaRequest $request, Paciente $paciente)
+    {
+        $this->authorize('update', $paciente);
+
+        $data = $request->validated();
+
+        $fecha = $data['fecha_observacion'] ?? now()->toDateString();
+        $fuente = $data['fuente'] ?? 'UI_MEDICO';
+
+        DB::transaction(function () use ($paciente, $data, $fecha, $fuente) {
+
+            foreach ($data['sintomas'] as $sid) {
+                DB::table('paciente_sintoma')->updateOrInsert(
+                    [
+                        'paciente_id' => (int) $paciente->id,
+                        'sintoma_id' => (int) $sid,
+                    ],
+                    [
+                        'activo' => true,
+                        'fecha_observacion' => $fecha,
+                        'fuente' => $fuente,
+                        'updated_at' => now(),
+                        // si la fila es nueva, se setea created_at; si ya existe, se mantiene
+                        'created_at' => DB::raw('COALESCE(created_at, NOW())'),
+                    ]
+                );
+            }
+        });
+
+        return redirect()
+            ->route('pacientes.show', $paciente->id)
+            ->with('success', 'Síntomas registrados correctamente.');
+    }
+
+    public function storeOrganoScores(StorePacienteOrganoScoreRequest $request, Paciente $paciente)
+    {
+        $this->authorize('update', $paciente);
+
+        $data = $request->validated();
+
+        $fecha = $data['fecha_evaluacion'] ?? now()->toDateString();
+        $comentario = $data['comentario'] ?? null;
+
+        DB::transaction(function () use ($paciente, $data, $fecha, $comentario) {
+            foreach ($data['organos'] as $organoId => $payload) {
+                $score = $payload['score_nih'] ?? null;
+
+                // Si viene vacío, no tocamos nada (incremental, sin borrar)
+                if ($score === null || $score === '') {
+                    continue;
+                }
+
+                $paciente->organos()->syncWithoutDetaching([
+                    (int) $organoId => [
+                        'score_nih' => (int) $score,
+                        'fecha_evaluacion' => $fecha,
+                        'comentario' => $comentario,
+                        // mantenemos los demás campos pivot si existen en tu migración
+                        // 'sintomas_asociados' => null,
+                    ],
+                ]);
+            }
+        });
+
+        return redirect()
+            ->route('pacientes.show', $paciente->id)
+            ->with('success', 'Evaluación NIH por órgano guardada correctamente.');
+    }
+
+
 }

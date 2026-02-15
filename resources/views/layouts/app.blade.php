@@ -46,7 +46,7 @@
                         </svg>
                     </div>
                     <div class="text-xl font-normal  max-w-full flex-initial">
-                       {{--  {{ session('warning') }} --}}
+                        {{-- {{ session('warning') }} --}}
                     </div>
                 </div>
             @endif
@@ -69,6 +69,7 @@
             {{ $slot }}
         </main>
     </div>
+    @stack('scripts')
 </body>
 
 </html>

@@ -171,7 +171,10 @@ return [
 
     'custom' => [
         'nuhsa' => [
-            'nuhsa' => 'El formato de :attribute no cumple con el formato NUHSA',
+            'invalid' => 'El código no cumple con el formato :attribute',
+            'unique' => 'Ya existe un paciente con este :attribute.',
+            'size' => 'El :attribute debe tener exactamente 10 dígitos.',
+            'required' => 'El :attribute es obligatorio.',
         ],
     ],
 
@@ -186,6 +189,12 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        'nuhsa' => 'NUHSA',
+        'email' => 'email',
+        'password' => 'contraseña',
+        'foto' => 'foto',
+    ],
+
 
 ];

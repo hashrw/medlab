@@ -9,23 +9,33 @@ class EspecialidadSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     *
-     * @return void
      */
-    public function run()
+    public function run(): void
     {
         DB::table('especialidads')->insert([
             [
-                'nombre' => "Oftalmología",
+                'nombre' => 'Hematología',
             ],
             [
-                'nombre' => "Neurología",
+                'nombre' => 'Oncología',
             ],
             [
-                'nombre' => "Cardiología",
+                'nombre' => 'Inmunología Clínica',
             ],
             [
-                'nombre' => "Dermatología",
+                'nombre' => 'Medicina Interna',
+            ],
+            [
+                'nombre' => 'Dermatología',
+            ],
+            [
+                'nombre' => 'Gastroenterología',
+            ],
+            [
+                'nombre' => 'Neumología',
+            ],
+            [
+                'nombre' => 'Oftalmología',
             ],
         ]);
     }

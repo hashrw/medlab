@@ -10,7 +10,7 @@ class SintomaAliasSeeder extends Seeder
 {
     public function run(): void
     {
-        // Limpieza en dev (como es fresh, esto es solo por seguridad)
+        // Limpieza en dev (solo por seguridad)
         DB::table('sintoma_aliases')->truncate();
 
         $sintomas = DB::table('sintomas')->select('id', 'organo_id', 'sintoma')->get();
@@ -36,6 +36,7 @@ class SintomaAliasSeeder extends Seeder
     {
         $txt = trim($txt);
         $txt = preg_replace('/\s+/u', ' ', $txt);
+
         // Str::ascii quita tildes/diacríticos, luego slug
         return Str::slug(Str::ascii($txt), '_');
     }

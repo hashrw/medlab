@@ -26,20 +26,6 @@ class HomeController extends Controller
 
     public function medico(Request $request)
     {
-        $stats = [
-            'pacientes' => Paciente::count(),
-            'diagnosticos' => Diagnostico::count(),
-            'tratamientos' => Tratamiento::count(),
-            'pruebas' => Prueba::count(),
-        ];
-
-        $ultimos = [
-            'pacientes' => Paciente::latest('id')->limit(5)->get(),
-            'diagnosticos' => Diagnostico::latest('id')->limit(5)->get(),
-            'tratamientos' => Tratamiento::latest('id')->limit(5)->get(),
-            'pruebas' => Prueba::latest('id')->limit(5)->get(),
-        ];
-
         $user = Auth::user();
 
         // BLINDAJE: dashboard médico solo si tiene perfil medico
@@ -49,6 +35,62 @@ class HomeController extends Controller
 
         $medicoId = $user->medico->id;
 
+        /**
+         * Fuente de verdad: pacientes del médico.
+         * OPCIÓN A (más común): columna medico_id en pacientes
+         */
+        $pacienteIds = Paciente::query()
+            ->where('medico_id', $medicoId)
+            ->pluck('id');
+
+        // KPIs filtrados
+        $stats = [
+            'pacientes' => $pacienteIds->count(),
+
+            // Diagnósticos: si Diagnostico tiene paciente_id
+            'diagnosticos' => Diagnostico::query()
+                ->whereIn('paciente_id', $pacienteIds)
+                ->count(),
+
+            // Tratamientos: si Tratamiento tiene paciente_id
+            'tratamientos' => Tratamiento::query()
+                ->whereIn('paciente_id', $pacienteIds)
+                ->count(),
+
+            // Pruebas: si Prueba tiene paciente_id
+            'pruebas' => Prueba::query()
+                ->whereIn('paciente_id', $pacienteIds)
+                ->count(),
+        ];
+
+        // Últimos filtrados
+        $ultimos = [
+            'pacientes' => Paciente::query()
+                ->whereIn('id', $pacienteIds)
+                ->latest('id')
+                ->limit(5)
+                ->get(),
+
+            'diagnosticos' => Diagnostico::query()
+                ->whereIn('paciente_id', $pacienteIds)
+                ->latest('id')
+                ->limit(5)
+                ->get(),
+
+            'tratamientos' => Tratamiento::query()
+                ->whereIn('paciente_id', $pacienteIds)
+                ->latest('id')
+                ->limit(5)
+                ->get(),
+
+            'pruebas' => Prueba::query()
+                ->whereIn('paciente_id', $pacienteIds)
+                ->latest('id')
+                ->limit(5)
+                ->get(),
+        ];
+
+        // Citas (igual que lo tenías)
         $citasPendientesCount = Cita::query()
             ->where('medico_id', $medicoId)
             ->where('estado', 'pendiente')

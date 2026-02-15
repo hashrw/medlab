@@ -6,14 +6,70 @@ use App\Models\Paciente;
 use App\Models\ReglaDecision;
 use App\Models\Diagnostico;
 use App\Models\Origen;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
 class InferenciaDiagnosticoService
 {
+    private function assertPrecondicionNih(Paciente $paciente): void
+    {
+        // Asegurar datos necesarios sin romper nada
+        $paciente->loadMissing(['sintomas', 'organos']);
+
+        // 1) Debe haber síntomas activos
+        // (tu relación ya filtra activo=true, pero aquí uso la query para que sea inequívoco)
+        $tieneActivos = $paciente->sintomas()
+            ->wherePivot('activo', true)
+            ->exists();
+
+        if (!$tieneActivos) {
+            throw ValidationException::withMessages([
+                'sintomas' => 'No es posible ejecutar la inferencia: no hay síntomas activos registrados.',
+            ]);
+        }
+
+        // 2) Órganos implicados por esos síntomas activos
+        $organosIds = $paciente->sintomas()
+            ->wherePivot('activo', true)
+            ->pluck('sintomas.organo_id')
+            ->filter()
+            ->unique()
+            ->map(fn($v) => (int) $v)
+            ->values();
+
+        if ($organosIds->isEmpty()) {
+            // Si no hay organo_id, no se puede evaluar NIH por órgano
+            throw ValidationException::withMessages([
+                'score_nih' => 'No es posible ejecutar la inferencia: los síntomas activos no tienen órgano asociado.',
+            ]);
+        }
+
+        // 3) Comprobar que existe organo_paciente y score_nih != null para cada órgano implicado
+        $scoresByOrganoId = $paciente->organos
+            ->keyBy(fn($o) => (int) $o->id)
+            ->map(fn($o) => $o->pivot->score_nih);
+
+        $faltan = $organosIds->filter(function (int $oid) use ($scoresByOrganoId) {
+            return !array_key_exists($oid, $scoresByOrganoId->all()) || is_null($scoresByOrganoId[$oid]);
+        });
+
+        if ($faltan->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'score_nih' => 'No es posible ejecutar la inferencia: falta evaluar NIH en órganos con síntomas activos (IDs: ' .
+                    $faltan->implode(', ') . ').',
+            ]);
+        }
+    }
+
     public function ejecutar(Paciente $paciente): array
     {
+        // PRECONDICIÓN NIH (no toca reglas, solo bloquea si faltan datos)
+        $this->assertPrecondicionNih($paciente);
+
         $aliasesActivos = $this->obtenerAliasesActivos($paciente);
+
+        // ya carga organos la precondición, pero lo dejo para no romper tu flujo mental
         $paciente->loadMissing('organos');
         $organosPaciente = $paciente->organos->keyBy('nombre');
 
@@ -25,7 +81,7 @@ class InferenciaDiagnosticoService
             $condiciones = $regla->condiciones ?? [];
 
             if (empty($condiciones)) {
-                // guardamos fallback para reportarlo si no hay match real
+                // guardamos por si no hay match real (regla sin condiciones)
                 $fallback = $regla;
                 continue;
             }
@@ -119,11 +175,11 @@ class InferenciaDiagnosticoService
                 }
             }
 
-            // Síntomas esperados: aliases (preferente)
+            // Síntomas esperados: alias/es
             $esperados = collect($criterios['sintomas'] ?? []);
 
             if ($esperados->isNotEmpty()) {
-                // Si vienen IDs (ints), convertirlos a alias canonical
+                // Si vienen IDs , convertirlos a alias 
                 $primer = $esperados->first();
                 $esperadosAliases = is_int($primer) || ctype_digit((string) $primer)
                     ? $this->idsASAliasesCanonicos($esperados->map(fn($v) => (int) $v)->all())

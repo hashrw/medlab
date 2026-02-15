@@ -56,7 +56,7 @@ class ReglaDecisionSeeder extends Seeder
             return $alias;
         };
 
-        // Resolver FK de infección (tu columna es 'nombre', no 'infeccion')
+        // Resolver FK de infección 
         $infeccionId = function (string $nombre): int {
             $id = DB::table('infeccions')->where('nombre', $nombre)->value('id');
             if (!$id) {
@@ -65,7 +65,7 @@ class ReglaDecisionSeeder extends Seeder
             return (int) $id;
         };
 
-        // Resolver FK de estado (columna 'estado')
+        // Resolver FK de estado 
         $estadoId = function (string $estado): int {
             $id = DB::table('estados')->where('estado', $estado)->value('id');
             if (!$id) {

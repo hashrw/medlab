@@ -1,3 +1,5 @@
+{{-- resources/views/pacientes/show.blade.php --}}
+
 <x-medico-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
@@ -11,6 +13,23 @@
             @php
                 $w = session('warning');
                 $ctx = session('flash_ctx', []);
+
+                // OJO: $paciente->sintomas ya viene filtrado a activos por la relación
+                $sintomasActivosIds = ($paciente->sintomas ?? collect())->pluck('id')->map(fn($v) => (int)$v)->all();
+                // Órganos con síntomas activos (para no evaluar NIH de órganos “vacíos”)
+                $organosConSintomasActivos = ($paciente->sintomas ?? collect())
+    ->pluck('organo_id')
+    ->filter()
+    ->unique()
+    ->map(fn($v) => (int)$v)
+    ->values()
+    ->all();
+
+// Scores NIH ya guardados en organo_paciente
+$scoresNihActuales = ($paciente->organos ?? collect())->mapWithKeys(function ($o) {
+    return [(int)$o->id => ($o->pivot->score_nih ?? null)];
+});
+
             @endphp
 
             <x-flash-message type="success" />
@@ -43,7 +62,6 @@
             <div class="bg-white shadow-xl rounded-lg overflow-hidden">
 
                 {{-- ENCABEZADO --}}
-                {{-- CLAVE: items-start para alinear botones arriba (como en Diagnostico) --}}
                 <div class="p-6 bg-blue-800 text-white flex justify-between items-start">
                     <div>
                         <h3 class="text-2xl font-bold">{{ $paciente->nombre }}</h3>
@@ -65,7 +83,6 @@
                     </div>
 
                     {{-- BOTONES --}}
-                    {{-- CLAVE: self-start + pt-1 para que queden a la misma altura visual que el título --}}
                     <div class="flex items-start space-x-4 text-lg self-start pt-1">
                         @php $backUrl = session('pacientes_back_url'); @endphp
 
@@ -80,16 +97,13 @@
                         @endif
 
                         @can('update', $paciente)
-                            <a href="{{ route('pacientes.edit', $paciente->id) }}"
-                               class="hover:text-yellow-300"
-                               title="Editar">
+                            <a href="{{ route('pacientes.edit', $paciente->id) }}" class="hover:text-yellow-300" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </a>
                         @endcan
 
                         @can('delete', $paciente)
-                            <form method="POST"
-                                  action="{{ route('pacientes.destroy', $paciente->id) }}"
+                            <form method="POST" action="{{ route('pacientes.destroy', $paciente->id) }}"
                                   onsubmit="return confirm('¿Eliminar este paciente?')">
                                 @csrf
                                 @method('DELETE')
@@ -105,7 +119,7 @@
                 {{-- CONTENIDO --}}
                 <div class="p-8 space-y-10 text-gray-800">
 
-                    {{-- SECCIONES 1 y 2: DATOS PERSONALES + SOMATOMÉTRICOS EN DOS COLUMNAS --}}
+                    {{-- SECCIONES 1 y 2 --}}
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
                         {{-- DATOS PERSONALES --}}
@@ -156,14 +170,12 @@
                                         <strong>IMC:</strong>
 
                                         @if(!is_null($paciente->imc))
-                                            <span class="
-                                                    inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm
-                                                    @if($paciente->imc_categoria === 'Normal') bg-green-100 text-green-700
-                                                    @elseif($paciente->imc_categoria === 'Sobrepeso') bg-yellow-100 text-yellow-700
-                                                    @elseif($paciente->imc_categoria && str_starts_with($paciente->imc_categoria, 'Obesidad')) bg-red-100 text-red-700
-                                                    @else bg-gray-100 text-gray-700
-                                                    @endif
-                                                ">
+                                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs md:text-sm
+                                                @if($paciente->imc_categoria === 'Normal') bg-green-100 text-green-700
+                                                @elseif($paciente->imc_categoria === 'Sobrepeso') bg-yellow-100 text-yellow-700
+                                                @elseif($paciente->imc_categoria && str_starts_with($paciente->imc_categoria, 'Obesidad')) bg-red-100 text-red-700
+                                                @else bg-gray-100 text-gray-700
+                                                @endif">
                                                 {{ number_format($paciente->imc, 1, '.', '') }}
                                                 — {{ $paciente->imc_categoria ?? 'No clasificado' }}
                                             </span>
@@ -177,7 +189,7 @@
 
                     </div>
 
-                    {{-- SECCIÓN 4: DIAGNÓSTICOS DEL PACIENTE --}}
+                    {{-- SECCIÓN 4: DIAGNÓSTICOS --}}
                     <div>
                         <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
                             Diagnósticos del paciente
@@ -209,14 +221,13 @@
                                                         $origenNombre = optional($diagnostico->origen)->origen ?? null;
                                                     @endphp
                                                     <span class="px-2 py-1 rounded text-xs
-                                                                @if($origenNombre === 'inferido')
-                                                                    bg-purple-100 text-purple-800
-                                                                @elseif($origenNombre === 'manual')
-                                                                    bg-gray-100 text-gray-800
-                                                                @else
-                                                                    bg-gray-50 text-gray-600
-                                                                @endif
-                                                            ">
+                                                        @if($origenNombre === 'inferido')
+                                                            bg-purple-100 text-purple-800
+                                                        @elseif($origenNombre === 'manual')
+                                                            bg-gray-100 text-gray-800
+                                                        @else
+                                                            bg-gray-50 text-gray-600
+                                                        @endif">
                                                         {{ $origenNombre ?? 'No definido' }}
                                                     </span>
                                                 </td>
@@ -235,22 +246,18 @@
                                 </table>
                             </div>
 
-                            {{-- MODALES DE DETALLE DE DIAGNÓSTICO --}}
+                            {{-- MODALES DE DETALLE --}}
                             @foreach($paciente->diagnosticos as $diagnostico)
                                 <div id="modal-diagnostico-{{ $diagnostico->id }}"
                                     class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
                                     <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 overflow-hidden">
 
-                                        {{-- CABECERA MODAL --}}
                                         <div class="px-6 py-4 bg-blue-700 text-white flex justify-between items-center">
                                             <div>
-                                                <h3 class="text-lg font-semibold">
-                                                    Detalle del diagnóstico
-                                                </h3>
+                                                <h3 class="text-lg font-semibold">Detalle del diagnóstico</h3>
                                                 <p class="text-xs text-blue-100">
                                                     Paciente: {{ $paciente->nombre }} |
-                                                    Fecha:
-                                                    {{ $diagnostico->fecha_diagnostico ? \Carbon\Carbon::parse($diagnostico->fecha_diagnostico)->format('d/m/Y') : '-' }}
+                                                    Fecha: {{ $diagnostico->fecha_diagnostico ? \Carbon\Carbon::parse($diagnostico->fecha_diagnostico)->format('d/m/Y') : '-' }}
                                                 </p>
                                             </div>
 
@@ -260,37 +267,21 @@
                                             </button>
                                         </div>
 
-                                        {{-- CUERPO MODAL --}}
                                         <div class="px-6 py-4 space-y-4 text-sm text-gray-800">
-
-                                            {{-- DATOS PRINCIPALES --}}
                                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <h4 class="font-semibold text-gray-700 mb-1">
-                                                        Datos del diagnóstico
-                                                    </h4>
-                                                    <p><strong>Tipo enfermedad:</strong>
-                                                        {{ $diagnostico->tipo_enfermedad ?? '-' }}</p>
+                                                    <h4 class="font-semibold text-gray-700 mb-1">Datos del diagnóstico</h4>
+                                                    <p><strong>Tipo enfermedad:</strong> {{ $diagnostico->tipo_enfermedad ?? '-' }}</p>
                                                     <p><strong>Grado EICH:</strong> {{ $diagnostico->grado_eich ?? '-' }}</p>
-                                                    <p>
-                                                        <strong>Origen:</strong>
-                                                        {{ optional($diagnostico->origen)->origen ?? 'No definido' }}
-                                                    </p>
+                                                    <p><strong>Origen:</strong> {{ optional($diagnostico->origen)->origen ?? 'No definido' }}</p>
                                                     <p><strong>CIE-10:</strong> {{ $diagnostico->cie10 ?? '-' }}</p>
                                                 </div>
 
                                                 <div>
-                                                    <h4 class="font-semibold text-gray-700 mb-1">
-                                                        Regla / Enfermedad asociada
-                                                    </h4>
-                                                    <p>
-                                                        <strong>Enfermedad:</strong>
-                                                        {{ optional($diagnostico->enfermedad)->nombre ?? 'No especificada' }}
-                                                    </p>
-                                                    <p>
-                                                        <strong>Regla clínica:</strong>
-                                                        {{ optional($diagnostico->reglaDecision)->nombre ?? ('ID ' . ($diagnostico->regla_decision_id ?? '-')) }}
-                                                    </p>
+                                                    <h4 class="font-semibold text-gray-700 mb-1">Regla / Enfermedad asociada</h4>
+                                                    <p><strong>Enfermedad:</strong> {{ optional($diagnostico->enfermedad)->nombre ?? 'No especificada' }}</p>
+                                                    <p><strong>Regla clínica:</strong> {{ optional($diagnostico->regla)->nombre ?? ('ID ' . ($diagnostico->regla_decision_id ?? '-')) }}</p>
+
                                                     @if(!empty($diagnostico->descripcion_clinica ?? $diagnostico->observaciones))
                                                         <p class="mt-1">
                                                             <strong>Resumen clínico:</strong><br>
@@ -302,56 +293,38 @@
                                                 </div>
                                             </div>
 
-                                            {{-- SÍNTOMAS ASOCIADOS --}}
                                             <div>
-                                                <h4 class="font-semibold text-gray-700 mb-2">
-                                                    Síntomas asociados
-                                                </h4>
+                                                <h4 class="font-semibold text-gray-700 mb-2">Síntomas asociados</h4>
 
                                                 @if($diagnostico->sintomas && $diagnostico->sintomas->count())
                                                     <div class="max-h-60 overflow-y-auto border rounded">
                                                         <table class="min-w-full text-xs">
                                                             <thead class="bg-gray-50">
                                                                 <tr>
-                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">
-                                                                        Órgano</th>
-                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">
-                                                                        Síntoma</th>
-                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">
-                                                                        Manifestación Clínica</th>
-                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">
-                                                                        Score NIH</th>
+                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">Órgano</th>
+                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">Síntoma</th>
+                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">Manifestación Clínica</th>
+                                                                    <th class="px-2 py-1 text-left font-semibold text-gray-600">Score NIH</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody class="divide-y divide-gray-100">
                                                                 @foreach($diagnostico->sintomas as $sintoma)
                                                                     <tr>
-                                                                        <td class="px-2 py-1">
-                                                                            {{ optional($sintoma->organo)->nombre ?? '-' }}
-                                                                        </td>
-                                                                        <td class="px-2 py-1">
-                                                                            {{ $sintoma->sintoma ?? '-' }}
-                                                                        </td>
-                                                                        <td class="px-2 py-1">
-                                                                            {{ $sintoma->manif_clinica ?? '-' }}
-                                                                        </td>
-                                                                        <td class="px-2 py-1">
-                                                                            {{ $sintoma->pivot->score_nih ?? '-' }}
-                                                                        </td>
+                                                                        <td class="px-2 py-1">{{ optional($sintoma->organo)->nombre ?? '-' }}</td>
+                                                                        <td class="px-2 py-1">{{ $sintoma->sintoma ?? '-' }}</td>
+                                                                        <td class="px-2 py-1">{{ $sintoma->manif_clinica ?? '-' }}</td>
+                                                                        <td class="px-2 py-1">{{ $sintoma->pivot->score_nih ?? '-' }}</td>
                                                                     </tr>
                                                                 @endforeach
                                                             </tbody>
                                                         </table>
                                                     </div>
                                                 @else
-                                                    <p class="text-gray-600">
-                                                        No hay síntomas asociados a este diagnóstico.
-                                                    </p>
+                                                    <p class="text-gray-600">No hay síntomas asociados a este diagnóstico.</p>
                                                 @endif
                                             </div>
                                         </div>
 
-                                        {{-- PIE DE MODAL --}}
                                         <div class="px-6 py-3 bg-gray-50 flex justify-between items-center text-xs">
                                             <a href="{{ route('diagnosticos.show', $diagnostico) }}"
                                                 class="text-blue-600 hover:text-blue-800 underline">
@@ -367,9 +340,7 @@
                                 </div>
                             @endforeach
                         @else
-                            <p class="text-gray-600">
-                                No hay diagnósticos registrados para este paciente.
-                            </p>
+                            <p class="text-gray-600">No hay diagnósticos registrados para este paciente.</p>
                         @endif
                     </div>
 
@@ -381,76 +352,47 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
 
-                            {{-- TRASPLANTES --}}
                             <div class="bg-white border rounded-lg p-4 shadow-sm">
-                                <h5 class="font-semibold text-blue-600 mb-2">
-                                    Trasplantes
-                                </h5>
+                                <h5 class="font-semibold text-blue-600 mb-2">Trasplantes</h5>
 
                                 @if($paciente->trasplantes->count())
                                     <ul class="space-y-2 text-sm">
-                                        @foreach($paciente->trasplantes->sortByDesc('fecha_trasplante') as $trasplante)
+                                        @foreach($paciente->trasplantes as $trasplante)
                                             <li class="border-b pb-2">
-                                                <p>
-                                                    <strong>Fecha:</strong>
-                                                    {{ $trasplante->fecha_trasplante ? \Carbon\Carbon::parse($trasplante->fecha_trasplante)->format('d/m/Y') : '-' }}
-                                                </p>
-                                                <p>
-                                                    <strong>Tipo:</strong> {{ $trasplante->tipo_trasplante ?? '-' }}
-                                                </p>
-                                                <p>
-                                                    <strong>Días desde trasplante:</strong>
-                                                    {{ $trasplante->dias_desde_trasplante ?? '-' }}
-                                                </p>
+                                                <p><strong>Fecha:</strong> {{ $trasplante->fecha_trasplante ? \Carbon\Carbon::parse($trasplante->fecha_trasplante)->format('d/m/Y') : '-' }}</p>
+                                                <p><strong>Tipo:</strong> {{ $trasplante->tipo_trasplante ?? '-' }}</p>
+                                                <p><strong>Días desde trasplante:</strong> {{ $trasplante->dias_desde_trasplante ?? '-' }}</p>
                                             </li>
                                         @endforeach
                                     </ul>
                                 @else
-                                    <p class="text-sm text-gray-600">
-                                        No hay trasplantes registrados.
-                                    </p>
+                                    <p class="text-sm text-gray-600">No hay trasplantes registrados.</p>
                                 @endif
                             </div>
 
-                            {{-- PRUEBAS CLÍNICAS --}}
                             <div class="bg-white border rounded-lg p-4 shadow-sm">
-                                <h5 class="font-semibold text-blue-600 mb-2">
-                                    Pruebas Clínicas
-                                </h5>
+                                <h5 class="font-semibold text-blue-600 mb-2">Pruebas Clínicas</h5>
 
                                 @if($paciente->pruebas->count())
                                     <ul class="space-y-2 text-sm">
-                                        @foreach($paciente->pruebas->sortByDesc('fecha') as $prueba)
+                                        @foreach($paciente->pruebas as $prueba)
                                             <li class="border-b pb-2">
-                                                <p>
-                                                    <strong>Fecha:</strong>
-                                                    {{ $prueba->fecha ? \Carbon\Carbon::parse($prueba->fecha)->format('d/m/Y') : '-' }}
-                                                </p>
-                                                <p>
-                                                    <strong>Prueba:</strong> {{ $prueba->nombre }}
-                                                </p>
-                                                <p>
-                                                    <strong>Tipo:</strong>
-                                                    {{ optional($prueba->tipo_prueba)->nombre ?? '-' }}
-                                                </p>
-                                                <p class="text-gray-700">
-                                                    <strong>Resultado:</strong>
-                                                    {{ $prueba->resultado ?? '-' }}
-                                                </p>
+                                                <p><strong>Fecha:</strong> {{ $prueba->fecha ? \Carbon\Carbon::parse($prueba->fecha)->format('d/m/Y') : '-' }}</p>
+                                                <p><strong>Prueba:</strong> {{ $prueba->nombre }}</p>
+                                                <p><strong>Tipo:</strong> {{ optional($prueba->tipo_prueba)->nombre ?? '-' }}</p>
+                                                <p class="text-gray-700"><strong>Resultado:</strong> {{ $prueba->resultado ?? '-' }}</p>
                                             </li>
                                         @endforeach
                                     </ul>
                                 @else
-                                    <p class="text-sm text-gray-600">
-                                        No hay pruebas clínicas registradas.
-                                    </p>
+                                    <p class="text-sm text-gray-600">No hay pruebas clínicas registradas.</p>
                                 @endif
                             </div>
 
                         </div>
                     </div>
 
-                    {{-- SECCIÓN 5: MOTOR DE INFERENCIA CLÍNICA --}}
+                    {{-- SECCIÓN 5: MOTOR INFERENCIA --}}
                     <div class="border rounded-lg p-4 bg-gray-50">
                         <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
                             Motor de inferencia clínica
@@ -458,60 +400,41 @@
 
                         <p class="text-sm text-gray-700 mb-4">
                             La inferencia utilizará la información actual del paciente (síntomas activos,
-                            órganos y scores NIH, trasplantes y otros datos clínicos relevantes) para
-                            proponer un posible diagnóstico de EICH y registrar el resultado como
-                            diagnóstico inferido.
+                            órganos y scores NIH) para proponer un posible diagnóstico.
                         </p>
+
+                        {{-- BOTÓN REGISTRAR SÍNTOMAS --}}
+                        <div class="flex flex-wrap gap-3 mb-4">
+    <button type="button" onclick="openSintomasModal()"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded text-sm shadow">
+        Registrar / Actualizar síntomas
+    </button>
+
+    <button type="button" onclick="openOrganosModal()"
+        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded text-sm shadow">
+        Evaluar órganos (NIH)
+    </button>
+</div>
+
+                        @if(!$tieneSintomasActivos)
+                            <div class="mb-4 border border-yellow-200 bg-yellow-50 text-yellow-900 rounded-lg p-3 text-sm">
+                                No es posible ejecutar la inferencia clínica: no hay síntomas activos registrados.
+                            </div>
+                        @endif
 
                         <form method="POST" action="{{ route('diagnosticos.inferir', $paciente->id) }}">
                             @csrf
 
-                            <button type="submit"
-                                class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded shadow text-sm">
+                            <button type="submit" @if(!$tieneSintomasActivos) disabled @endif
+                                class="px-4 py-2 rounded shadow text-sm
+                                @if($tieneSintomasActivos)
+                                    bg-purple-600 hover:bg-purple-700 text-white
+                                @else
+                                    bg-gray-300 text-gray-600 cursor-not-allowed
+                                @endif">
                                 Ejecutar inferencia clínica
                             </button>
                         </form>
-
-                        @php
-                            $diagnosticosPaciente = $paciente->diagnosticos ?? collect();
-                            $diagnosticosInferidos = $diagnosticosPaciente->filter(function ($d) {
-                                return optional($d->origen)->origen === 'inferido';
-                            });
-                            $ultimoInferido = $diagnosticosInferidos->sortByDesc('fecha_diagnostico')->first();
-                        @endphp
-
-                        @if($ultimoInferido)
-                            <div class="mt-4 p-3 bg-white border rounded">
-                                <h5 class="text-sm font-semibold text-gray-800 mb-1">
-                                    Último diagnóstico inferido
-                                </h5>
-                                <p class="text-sm text-gray-700">
-                                    Fecha:
-                                    <strong>
-                                        {{ $ultimoInferido->fecha_diagnostico ? \Carbon\Carbon::parse($ultimoInferido->fecha_diagnostico)->format('d/m/Y') : '-' }}
-                                    </strong>
-                                    –
-                                    Grado:
-                                    <strong>{{ $ultimoInferido->grado_eich ?? '-' }}</strong>
-                                    –
-                                    Regla aplicada:
-                                    <strong>
-                                        {{ optional($ultimoInferido->reglaDecision)->nombre ?? ('ID ' . ($ultimoInferido->regla_decision_id ?? '-')) }}
-                                    </strong>
-                                </p>
-                                <p class="text-xs text-gray-500 mt-1">
-                                    Puedes ver el detalle completo en la ficha del diagnóstico.
-                                </p>
-                                <a href="{{ route('diagnosticos.show', $ultimoInferido) }}"
-                                    class="inline-block mt-2 text-blue-600 hover:text-blue-800 underline text-xs">
-                                    Ver detalle del diagnóstico inferido
-                                </a>
-                            </div>
-                        @else
-                            <p class="mt-3 text-sm text-gray-600">
-                                Todavía no se ha registrado ningún diagnóstico inferido para este paciente.
-                            </p>
-                        @endif
                     </div>
 
                 </div>
@@ -520,19 +443,171 @@
         </div>
     </div>
 
+    {{-- MODAL SÍNTOMAS --}}
+    <div id="modal-sintomas" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 overflow-hidden">
+
+            <div class="px-6 py-4 bg-blue-700 text-white flex justify-between items-center">
+                <h3 class="text-lg font-semibold">Registrar síntomas</h3>
+                <button type="button" onclick="closeSintomasModal()" class="text-white text-xl leading-none">&times;</button>
+            </div>
+
+            <form method="POST" action="{{ route('pacientes.sintomas.store', $paciente) }}">
+                @csrf
+
+                {{-- si quieres trazabilidad desde UI, ya va aquí --}}
+                <input type="hidden" name="fuente" value="UI_MEDICO">
+
+                <div class="p-6 max-h-96 overflow-y-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+                        @foreach($sintomasCatalogo as $sintoma)
+                            @php $id = (int) $sintoma->id; @endphp
+                            <label class="flex items-start space-x-2 text-sm">
+                                <input
+                                    type="checkbox"
+                                    name="sintomas[]"
+                                    value="{{ $id }}"
+                                    class="mt-1"
+                                    @if(in_array($id, $sintomasActivosIds, true)) checked @endif
+                                >
+                                <span>
+                                    <strong>{{ $sintoma->organo->nombre ?? '-' }}</strong><br>
+                                    {{ $sintoma->sintoma }}
+                                </span>
+                            </label>
+                        @endforeach
+
+                    </div>
+                </div>
+
+                <div class="px-6 py-3 bg-gray-50 flex justify-end space-x-3">
+                    <button type="button" onclick="closeSintomasModal()" class="px-3 py-1 border rounded text-gray-700">
+                        Cancelar
+                    </button>
+
+                    <button type="submit" class="px-3 py-1 bg-blue-600 text-white rounded">
+                        Guardar síntomas
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- MODAL NIH ÓRGANOS --}}
+<div id="modal-organos" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden">
+
+        <div class="px-6 py-4 bg-indigo-700 text-white flex justify-between items-center">
+            <h3 class="text-lg font-semibold">Evaluación NIH por órgano</h3>
+            <button type="button" onclick="closeOrganosModal()" class="text-white text-xl leading-none">&times;</button>
+        </div>
+
+        <form method="POST" action="{{ route('pacientes.organosScore.store', $paciente) }}">
+            @csrf
+
+            <div class="p-6 max-h-96 overflow-y-auto space-y-4">
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach($organosCatalogo as $organo)
+                        @php
+                            $oid = (int) $organo->id;
+                            $tieneSintomas = in_array($oid, $organosConSintomasActivos, true);
+                            $valor = $scoresNihActuales[$oid] ?? null;
+                        @endphp
+
+                        <div class="border rounded p-3 @if(!$tieneSintomas) opacity-60 @endif">
+                            <div class="text-sm font-semibold text-gray-800 mb-2">
+                                {{ $organo->nombre }}
+                                @if(!$tieneSintomas)
+                                    <span class="text-xs text-gray-500 font-normal"> (sin síntomas activos)</span>
+                                @endif
+                            </div>
+
+                            <label class="text-xs text-gray-600">Score NIH</label>
+                            <select name="organos[{{ $oid }}][score_nih]"
+                                    class="mt-1 w-full border rounded px-2 py-1 text-sm"
+                                    @if(!$tieneSintomas) disabled @endif>
+                                <option value="">-- sin evaluar --</option>
+                                @for($i=0; $i<=4; $i++)
+                                    <option value="{{ $i }}" @if((string)$valor === (string)$i) selected @endif>
+                                        {{ $i }}
+                                    </option>
+                                @endfor
+                            </select>
+
+                            @if(!$tieneSintomas)
+                                {{-- Para no “perder” el field deshabilitado --}}
+                                <input type="hidden" name="organos[{{ $oid }}][score_nih]" value="">
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-xs text-gray-600">Fecha evaluación</label>
+                        <input type="date" name="fecha_evaluacion"
+                               value="{{ now()->toDateString() }}"
+                               class="mt-1 w-full border rounded px-2 py-1 text-sm">
+                    </div>
+
+                    <div>
+                        <label class="text-xs text-gray-600">Comentario (opcional)</label>
+                        <input type="text" name="comentario" maxlength="255"
+                               class="mt-1 w-full border rounded px-2 py-1 text-sm"
+                               placeholder="Observaciones...">
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="px-6 py-3 bg-gray-50 flex justify-end space-x-3">
+                <button type="button" onclick="closeOrganosModal()"
+                        class="px-3 py-1 border rounded text-gray-700">
+                    Cancelar
+                </button>
+
+                <button type="submit" class="px-3 py-1 bg-indigo-600 text-white rounded">
+                    Guardar NIH
+                </button>
+            </div>
+
+        </form>
+    </div>
+</div>
+
     <script>
         function openDiagnosticoModal(id) {
             const modal = document.getElementById('modal-diagnostico-' + id);
-            if (modal) {
-                modal.classList.remove('hidden');
-            }
+            if (modal) modal.classList.remove('hidden');
         }
 
         function closeDiagnosticoModal(id) {
             const modal = document.getElementById('modal-diagnostico-' + id);
-            if (modal) {
-                modal.classList.add('hidden');
-            }
+            if (modal) modal.classList.add('hidden');
         }
+
+        function openSintomasModal() {
+            const modal = document.getElementById('modal-sintomas');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function closeSintomasModal() {
+            const modal = document.getElementById('modal-sintomas');
+            if (modal) modal.classList.add('hidden');
+        }
+        function openOrganosModal() {
+    const modal = document.getElementById('modal-organos');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeOrganosModal() {
+    const modal = document.getElementById('modal-organos');
+    if (modal) modal.classList.add('hidden');
+}
+
     </script>
+
+    
 </x-medico-layout>

@@ -13,7 +13,7 @@ class InferenciaTratamientoService
     /**
      * Genera un tratamiento inferido a partir de un diagnóstico inferido.
      *
-     * Alcance v1:
+     * Alcance: EICH Aguda.
      * - tipo_enfermedad: 'aguda'
      * - 1ª línea (solo esteroide sistémico + esteroides tópicos)
      * - NO infiere IC

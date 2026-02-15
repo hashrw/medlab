@@ -17,7 +17,7 @@
                 </div>
 
                 <a href="{{ route('tratamientos.show', session('tratamiento_existente_id')) }}"
-                   class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
+                    class="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded text-sm">
                     Abrir ficha del tratamiento
                 </a>
             </div>
@@ -67,16 +67,18 @@
                         @if($diagnostico->regla_decision_id)
                             <form method="POST" action="{{ route('tratamientos.inferirDesdeDiagnostico', $diagnostico) }}">
                                 @csrf
-                                <button type="button" onclick="openTratamientoWizard()" class="hover:text-green-300" title="Iniciar tratamiento">
+                                <button type="button" onclick="openTratamientoWizard()" class="hover:text-green-300"
+                                    title="Iniciar tratamiento">
                                     <i class="fas fa-notes-medical"></i>
                                 </button>
                             </form>
                         @endif
 
-                        {{--  @if($paciente)
-                            <a href="{{ route('pacientes.show', $paciente->id) }}" class="hover:text-gray-200" title="Volver al paciente">
-                                <i class="fas fa-arrow-left"></i>
-                            </a> --}}
+                        {{-- @if($paciente)
+                        <a href="{{ route('pacientes.show', $paciente->id) }}" class="hover:text-gray-200"
+                            title="Volver al paciente">
+                            <i class="fas fa-arrow-left"></i>
+                        </a> --}}
                         @php $backUrl = session('diagnosticos_back_url'); @endphp
 
                         @if($backUrl)
@@ -84,21 +86,24 @@
                                 <i class="fas fa-arrow-left"></i>
                             </a>
                         @elseif($paciente)
-                            <a href="{{ route('pacientes.show', $paciente->id) }}" class="hover:text-gray-200" title="Volver al paciente">
+                            <a href="{{ route('pacientes.show', $paciente->id) }}" class="hover:text-gray-200"
+                                title="Volver al paciente">
                                 <i class="fas fa-arrow-left"></i>
                             </a>
                         @else
-                            <a href="{{ route('diagnosticos.index') }}" class="hover:text-gray-200" title="Volver a diagnósticos">
+                            <a href="{{ route('diagnosticos.index') }}" class="hover:text-gray-200"
+                                title="Volver a diagnósticos">
                                 <i class="fas fa-arrow-left"></i>
                             </a>
                         @endif
 
-                        <a href="{{ route('diagnosticos.edit', $diagnostico->id) }}" class="hover:text-yellow-300" title="Editar">
+                        <a href="{{ route('diagnosticos.edit', $diagnostico->id) }}" class="hover:text-yellow-300"
+                            title="Editar">
                             <i class="fas fa-edit"></i>
                         </a>
 
                         <form method="POST" action="{{ route('diagnosticos.destroy', $diagnostico->id) }}"
-                              onsubmit="return confirm('¿Eliminar este diagnóstico?')">
+                            onsubmit="return confirm('¿Eliminar este diagnóstico?')">
                             @csrf
                             @method('DELETE')
 
@@ -124,9 +129,9 @@
                                     <p><strong>ID Paciente:</strong> {{ $paciente->id }}</p>
                                     <p><strong>NUHSA:</strong> {{ $paciente->nuhsa ?? '-' }}</p>
 
-                                    {{--  @if($paciente->usuarioAcceso)
-                                        <p><strong>Nombre:</strong> {{ $paciente->usuarioAcceso->name ?? '-' }}</p>
-                                        <p><strong>Email:</strong> {{ $paciente->usuarioAcceso->email ?? '-' }}</p>
+                                    {{-- @if($paciente->usuarioAcceso)
+                                    <p><strong>Nombre:</strong> {{ $paciente->usuarioAcceso->name ?? '-' }}</p>
+                                    <p><strong>Email:</strong> {{ $paciente->usuarioAcceso->email ?? '-' }}</p>
                                     @endif --}}
                                 </div>
 
@@ -156,7 +161,8 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm md:text-base">
                             <div class="space-y-2">
-                                <p><strong>Fecha diagnóstico:</strong> {{ $diagnostico->fecha_diagnostico?->format('d/m/Y') ?? '-' }}</p>
+                                <p><strong>Fecha diagnóstico:</strong>
+                                    {{ $diagnostico->fecha_diagnostico?->format('d/m/Y') ?? '-' }}</p>
                                 <p><strong>Tipo de enfermedad:</strong> {{ $diagnostico->tipo_enfermedad ?? '-' }}</p>
                                 <p><strong>Grado EICH:</strong> {{ $diagnostico->grado_eich ?? '-' }}</p>
                                 <p><strong>Estado del injerto:</strong> {{ $diagnostico->estado_injerto ?? '-' }}</p>
@@ -194,7 +200,8 @@
                                     <strong>Prioridad:</strong> {{ $diagnostico->regla->prioridad ?? '-' }}
                                 </p>
                                 <p class="text-sm text-gray-800">
-                                    <strong>Recomendación clínica:</strong> {{ $diagnostico->regla->tipo_recomendacion ?? '-' }}
+                                    <strong>Recomendación clínica:</strong>
+                                    {{ $diagnostico->regla->tipo_recomendacion ?? '-' }}
                                 </p>
                                 @if(!empty($diagnostico->regla->descripcion_clinica))
                                     <p class="text-sm text-gray-800 mt-2">
@@ -219,7 +226,8 @@
                                     <thead class="bg-gray-50">
                                         <tr>
                                             <th class="px-3 py-2 text-left font-semibold text-gray-600">Síntoma</th>
-                                            <th class="px-3 py-2 text-left font-semibold text-gray-600">Fecha diagnóstico</th>
+                                            <th class="px-3 py-2 text-left font-semibold text-gray-600">Fecha diagnóstico
+                                            </th>
                                             <th class="px-3 py-2 text-left font-semibold text-gray-600">Score NIH</th>
                                         </tr>
                                     </thead>
@@ -243,12 +251,12 @@
                         <div class="flex items-center justify-end mt-6">
                             @if($paciente)
                                 <a href="{{ route('pacientes.show', $paciente->id) }}"
-                                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
                                     Volver a paciente
                                 </a>
                             @else
                                 <a href="{{ route('diagnosticos.index') }}"
-                                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                                    class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
                                     Volver
                                 </a>
                             @endif
@@ -264,7 +272,7 @@
 
     @if($diagnostico->regla_decision_id)
         <div id="modal-tratamiento-wizard"
-             class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+            class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
             <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden">
 
                 <div class="px-6 py-4 bg-blue-700 text-white flex justify-between items-center">
@@ -275,9 +283,8 @@
                         </p>
                     </div>
 
-                    <button type="button"
-                            onclick="closeTratamientoWizard()"
-                            class="text-white hover:text-gray-200 text-xl leading-none">
+                    <button type="button" onclick="closeTratamientoWizard()"
+                        class="text-white hover:text-gray-200 text-xl leading-none">
                         &times;
                     </button>
                 </div>
@@ -294,21 +301,29 @@
                     </p>
                 </div>
 
-                <div class="px-6 py-3 bg-gray-50 flex justify-end gap-2">
-                    <button type="button"
-                            onclick="closeTratamientoWizard()"
-                            class="px-4 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100">
-                        Cancelar
+                <div class="px-6 py-4 bg-gray-50 flex justify-end items-center gap-4">
+
+                    <button type="button" onclick="closeTratamientoWizard()" class="inline-flex items-center gap-2 px-5 h-11 rounded-md border border-blue-300
+                       text-blue-700 bg-white hover:bg-blue-50
+                       transition font-medium">
+                        <i class="fas fa-times text-sm"></i>
+                        <span>Cancelar</span>
                     </button>
 
-                    <form method="POST" action="{{ route('tratamientos.inferirDesdeDiagnostico', $diagnostico) }}">
+                    <form method="POST" action="{{ route('tratamientos.inferirDesdeDiagnostico', $diagnostico) }}"
+                        class="m-0">
                         @csrf
-                        <button type="submit"
-                                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded">
-                            Confirmar e iniciar
+                        <button type="submit" class="inline-flex items-center gap-2 px-5 h-11 rounded-md
+                           bg-green-600 hover:bg-green-700
+                           text-white transition font-medium shadow-sm">
+                            <i class="fas fa-check text-sm"></i>
+                            <span>Confirmar e iniciar</span>
                         </button>
                     </form>
+
                 </div>
+
+
             </div>
         </div>
 

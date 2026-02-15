@@ -7,15 +7,14 @@ use App\Models\Medico;
 use App\Models\Paciente;
 use App\Models\Especialidad;
 use App\Models\User;
-use Illuminate\Http\Request;
+use App\Http\Requests\Admin\StoreMedicoBackofficeRequest;
 use App\Http\Requests\Admin\StorePacienteBackofficeRequest;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Storage;
 
 class AdminController extends Controller
 {
-
     public function index()
     {
         return view('dashboard.admin');
@@ -31,7 +30,7 @@ class AdminController extends Controller
 
     /**
      * Formulario de alta de paciente.
-     * Necesitamos listar médicos para poder asignar uno (opcional).
+     * Listar médicos para asignación.
      */
     public function createPaciente()
     {
@@ -44,8 +43,8 @@ class AdminController extends Controller
 
     /**
      * Formulario de alta de médico.
-     * Necesitamos especialidades para el select.*/
-
+     * Listar especialidades.
+     */
     public function createMedico()
     {
         $especialidades = Especialidad::orderBy('nombre')->get();
@@ -56,31 +55,32 @@ class AdminController extends Controller
     }
 
     /**
-     * Guardar paciente:
-     * 1) Validamos
-     * 2) Creamos PACIENTE
-     * 3) Creamos USER con tipo_usuario_id=2 y paciente_id apuntando al paciente.
-     *
-     * Importante:
-     * - Lo hacemos en transacción para que NO queden datos a medias.
+     * Guardar paciente (Backoffice):
+     * - Validación via StorePacienteBackofficeRequest
+     * - Transacción
+     * - Avatar opcional (se guarda en users.avatar)
      */
     public function storePaciente(StorePacienteBackofficeRequest $request)
     {
         $validated = $request->validated();
 
         try {
-            DB::transaction(function () use ($validated) {
-                // 1) Crear paciente (ya viene medico_id validado)
+            DB::transaction(function () use ($request, $validated) {
+
+                // 1) Crear paciente
                 $paciente = new Paciente();
                 $paciente->nuhsa = $validated['nuhsa'];
                 $paciente->fecha_nacimiento = $validated['fecha_nacimiento'];
                 $paciente->sexo = $validated['sexo'];
+
+                // Mantengo esto porque ya lo tenías; si no están en tu Request, no se guardan.
                 $paciente->peso = $validated['peso'] ?? null;
                 $paciente->altura = $validated['altura'] ?? null;
+
                 $paciente->medico_id = $validated['medico_id'];
                 $paciente->save();
 
-                // 2) Crear usuario de acceso y enlazarlo
+                // 2) Crear usuario de acceso
                 $user = new User();
                 $user->name = $validated['name'];
                 $user->apellidos = $validated['apellidos'] ?? null;
@@ -90,73 +90,71 @@ class AdminController extends Controller
 
                 $user->tipo_usuario_id = 2;           // paciente
                 $user->paciente_id = $paciente->id;   // enlace fuerte
+
+
+                // 3) Avatar opcional
+                if ($request->hasFile('foto')) {
+                    $path = $request->file('foto')->store('avatars', 'public');
+                    $user->foto = $path; // requiere columna users.avatar nullable
+                }
+
                 $user->save();
             });
 
             return redirect()
                 ->route('admin.usuarios.createPaciente')
                 ->with('success', 'Usuario paciente creado correctamente.');
-        } /*catch (\Throwable $e) {
-           return back()
-               ->withInput()
-               ->withErrors(['error' => 'Error al crear usuario: ' . $e->getMessage()]);
-       }*/ 
-               catch (\Throwable $e) {
-            dd($e->getMessage(), $e->getTraceAsString());
+
+        } catch (\Throwable $e) {
+            return back()
+                ->withInput()
+                ->withErrors(['error' => 'Error al crear usuario: ' . $e->getMessage()]);
         }
     }
 
     /**
-     * Guardar médico:
-     * 1) Validamos
-     * 2) Creamos USER con tipo_usuario_id=1
-     * 3) Creamos MEDICO con user_id apuntando al user
+     * Guardar médico (Backoffice):
+     * - Validación via StoreMedicoBackofficeRequest
+     * - Transacción
+     * - Avatar opcional (se guarda en users.avatar)
      */
-    public function storeMedico(Request $request)
+    public function storeMedico(StoreMedicoBackofficeRequest $request)
     {
-        $request->validate([
-            'tipo_usuario_id' => ['required', 'in:1'],
-
-            'name' => ['required', 'string', 'max:255'],
-            'apellidos' => ['nullable', 'string', 'max:255'],
-            'telefono' => ['nullable', 'string', 'max:50'],
-
-            'email' => ['required', 'email', 'max:255', 'unique:users,email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
-
-            'especialidad_id' => ['required', 'exists:especialidads,id'],
-            'residente' => ['required', 'in:0,1'],
-        ]);
-
-        DB::beginTransaction();
+        $validated = $request->validated();
 
         try {
-            // 1) Crear user
-            $user = new User();
-            $user->name = $request->name;
-            $user->apellidos = $request->apellidos;
-            $user->telefono = $request->telefono;
-            $user->email = $request->email;
-            $user->password = Hash::make($request->password);
-            $user->tipo_usuario_id = 1; // médico
-            $user->save();
+            DB::transaction(function () use ($request, $validated) {
 
-            // 2) Crear medico
-            $medico = new Medico();
-            $medico->user_id = $user->id;
-            $medico->especialidad_id = $request->especialidad_id;
-            $medico->residente = (bool) $request->residente;
-            $medico->save();
+                // 1) Crear user
+                $user = new User();
+                $user->name = $validated['name'];
+                $user->apellidos = $validated['apellidos'] ?? null;
+                $user->telefono = $validated['telefono'] ?? null;
+                $user->email = $validated['email'];
+                $user->password = Hash::make($validated['password']);
+                $user->tipo_usuario_id = 1; // médico
+                
+                // 2) Avatar opcional
+                if ($request->hasFile('foto')) {
+                    $path = $request->file('foto')->store('avatars', 'public');
+                    $user->foto = $path; // requiere columna users.avatar nullable
+                }
 
-            DB::commit();
+                $user->save();
+
+                // 3) Crear medico
+                $medico = new Medico();
+                $medico->user_id = $user->id;
+                $medico->especialidad_id = $validated['especialidad_id'];
+                $medico->residente = (bool) $validated['residente'];
+                $medico->save();
+            });
 
             return redirect()
                 ->route('admin.usuarios.createMedico')
                 ->with('success', 'Médico creado correctamente.');
 
         } catch (\Throwable $e) {
-            DB::rollBack();
-
             return back()
                 ->withInput()
                 ->withErrors(['error' => 'Error al crear médico: ' . $e->getMessage()]);

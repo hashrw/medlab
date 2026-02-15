@@ -29,7 +29,8 @@ class Nuhsa implements ValidationRule
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
         if (!$this->esNuhsaValido($value)) {
-            $fail(__('validation.custom.nuhsa')[$attribute]);
+            $fail(__('validation.custom.nuhsa.invalid'));
+
         }
     }
 }

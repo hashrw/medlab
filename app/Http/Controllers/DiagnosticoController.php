@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use App\Models\Paciente;
@@ -317,7 +318,22 @@ class DiagnosticoController extends Controller
                 ]);
         }
 
-        [$diagnostico, $fallback] = $inferenciaService->ejecutar($paciente);
+        try {
+            [$diagnostico, $fallback] = $inferenciaService->ejecutar($paciente);
+        } catch (ValidationException $e) {
+
+            // Prioridad: NIH, luego síntomas
+            $msg = $e->errors()['score_nih'][0]
+                ?? $e->errors()['sintomas'][0]
+                ?? 'No es posible ejecutar la inferencia: precondiciones no cumplidas.';
+
+            return redirect()
+                ->route('pacientes.show', (int) $pacienteId)
+                ->with([
+                    'warning' => $msg,
+                    'flash_ctx' => ['paciente_id' => (int) $pacienteId],
+                ]);
+        }
 
         if ($diagnostico) {
             $regla = $diagnostico->regla_decision_id

@@ -105,7 +105,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         | Líneas de tratamiento (solo médico)
         |----------------------------------------------------------------------
         | Estas rutas son necesarias porque la vista tratamientos/edit.blade.php
-        | llama a route('tratamientos.cerrarLinea', ...). Si faltan, revienta.
+        | llama a route('tratamientos.cerrarLinea', ...).
         */
         Route::post('/tratamientos/{tratamiento}/lineas', [TratamientoController::class, 'attach_linea'])
             ->name('tratamientos.attachLinea');
@@ -135,18 +135,29 @@ Route::middleware(['auth', 'verified'])->group(function () {
         */
         Route::resources([
             'especialidads' => EspecialidadController::class,
-            'medicos'       => MedicoController::class,
-            'pacientes'     => PacienteController::class,
-            'medicamentos'  => MedicamentoController::class,
-            'trasplantes'   => TrasplanteController::class,
-            'sintomas'      => SintomaController::class,
-            'diagnosticos'  => DiagnosticoController::class,
-            'tratamientos'  => TratamientoController::class,
-            'organos'       => OrganoController::class,
-            'estadisticas'  => EstadisticaController::class,
-            'pruebas'       => PruebaController::class,
-            'reglas'        => ReglaController::class,
+            'medicos' => MedicoController::class,
+            'pacientes' => PacienteController::class,
+            'medicamentos' => MedicamentoController::class,
+            'trasplantes' => TrasplanteController::class,
+            'sintomas' => SintomaController::class,
+            'diagnosticos' => DiagnosticoController::class,
+            'tratamientos' => TratamientoController::class,
+            'organos' => OrganoController::class,
+            'estadisticas' => EstadisticaController::class,
+            'pruebas' => PruebaController::class,
+            'reglas' => ReglaController::class,
         ]);
+
+        Route::get('/pacientes/{paciente}/sintomas/crear', [PacienteController::class, 'createSintomas'])
+            ->name('pacientes.sintomas.create');
+
+        Route::post('/pacientes/{paciente}/sintomas', [PacienteController::class, 'storeSintomas'])
+            ->name('pacientes.sintomas.store');
+
+        Route::post('/pacientes/{paciente}/organos-score', [PacienteController::class, 'storeOrganoScores'])
+            ->name('pacientes.organosScore.store');
+
+
     });
 
     /*

@@ -17,6 +17,7 @@ class User extends Authenticatable
         'apellidos',
         'telefono',
         'password',
+        'foto',
         'tipo_usuario_id',
         'paciente_id',          // vinculación opcional a paciente clínico
     ];
@@ -30,6 +31,18 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->foto) {
+            return asset('storage/' . $this->foto);
+        }
+
+        $name = urlencode($this->name ?? 'User');
+
+        return "https://api.dicebear.com/7.x/initials/svg?seed={$name}";
+    }
+
 
     /*--------------------------------------------------------------
      | RELACIÓN: Usuario → Paciente clínico
