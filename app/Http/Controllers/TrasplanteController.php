@@ -68,12 +68,23 @@ class TrasplanteController extends Controller
         $this->authorize('create', Trasplante::class);
 
         $user = Auth::user();
+        $paciente = request()->route('paciente');
+        if (!($paciente instanceof Paciente)) {
+            $paciente = Paciente::findOrFail((int) $paciente);
+        }
 
+        // Si viene desde ficha paciente (ruta nested)
+        if ($paciente) {
+
+            return view('trasplantes.create', [
+                'pacientes' => collect([$paciente])
+            ]);
+        }
+
+        // comportamiento original
         if ($user->es_medico) {
             $medicoId = $user->medico?->id;
-            if (!$medicoId) {
-                abort(403);
-            }
+            abort_unless($medicoId, 403);
 
             $pacientes = Paciente::query()
                 ->with('usuarioAcceso')
@@ -81,17 +92,18 @@ class TrasplanteController extends Controller
                 ->orderByDesc('id')
                 ->get();
 
-            return view('trasplantes.create', ['pacientes' => $pacientes]);
+            return view('trasplantes.create', compact('pacientes'));
         }
 
         if ($user->es_paciente) {
-            // P0: asegurar consistencia en la vista (usuarioAcceso puede usarse en el select)
             $paciente = $user->paciente?->loadMissing('usuarioAcceso');
-            return view('trasplantes.create', ['pacientes' => $paciente ? collect([$paciente]) : collect([])]);
+            return view('trasplantes.create', [
+                'pacientes' => $paciente ? collect([$paciente]) : collect([])
+            ]);
         }
 
         $pacientes = Paciente::with('usuarioAcceso')->orderByDesc('id')->get();
-        return view('trasplantes.create', ['pacientes' => $pacientes]);
+        return view('trasplantes.create', compact('pacientes'));
     }
 
     public function store(StoreTrasplanteRequest $request)
@@ -106,7 +118,6 @@ class TrasplanteController extends Controller
             if (!$paciente) {
                 abort(404);
             }
-            $this->authorize('view', $paciente);
         }
 
         if ($user->es_paciente && $user->paciente?->id) {
@@ -115,7 +126,19 @@ class TrasplanteController extends Controller
 
         Trasplante::create($data);
 
-        session()->flash('success', 'Registro creado correctamente.');
+        session()->flash('success', 'Trasplante creado correctamente.');
+
+        $redirectTo = (string) $request->input('redirect_to', '');
+
+        if ($redirectTo !== '') {
+            return redirect()->to($redirectTo);
+        }
+
+        // Fallback seguro: ficha paciente si existe
+        if (!empty($data['paciente_id'])) {
+            return redirect()->route('pacientes.show', (int) $data['paciente_id']);
+        }
+
         return redirect()->route('trasplantes.index');
     }
 

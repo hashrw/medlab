@@ -93,6 +93,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/diagnosticos/inferir', [DiagnosticoController::class, 'inferirSelector'])
             ->name('diagnosticos.inferirSelector');
 
+        Route::post('/diagnosticos/{diagnostico}/lineas', [DiagnosticoController::class, 'attach_sintoma'])
+            ->name('diagnosticos.attachSintoma');
+
         Route::post('/diagnosticos/inferir/{pacienteId}', [DiagnosticoController::class, 'inferirDesdeSistema'])
             ->name('diagnosticos.inferir');
 
@@ -157,6 +160,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/pacientes/{paciente}/organos-score', [PacienteController::class, 'storeOrganoScores'])
             ->name('pacientes.organosScore.store');
 
+        Route::prefix('pacientes/{paciente}')->group(function () {
+            Route::get('trasplantes/create', [TrasplanteController::class, 'create'])->name('pacientes.trasplantes.create');
+            Route::post('trasplantes', [TrasplanteController::class, 'store'])->name('pacientes.trasplantes.store');
+
+            Route::get('pruebas/create', [PruebaController::class, 'create'])->name('pacientes.pruebas.create');
+            Route::post('pruebas', [PruebaController::class, 'store'])->name('pacientes.pruebas.store');
+        });
+
+        // infección por diagnóstico
+        Route::get('diagnosticos/{diagnostico}/infeccion', [DiagnosticoController::class, 'edit'])->name('diagnosticos.infeccion.edit');
+        Route::put('diagnosticos/{diagnostico}/infeccion', [DiagnosticoController::class, 'update'])->name('diagnosticos.infeccion.update');
+
+        // TRASPLANTES (nested)
+        Route::get('/pacientes/{paciente}/trasplantes/create', [TrasplanteController::class, 'create'])
+            ->name('pacientes.trasplantes.create');
+
+        Route::post('/pacientes/{paciente}/trasplantes', [TrasplanteController::class, 'store'])
+            ->name('pacientes.trasplantes.store');
 
     });
 
@@ -169,8 +190,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/dashboard/paciente', [HomeController::class, 'paciente'])
             ->name('dashboard.paciente');
-
-        // Read-only paciente
         Route::prefix('paciente')->name('paciente.')->group(function () {
 
             Route::get('/diagnosticos/{diagnostico}', [PacienteDiagnosticoController::class, 'show'])
@@ -178,12 +197,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::get('/tratamientos/{tratamiento}', [PacienteTratamientoController::class, 'show'])
                 ->name('tratamientos.show');
+
         });
+
     });
 
     /*
     |--------------------------------------------------------------------------
-    | CITA STORE (COMÚN: médico crea / paciente solicita)
+    | CITA store (COMÚN: médico crea / paciente solicita)
     |--------------------------------------------------------------------------
     | Se protege por middleware tipo_usuario:1,2 (confirmas que soporta listas).
     | La autorización fina sigue siendo responsabilidad de Policy + FormRequest.

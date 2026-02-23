@@ -6,28 +6,46 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('tratamientos', function (Blueprint $table) {
             $table->id();
-            
-            $table->string('tratamiento')->nullable();;
+
+            // Fuente de verdad del estado global
+            $table->boolean('activo')->default(false); // antes nullable
+
+            $table->string('tratamiento')->nullable();
             $table->date('fecha_asignacion')->nullable();
+
+            // NUEVO: fechas clínicas globales (sin renombrar nada)
+            $table->date('fecha_inicio')->nullable(); // inicio real del tratamiento
+            $table->date('fecha_cierre')->nullable(); // cierre global decidido explícitamente
+
             $table->text('descripcion')->nullable();
-            //se calcula a partir de la fecha de inicio de la 1ª línea de tratamiento y la fecha de fin de la última línea de tratamiento asignada.
-            //$table->integer('duracion_trat')->nullable();
+
+            // Relación con diagnóstico (tu modelo ya lo usa)
+            $table->foreignId('diagnostico_id')->nullable()
+                ->constrained('diagnosticos')
+                ->nullOnDelete();
+
             $table->foreignId('medico_id')->constrained()->onDelete('cascade');
-            $table->foreignId('paciente_id')->nullable()->constrained()->onDelete('cascade');
+
+            // RECOMENDADO: evitar borrar tratamientos si se borra paciente
+            $table->foreignId('paciente_id')->nullable()
+                ->constrained()
+                ->nullOnDelete();
+
             $table->timestamps();
+
+            // Índices útiles
+            $table->index('activo');
+            $table->index('fecha_asignacion');
+            $table->index('fecha_inicio');
+            $table->index('fecha_cierre');
+            $table->index('diagnostico_id');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('tratamientos');

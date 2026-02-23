@@ -1,18 +1,15 @@
 @csrf
-
+<input type="hidden" name="redirect_to" value="{{ url()->previous() }}">
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
     {{-- Tipo de trasplante --}}
     <div>
         <x-input-label for="tipo_trasplante" value="Tipo de trasplante" />
-
-        <select name="tipo_trasplante" id="tipo_trasplante"
-                class="w-full border-gray-300 rounded-md shadow-sm mt-1">
+        <select name="tipo_trasplante" id="tipo_trasplante" class="w-full border-gray-300 rounded-md shadow-sm mt-1">
             <option value="">Seleccione...</option>
 
-            @foreach(['alogénico emparentado','alogénico no emparentado','autólogo','singénico'] as $tipo)
-                <option value="{{ $tipo }}"
-                    @selected(old('tipo_trasplante', $trasplante->tipo_trasplante ?? '') == $tipo)>
+            @foreach(['alogénico emparentado', 'alogénico no emparentado', 'autólogo', 'singénico'] as $tipo)
+                <option value="{{ $tipo }}" @selected(old('tipo_trasplante', $trasplante->tipo_trasplante ?? '') == $tipo)>
                     {{ ucfirst($tipo) }}
                 </option>
             @endforeach
@@ -24,8 +21,7 @@
     {{-- Fecha --}}
     <div>
         <x-input-label for="fecha_trasplante" value="Fecha del trasplante" />
-        <x-text-input type="date" name="fecha_trasplante" id="fecha_trasplante"
-            class="w-full mt-1"
+        <x-text-input type="date" name="fecha_trasplante" id="fecha_trasplante" class="w-full mt-1"
             :value="old('fecha_trasplante', isset($trasplante) ? $trasplante->fecha_trasplante->format('Y-m-d') : '')" />
 
         <x-input-error :messages="$errors->get('fecha_trasplante')" class="mt-2" />
@@ -36,13 +32,12 @@
         <x-input-label for="origen_trasplante" value="Origen del injerto" />
 
         <select name="origen_trasplante" id="origen_trasplante"
-                class="w-full border-gray-300 rounded-md shadow-sm mt-1">
+            class="w-full border-gray-300 rounded-md shadow-sm mt-1">
 
             <option value="">Seleccione...</option>
 
-            @foreach(['médula ósea','sangre periférica'] as $origen)
-                <option value="{{ $origen }}"
-                    @selected(old('origen_trasplante', $trasplante->origen_trasplante ?? '') == $origen)>
+            @foreach(['médula ósea', 'sangre periférica'] as $origen)
+                <option value="{{ $origen }}" @selected(old('origen_trasplante', $trasplante->origen_trasplante ?? '') == $origen)>
                     {{ ucfirst($origen) }}
                 </option>
             @endforeach
@@ -56,13 +51,11 @@
     <div>
         <x-input-label for="identidad_hla" value="Compatibilidad HLA" />
 
-        <select name="identidad_hla" id="identidad_hla"
-                class="w-full border-gray-300 rounded-md shadow-sm mt-1">
+        <select name="identidad_hla" id="identidad_hla" class="w-full border-gray-300 rounded-md shadow-sm mt-1">
             <option value="">Seleccione...</option>
 
-            @foreach(['idéntico','disparidad clase I','disparidad clase II'] as $hla)
-                <option value="{{ $hla }}"
-                    @selected(old('identidad_hla', $trasplante->identidad_hla ?? '') == $hla)>
+            @foreach(['idéntico', 'disparidad clase I', 'disparidad clase II'] as $hla)
+                <option value="{{ $hla }}" @selected(old('identidad_hla', $trasplante->identidad_hla ?? '') == $hla)>
                     {{ ucfirst($hla) }}
                 </option>
             @endforeach
@@ -76,13 +69,12 @@
         <x-input-label for="tipo_acondicionamiento" value="Tipo de acondicionamiento" />
 
         <select name="tipo_acondicionamiento" id="tipo_acondicionamiento"
-                class="w-full border-gray-300 rounded-md shadow-sm mt-1">
+            class="w-full border-gray-300 rounded-md shadow-sm mt-1">
 
             <option value="">Seleccione...</option>
 
-            @foreach(['intensidad reducida','mieloablativo'] as $tc)
-                <option value="{{ $tc }}"
-                    @selected(old('tipo_acondicionamiento', $trasplante->tipo_acondicionamiento ?? '') == $tc)>
+            @foreach(['intensidad reducida', 'mieloablativo'] as $tc)
+                <option value="{{ $tc }}" @selected(old('tipo_acondicionamiento', $trasplante->tipo_acondicionamiento ?? '') == $tc)>
                     {{ ucfirst($tc) }}
                 </option>
             @endforeach
@@ -96,7 +88,7 @@
         <x-input-label for="seropositividad_donante" value="Serología Donante" />
 
         <select name="seropositividad_donante" id="seropositividad_donante"
-                class="w-full border-gray-300 rounded-md shadow-sm mt-1">
+            class="w-full border-gray-300 rounded-md shadow-sm mt-1">
             <option value="">Seleccione...</option>
             <option value="+" @selected(old('seropositividad_donante', $trasplante->seropositividad_donante ?? '') == '+')>+</option>
             <option value="-" @selected(old('seropositividad_donante', $trasplante->seropositividad_donante ?? '') == '-')>-</option>
@@ -110,7 +102,7 @@
         <x-input-label for="seropositividad_receptor" value="Serología Receptor" />
 
         <select name="seropositividad_receptor" id="seropositividad_receptor"
-                class="w-full border-gray-300 rounded-md shadow-sm mt-1">
+            class="w-full border-gray-300 rounded-md shadow-sm mt-1">
             <option value="">Seleccione...</option>
             <option value="+" @selected(old('seropositividad_receptor', $trasplante->seropositividad_receptor ?? '') == '+')>+</option>
             <option value="-" @selected(old('seropositividad_receptor', $trasplante->seropositividad_receptor ?? '') == '-')>-</option>
@@ -120,32 +112,40 @@
     </div>
 
     {{-- Campo PACIENTE --}}
-    <div class="md:col-span-2">
-        <x-input-label for="paciente_id" value="Paciente" />
+    @if(isset($pacientes) && $pacientes->count() === 1)
+        @php $p0 = $pacientes->first(); @endphp
 
-        <select name="paciente_id" id="paciente_id"
-                class="w-full border-gray-300 rounded-md shadow-sm mt-1">
+        <div class="md:col-span-2">
+            <x-input-label value="NUHSA" />
+            <input type="text" class="w-full mt-1 border-gray-300 rounded-md shadow-sm bg-gray-100 text-gray-800"
+                value="{{ $p0->nuhsa ?? ('Paciente #' . $p0->id) }}" readonly>
+        </div>
 
-            <option value="">Seleccione paciente...</option>
+        <input type="hidden" name="paciente_id" value="{{ (int) $p0->id }}">
+    @else
+        <div class="md:col-span-2">
+            <x-input-label for="paciente_id" value="Paciente" />
 
-            @foreach($pacientes as $p)
-                <option value="{{ $p->id }}"
-                    @selected(old('paciente_id', $trasplante->paciente_id ?? '') == $p->id)>
-                    {{ $p->nombre }} ({{ $p->nuhsa }})
-                </option>
-            @endforeach
+            <select name="paciente_id" id="paciente_id" class="w-full border-gray-300 rounded-md shadow-sm mt-1">
+                <option value="">Seleccione paciente...</option>
 
-        </select>
+                @foreach($pacientes as $p)
+                    <option value="{{ $p->id }}" @selected(old('paciente_id', $trasplante->paciente_id ?? '') == $p->id)>
+                        {{ $p->nombre }} ({{ $p->nuhsa }})
+                    </option>
+                @endforeach
+            </select>
 
-        <x-input-error :messages="$errors->get('paciente_id')" class="mt-2" />
-    </div>
+            <x-input-error :messages="$errors->get('paciente_id')" class="mt-2" />
+        </div>
+    @endif
+
 
 </div>
 
 {{-- Botones --}}
 <div class="flex justify-end mt-8">
-    <a href="{{ route('trasplantes.index') }}"
-       class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+    <a href="{{ route('pacientes.show', $paciente) }}" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
         Cancelar
     </a>
 

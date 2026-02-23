@@ -58,6 +58,16 @@ class DiagnosticoPolicy
      */
     public function view(User $user, Diagnostico $diagnostico): bool
     {
+       /* dd([
+            'user_id' => $user->id,
+            'user_es_medico' => $user->es_medico,
+            'user_medico_id' => $user->medico?->id,
+            'diagnostico_id' => $diagnostico->id,
+            'diagnostico_paciente_id_fk' => $diagnostico->paciente_id,
+            'diagnostico_paciente_rel' => $diagnostico->paciente?->id,
+            'paciente_medico_id' => $diagnostico->paciente?->medico_id,
+        ]);*/
+
         if ($user->es_administrador) {
             return true;
         }
@@ -118,7 +128,7 @@ class DiagnosticoPolicy
      */
     public function delete(User $user, Diagnostico $diagnostico): bool
     {
-        return $user->es_administrador;
+        return $user->es_administrador || $user->es_medico;
     }
 
     public function restore(User $user, Diagnostico $diagnostico): bool

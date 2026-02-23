@@ -9,6 +9,8 @@ use App\Models\Origen;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Domain\Clinical\CasoClinico;
+use App\Domain\Clinical\CasoClinicoFactory;
 
 class InferenciaDiagnosticoService
 {
@@ -18,7 +20,7 @@ class InferenciaDiagnosticoService
         $paciente->loadMissing(['sintomas', 'organos']);
 
         // 1) Debe haber síntomas activos
-        // (tu relación ya filtra activo=true, pero aquí uso la query para que sea inequívoco)
+        // aunque se filtre activo=true, usamos la query para que sea inequívoco
         $tieneActivos = $paciente->sintomas()
             ->wherePivot('activo', true)
             ->exists();
@@ -64,10 +66,14 @@ class InferenciaDiagnosticoService
 
     public function ejecutar(Paciente $paciente): array
     {
+        //caso
+        $case = CasoClinicoFactory::fromPaciente($paciente);
+
         // PRECONDICIÓN NIH (no toca reglas, solo bloquea si faltan datos)
         $this->assertPrecondicionNih($paciente);
 
-        $aliasesActivos = $this->obtenerAliasesActivos($paciente);
+        //$aliasesActivos = $this->obtenerAliasesActivos($paciente);
+        $aliasesActivos = $case->activeAliasesCanonical;
 
         // ya carga organos la precondición, pero lo dejo para no romper tu flujo mental
         $paciente->loadMissing('organos');

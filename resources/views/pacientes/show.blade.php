@@ -344,53 +344,133 @@ $scoresNihActuales = ($paciente->organos ?? collect())->mapWithKeys(function ($o
                         @endif
                     </div>
 
-                    {{-- SECCIÓN 3: INFORMACIÓN CLÍNICA ASOCIADA --}}
-                    <div>
-                        <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
-                            Información Clínica Asociada
-                        </h4>
+                    {{-- SECCIÓN: INFORMACIÓN CLÍNICA ASOCIADA --}}
+<div>
+    <h4 class="text-lg font-semibold text-blue-700 mb-3 border-b pb-1">
+        Información Clínica Asociada
+    </h4>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+    @php
+        // Clase reutilizable para botones icono (fácil de añadir más)
+        $iconBtn = 'inline-flex items-center justify-center w-9 h-9 rounded border border-gray-200
+                   text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition';
+    @endphp
 
-                            <div class="bg-white border rounded-lg p-4 shadow-sm">
-                                <h5 class="font-semibold text-blue-600 mb-2">Trasplantes</h5>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                                @if($paciente->trasplantes->count())
-                                    <ul class="space-y-2 text-sm">
-                                        @foreach($paciente->trasplantes as $trasplante)
-                                            <li class="border-b pb-2">
-                                                <p><strong>Fecha:</strong> {{ $trasplante->fecha_trasplante ? \Carbon\Carbon::parse($trasplante->fecha_trasplante)->format('d/m/Y') : '-' }}</p>
-                                                <p><strong>Tipo:</strong> {{ $trasplante->tipo_trasplante ?? '-' }}</p>
-                                                <p><strong>Días desde trasplante:</strong> {{ $trasplante->dias_desde_trasplante ?? '-' }}</p>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                    <p class="text-sm text-gray-600">No hay trasplantes registrados.</p>
+        {{-- Trasplantes --}}
+        <div class="border rounded-lg p-4 bg-white">
+            <div class="flex items-center justify-between mb-3">
+                <h5 class="font-semibold text-blue-700">Trasplantes</h5>
+
+                <div class="flex items-center gap-2">
+                    {{-- Crear (icono + tooltip) --}}
+                    <a href="{{ route('pacientes.trasplantes.create', $paciente) }}"
+                       class="{{ $iconBtn }}"
+                       title="Registrar trasplante"
+                       aria-label="Registrar trasplante">
+                        <i class="fas fa-plus"></i>
+                    </a>
+
+                    {{-- Ver listado (si existe tu route trasplantes.index) --}}
+                   <button type="button"
+        onclick="openTrasplantesModal()"
+        class="{{ $iconBtn }}"
+        title="Ver trasplantes"
+        aria-label="Ver trasplantes">
+    <i class="fas fa-list"></i>
+</button>
+                </div>
+            </div>
+
+            @if(empty($trasplantes) || $trasplantes->isEmpty())
+                <p class="text-sm text-gray-600">No hay trasplantes registrados.</p>
+            @else
+                <ul class="text-sm text-gray-700 space-y-1">
+                    @foreach($trasplantes as $t)
+                        <li class="flex items-center justify-between gap-3">
+                            <span>
+                                {{ $t->fecha_trasplante?->format('d/m/Y') ?? '-' }}
+                                @if(!empty($t->tipo_trasplante))
+                                    <span class="text-gray-500">— {{ $t->tipo_trasplante }}</span>
                                 @endif
-                            </div>
+                            </span>
 
-                            <div class="bg-white border rounded-lg p-4 shadow-sm">
-                                <h5 class="font-semibold text-blue-600 mb-2">Pruebas Clínicas</h5>
+                            <a href="{{ route('trasplantes.show', $t) }}"
+                               class="text-gray-500 hover:text-gray-800"
+                               title="Abrir"
+                               aria-label="Abrir trasplante">
+                                <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
 
-                                @if($paciente->pruebas->count())
-                                    <ul class="space-y-2 text-sm">
-                                        @foreach($paciente->pruebas as $prueba)
-                                            <li class="border-b pb-2">
-                                                <p><strong>Fecha:</strong> {{ $prueba->fecha ? \Carbon\Carbon::parse($prueba->fecha)->format('d/m/Y') : '-' }}</p>
-                                                <p><strong>Prueba:</strong> {{ $prueba->nombre }}</p>
-                                                <p><strong>Tipo:</strong> {{ optional($prueba->tipo_prueba)->nombre ?? '-' }}</p>
-                                                <p class="text-gray-700"><strong>Resultado:</strong> {{ $prueba->resultado ?? '-' }}</p>
-                                            </li>
-                                        @endforeach
-                                    </ul>
-                                @else
-                                    <p class="text-sm text-gray-600">No hay pruebas clínicas registradas.</p>
+        {{-- Pruebas clínicas --}}
+        <div class="border rounded-lg p-4 bg-white">
+            <div class="flex items-center justify-between mb-3">
+                <h5 class="font-semibold text-blue-700">Pruebas Clínicas</h5>
+
+                <div class="flex items-center gap-2">
+                    {{-- IMPORTANTE: aquí va $paciente, NO $diagnostico --}}
+                    <a href="{{ route('pacientes.pruebas.create', $paciente) }}"
+                       class="{{ $iconBtn }}"
+                       title="Registrar prueba"
+                       aria-label="Registrar prueba">
+                        <i class="fas fa-plus"></i>
+                    </a>
+
+                    {{-- Si tienes index de pruebas, cámbialo. Si no existe, quita este botón. --}}
+                    @if(\Illuminate\Support\Facades\Route::has('pruebas.index'))
+                       <button type="button"
+        onclick="openPruebasModal()"
+        class="{{ $iconBtn }}"
+        title="Ver pruebas"
+        aria-label="Ver pruebas">
+    <i class="fas fa-list"></i>
+</button>
+                    @endif
+                </div>
+            </div>
+
+            @if(empty($pruebas) || $pruebas->isEmpty())
+                <p class="text-sm text-gray-600">No hay pruebas clínicas registradas.</p>
+            @else
+                <ul class="text-sm text-gray-700 space-y-1">
+                    @foreach($pruebas as $p)
+                        <li class="flex items-center justify-between gap-3">
+                            <span>
+                                {{ $p->fecha?->format('d/m/Y') ?? '-' }}
+                                @if(!empty($p->nombre))
+                                    <span class="text-gray-500">— {{ $p->nombre }}</span>
                                 @endif
-                            </div>
+                            </span>
 
-                        </div>
-                    </div>
+                            {{-- Si tienes show de pruebas, ajusta la ruta. Si no, elimina este link. --}}
+                            @if(\Illuminate\Support\Facades\Route::has('pruebas.show'))
+                                <a href="{{ route('pruebas.show', $p) }}"
+                                   class="text-gray-500 hover:text-gray-800"
+                                   title="Abrir"
+                                   aria-label="Abrir prueba">
+                                    <i class="fas fa-arrow-right"></i>
+                                </a>
+                            @endif
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+
+    </div>
+
+    <p class="mt-3 text-xs text-gray-500">
+        Nota: la infección se asigna en la ficha del diagnóstico (FK en diagnósticos).
+    </p>
+</div>
+
+
 
                     {{-- SECCIÓN 5: MOTOR INFERENCIA --}}
                     <div class="border rounded-lg p-4 bg-gray-50">
@@ -577,6 +657,124 @@ $scoresNihActuales = ($paciente->organos ?? collect())->mapWithKeys(function ($o
     </div>
 </div>
 
+{{-- MODAL TRASPLANTES --}}
+<div id="modal-trasplantes" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 overflow-hidden">
+
+        <div class="px-6 py-4 bg-blue-700 text-white flex justify-between items-center">
+            <div>
+                <h3 class="text-lg font-semibold">Trasplantes</h3>
+                <p class="text-xs text-blue-100">NUHSA: {{ $paciente->nuhsa }}</p>
+            </div>
+
+            <button type="button" onclick="closeTrasplantesModal()" class="text-white text-xl leading-none">&times;</button>
+        </div>
+
+        <div class="p-6 max-h-96 overflow-y-auto text-sm text-gray-800">
+            @if(empty($trasplantes) || $trasplantes->isEmpty())
+                <p class="text-gray-600">No hay trasplantes registrados.</p>
+            @else
+                <div class="overflow-x-auto border rounded">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-3 py-2 text-left font-semibold text-gray-600">Fecha</th>
+                                <th class="px-3 py-2 text-left font-semibold text-gray-600">Tipo</th>
+                                <th class="px-3 py-2 text-left font-semibold text-gray-600">Origen</th>
+                                <th class="px-3 py-2 text-left font-semibold text-gray-600">HLA</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @foreach($trasplantes as $t)
+                                <tr>
+                                    <td class="px-3 py-2">{{ $t->fecha_trasplante?->format('d/m/Y') ?? '-' }}</td>
+                                    <td class="px-3 py-2">{{ $t->tipo_trasplante ?? '-' }}</td>
+                                    <td class="px-3 py-2">{{ $t->origen_trasplante ?? '-' }}</td>
+                                    <td class="px-3 py-2">{{ $t->identidad_hla ?? '-' }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            @endif
+        </div>
+
+        <div class="px-6 py-3 bg-gray-50 flex justify-end">
+            <button type="button" onclick="closeTrasplantesModal()"
+                    class="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+{{-- MODAL PRUEBAS --}}
+<div id="modal-pruebas" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-3xl w-full mx-4 overflow-hidden">
+
+        <div class="px-6 py-4 bg-blue-700 text-white flex justify-between items-center">
+            <div>
+                <h3 class="text-lg font-semibold">Pruebas clínicas</h3>
+                <p class="text-xs text-blue-100">NUHSA: {{ $paciente->nuhsa }}</p>
+            </div>
+
+            <button type="button" onclick="closePruebasModal()" class="text-white text-xl leading-none">&times;</button>
+        </div>
+
+        <div class="p-6 max-h-96 overflow-y-auto text-sm text-gray-800">
+            @if(empty($pruebas) || $pruebas->isEmpty())
+                <p class="text-gray-600">No hay pruebas registradas.</p>
+            @else
+                @php
+                    $pruebasPorTipo = $pruebas->groupBy(fn($p) => $p->tipo_prueba?->nombre ?? 'Sin tipo');
+                @endphp
+
+                <div class="space-y-6">
+                    @foreach($pruebasPorTipo as $tipoNombre => $items)
+                        <div class="border rounded">
+                            <div class="px-4 py-2 bg-gray-50 font-semibold text-gray-700">
+                                {{ $tipoNombre }}
+                            </div>
+
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full text-sm">
+                                    <thead class="bg-white">
+                                        <tr>
+                                            <th class="px-3 py-2 text-left font-semibold text-gray-600">Fecha</th>
+                                            <th class="px-3 py-2 text-left font-semibold text-gray-600">Nombre</th>
+                                            <th class="px-3 py-2 text-left font-semibold text-gray-600">Resultado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-gray-100">
+                                        @foreach($items as $p)
+                                            <tr>
+                                                <td class="px-3 py-2">{{ $p->fecha?->format('d/m/Y') ?? '-' }}</td>
+                                                <td class="px-3 py-2">{{ $p->nombre ?? '-' }}</td>
+                                                <td class="px-3 py-2">
+                                                    {{ \Illuminate\Support\Str::limit($p->resultado ?? '-', 120) }}
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+
+                        </div>
+                    @endforeach
+                </div>
+            @endif
+        </div>
+
+        <div class="px-6 py-3 bg-gray-50 flex justify-end">
+            <button type="button" onclick="closePruebasModal()"
+                    class="px-4 py-2 border rounded text-gray-700 hover:bg-gray-100">
+                Cerrar
+            </button>
+        </div>
+    </div>
+</div>
+
+
     <script>
         function openDiagnosticoModal(id) {
             const modal = document.getElementById('modal-diagnostico-' + id);
@@ -606,6 +804,27 @@ function closeOrganosModal() {
     const modal = document.getElementById('modal-organos');
     if (modal) modal.classList.add('hidden');
 }
+
+function openTrasplantesModal() {
+    const modal = document.getElementById('modal-trasplantes');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeTrasplantesModal() {
+    const modal = document.getElementById('modal-trasplantes');
+    if (modal) modal.classList.add('hidden');
+}
+
+function openPruebasModal() {
+    const modal = document.getElementById('modal-pruebas');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closePruebasModal() {
+    const modal = document.getElementById('modal-pruebas');
+    if (modal) modal.classList.add('hidden');
+}
+
 
     </script>
 

@@ -12,9 +12,15 @@ class UpdateTrasplanteRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        $trasplante = Trasplante::find($this->route('trasplante'))->first();
+        $trasplante = $this->route('trasplante'); // model binding
+
+        if (!$trasplante instanceof Trasplante) {
+            $trasplante = Trasplante::find($trasplante);
+        }
+
         return $trasplante && $this->user()->can('update', $trasplante);
     }
+
 
     /**
      * Get the validation rules that apply to the request.

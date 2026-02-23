@@ -30,7 +30,6 @@ class MedicoController extends Controller
      * Show the form for creating a new resource.
      */
 
-
     public function create()
     {
         $this->authorize('create', Medico::class);
@@ -138,11 +137,10 @@ class MedicoController extends Controller
             : redirect()->route('citas.index');
     }
 
-
-
     /**
      * Remove the specified resource from storage.
      */
+
     public function destroy(Medico $medico)
     {
         $this->authorize('delete', $medico);

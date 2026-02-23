@@ -23,16 +23,18 @@ class StoreTrasplanteRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'tipo_trasplante' => 'required|string',
-            'fecha_trasplante' => 'required|date',
-            'origen_trasplante' => 'required|string',
-            'identidad_hla' => 'required|string',
-            'tipo_acondicionamiento' => 'string',
-            'seropositividad_donante' => 'string',
-            'seropositividad_receptor' => 'string',
-            'paciente_id' => 'exists:pacientes,id',
+        $isPaciente = $this->user()?->es_paciente;
 
+        return [
+            'tipo_trasplante' => 'nullable|string|max:255',
+            'fecha_trasplante' => 'required|date',
+            'origen_trasplante' => 'nullable|string|max:255',
+            'identidad_hla' => 'nullable|string|max:255',
+            'tipo_acondicionamiento' => 'nullable|string|max:255',
+            'seropositividad_donante' => 'nullable|string|max:255',
+            'seropositividad_receptor' => 'nullable|string|max:255',
+            'paciente_id' => ($isPaciente ? 'nullable' : 'required') . '|exists:pacientes,id',
         ];
     }
+
 }

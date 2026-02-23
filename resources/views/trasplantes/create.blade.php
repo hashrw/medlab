@@ -1,23 +1,27 @@
 <x-medico-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Nuevo Trasplante
+            Nuevo trasplante
         </h2>
     </x-slot>
 
-    <div class="py-3">
-        <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
+    <div class="py-4">
+        <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
 
-            <div class="bg-white shadow-lg rounded-lg p-6">
+            <div class="bg-white shadow-xl rounded-lg overflow-hidden">
 
-                <h3 class="text-lg font-semibold text-blue-800 mb-4">
-                    Registrar nuevo trasplante
-                </h3>
+                <div class="px-6 py-4 bg-blue-800 text-white">
+                    <h3 class="text-lg font-semibold">Registro de trasplante</h3>
+                    <p class="text-xs text-blue-100 mt-1">
+                        Introduzca la información del procedimiento.
+                    </p>
+                </div>
 
-                {{-- Formulario clínico --}}
-                <form method="POST" action="{{ route('trasplantes.store') }}">
-                    @include('trasplantes._form')
-                </form>
+                <div class="p-8 space-y-6 text-gray-800">
+                    <form method="POST" action="{{ route('trasplantes.store') }}">
+                        @include('trasplantes._form')
+                    </form>
+                </div>
 
             </div>
 

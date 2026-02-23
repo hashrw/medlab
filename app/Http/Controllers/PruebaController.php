@@ -6,6 +6,7 @@ use App\Http\Requests\Prueba\StorePruebaRequest;
 use App\Http\Requests\Prueba\UpdatePruebaRequest;
 use App\Models\Prueba;
 use App\Models\TipoPrueba;
+use App\Models\Paciente;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -50,8 +51,39 @@ class PruebaController extends Controller
     public function create()
     {
         $this->authorize('create', Prueba::class);
-        return view('pruebas/create');
+
+        $user = Auth::user();
+        $paciente = request()->route('paciente');
+
+        if ($paciente) {
+            if (!($paciente instanceof Paciente)) {
+                $paciente = Paciente::findOrFail((int) $paciente);
+            }
+
+            // nested: devolver $paciente explícito (blade lo usa)
+            return view('pruebas.create', [
+                'paciente' => $paciente,
+                'pacientes' => collect([$paciente]), // lo puedes seguir usando si lo necesitas
+                'tipos' => TipoPrueba::all(),
+            ]);
+        }
+
+        // no-nested (si lo usas)
+        if ($user->es_medico) {
+            $medicoId = $user->medico?->id;
+            abort_unless($medicoId, 403);
+
+            $pacientes = Paciente::where('medico_id', $medicoId)->get();
+
+            return view('pruebas.create', [
+                'pacientes' => $pacientes,
+                'tipos' => TipoPrueba::all(),
+            ]);
+        }
+
+        abort(403);
     }
+
 
     public function store(StorePruebaRequest $request)
     {
@@ -59,29 +91,51 @@ class PruebaController extends Controller
 
         $data = $request->validated();
 
-        // P0: si el creador es médico, validar que el paciente es suyo
-        if ($request->user()->es_medico && !empty($data['paciente_id'])) {
-            $paciente = \App\Models\Paciente::find((int) $data['paciente_id']);
+        $pacienteFromRoute = $request->route('paciente'); // Paciente|null o string/int
+        $paciente = null;
 
+        if ($pacienteFromRoute) {
+            if (!($pacienteFromRoute instanceof Paciente)) {
+                $pacienteFromRoute = Paciente::findOrFail((int) $pacienteFromRoute);
+            }
+
+            $paciente = $pacienteFromRoute;
+            $data['paciente_id'] = (int) $paciente->id;
+        } else {
+            $pacienteIdFromBody = isset($data['paciente_id']) ? (int) $data['paciente_id'] : null;
+            $paciente = $pacienteIdFromBody ? Paciente::find($pacienteIdFromBody) : null;
+        }
+
+        // Seguridad / ownership
+        if ($request->user()->es_medico) {
             if (!$paciente) {
-                abort(404);
+                abort(422, 'Paciente no informado para registrar la prueba.');
             }
 
             $this->authorize('view', $paciente);
+            $data['paciente_id'] = (int) $paciente->id;
         }
 
-        // Si el creador es paciente, forzamos su propio paciente_id (evita spoof)
-        if ($request->user()->es_paciente && $request->user()->paciente?->id) {
-            $data['paciente_id'] = (int) $request->user()->paciente->id;
+        // Si el creador es paciente, forzar su propio paciente_id
+        if ($request->user()->es_paciente) {
+            $pacienteUser = $request->user()->paciente;
+            abort_unless($pacienteUser, 403);
+
+            $data['paciente_id'] = (int) $pacienteUser->id;
+            $paciente = $pacienteUser;
         }
 
-        $prueba = new Prueba($data);
-        $prueba->save();
+        $prueba = Prueba::create($data);
 
-        session()->flash('success', 'Registro creado correctamente.');
+        session()->flash('success', 'Prueba creada correctamente.');
+
+        // Flujo serio: volver a ficha del paciente si existe
+        if ($paciente) {
+            return redirect()->route('pacientes.show', (int) $paciente->id);
+        }
+
         return redirect()->route('pruebas.index');
     }
-
 
     public function show(Prueba $prueba)
     {

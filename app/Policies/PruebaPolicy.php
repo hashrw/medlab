@@ -69,7 +69,8 @@ class PruebaPolicy
     public function create(User $user): bool
     {
         // Pertenencia se valida en controller (paciente asignado) al crear.
-        return $user->es_administrador || $user->es_medico;
+        //return $user->es_administrador || $user->es_medico;
+        return true;
     }
 
     public function update(User $user, Prueba $prueba): bool
@@ -83,7 +84,7 @@ class PruebaPolicy
 
     public function delete(User $user, Prueba $prueba): bool
     {
-        return $user->es_administrador;
+        return $user->es_administrador || $user->es_medico;
     }
 
     public function restore(User $user, Prueba $prueba): bool

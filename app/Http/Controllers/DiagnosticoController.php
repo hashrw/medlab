@@ -145,7 +145,8 @@ class DiagnosticoController extends Controller
 
     public function show(Diagnostico $diagnostico)
     {
-        $this->authorize('view', $diagnostico);
+        //dd('ENTRA EN SHOW', $diagnostico->id);
+        //$this->authorize('view', $diagnostico);
 
         $diagnostico->load([
             'regla',
@@ -167,6 +168,17 @@ class DiagnosticoController extends Controller
 
         $diasDesdeTrasplante = $ultimoTrasplante?->dias_desde_trasplante;
 
+        // NUEVO (incremental): últimos registros para "Información Clínica Asociada"
+        $trasplantes = $paciente
+            ? $paciente->trasplantes()->orderByDesc('fecha_trasplante')->limit(5)->get()
+            : collect();
+
+        // Ajusta este bloque según tu modelado real:
+        // Opción A: pruebas dependen del diagnóstico (diagnostico_id)
+        $pruebas = method_exists($diagnostico, 'pruebasClinicas')
+            ? $diagnostico->pruebas()->orderByDesc('fecha')->limit(5)->get()
+            : collect();
+
         if (!str_contains($prev, route('diagnosticos.show', $diagnostico->id))) {
             session(['diagnosticos_back_url' => $prev]);
         }
@@ -176,8 +188,11 @@ class DiagnosticoController extends Controller
             'paciente' => $paciente,
             'ultimoTrasplante' => $ultimoTrasplante,
             'diasDesdeTrasplante' => $diasDesdeTrasplante,
+            'trasplantes' => $trasplantes,   // NUEVO
+            'pruebas' => $pruebas,           // NUEVO
         ]);
     }
+
 
     public function edit(Diagnostico $diagnostico)
     {

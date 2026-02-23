@@ -109,21 +109,22 @@ class PacienteController extends Controller
         $paciente->load([
             'usuarioAcceso',
 
-            // Orden por fecha (ajusta el nombre del campo si no es "fecha")
+            // Trasplantes (ordenados)
             'trasplantes' => fn($q) => $q->orderByDesc('fecha_trasplante'),
+
+            // Pruebas (ordenadas + tipo)
+            'pruebas' => fn($q) => $q->orderByDesc('fecha'),
+            // OJO: usa UNA de estas dos según tu relación real:
+            'pruebas.tipo_prueba',
+            // 'pruebas.tipoPrueba',
 
             // Tratamientos
             'tratamientos',
             'tratamientos.lineasTratamiento',
             'tratamientos.diagnostico',
 
-            // Síntomas (tu comentario dice "filtra activo=true": eso NO lo hace el load por sí solo,
-            // depende de cómo esté definida la relación en el modelo)
+            // Síntomas
             'sintomas',
-
-            // Pruebas: ordenar por fecha y cargar tipo_prueba
-            'pruebas' => fn($q) => $q->orderByDesc('fecha'),
-            'pruebas.tipo_prueba',
 
             // Órganos
             'organos',
@@ -131,15 +132,11 @@ class PacienteController extends Controller
             // Diagnósticos
             'diagnosticos.origen',
             'diagnosticos.regla',
-            // OJO: NO cargar 'diagnosticos.enfermedad' si NO existe relación.
             'diagnosticos.sintomas.organo',
         ]);
 
-        /*dd(
-            $paciente->trasplantes()
-                ->orderByDesc('fecha_trasplante')
-                ->pluck('fecha_trasplante')
-        );*/
+        $trasplantes = $paciente->trasplantes;
+        $pruebas = $paciente->pruebas;
 
         $tieneSintomasActivos = $paciente->sintomas->isNotEmpty();
 
@@ -153,12 +150,14 @@ class PacienteController extends Controller
             ->orderBy('nombre')
             ->get(['id', 'nombre']);
 
-        return view('pacientes.show', compact(
-            'paciente',
-            'tieneSintomasActivos',
-            'sintomasCatalogo',
-            'organosCatalogo'
-        ));
+        return view('pacientes.show', [
+            'paciente' => $paciente,
+            'tieneSintomasActivos' => $tieneSintomasActivos,
+            'sintomasCatalogo' => $sintomasCatalogo,
+            'organosCatalogo' => $organosCatalogo,
+            'trasplantes' => $trasplantes,
+            'pruebas' => $pruebas,
+        ]);
     }
 
 

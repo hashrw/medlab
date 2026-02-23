@@ -65,7 +65,7 @@ class TrasplantePolicy
 
     public function create(User $user): bool
     {
-        // P0: admin o médico. Paciente no, salvo que lo abras explícitamente.
+        // admin o médico. Paciente no, salvo que lo abras explícitamente.
         return $user->es_administrador || $user->es_medico;
     }
 
@@ -80,8 +80,7 @@ class TrasplantePolicy
 
     public function delete(User $user, Trasplante $trasplante): bool
     {
-        // Solo admin (si quieres que médico borre, me lo dices).
-        return $user->es_administrador;
+        return $user->es_administrador || $user->es_medico;
     }
 
     public function restore(User $user, Trasplante $trasplante): bool

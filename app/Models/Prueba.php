@@ -9,9 +9,12 @@ class Prueba extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['nombre', 'tipo_prueba_id', 'fecha', 'resultado', 'comentario'];
+    protected $fillable = ['nombre', 'tipo_prueba_id', 'fecha', 'resultado', 'comentario', 'paciente_id'];
 
-    protected $casts = ['fecha' => 'datetime:Y-m-d'];
+    // si solo fecha:
+    protected $casts = ['fecha' => 'date:Y-m-d'];
+    // si fecha+hora:
+    // protected $casts = ['fecha' => 'datetime:Y-m-d H:i'];
 
     public function tipo_prueba()
     {
