@@ -17,7 +17,8 @@ final class CasoClinico
         public readonly array $activeAliasesCanonical,
         public readonly array $organoScoreNihByNombre,
         public readonly Carbon $asOf
-    ) {}
+    ) {
+    }
 
     public function hasActiveSymptoms(): bool
     {
@@ -27,5 +28,17 @@ final class CasoClinico
     public function scoreForOrganoNombre(string $organoNombre): ?int
     {
         return $this->organoScoreNihByNombre[$organoNombre] ?? null;
+    }
+
+    public function toArray(): array
+    {
+        return [
+            'paciente_id' => $this->pacienteId,
+            'as_of' => $this->asOf->toIso8601String(),
+            'active_sintoma_ids' => $this->activeSintomaIds,
+            'active_aliases_canonical' => $this->activeAliasesCanonical,
+            'organo_score_nih_by_nombre' => $this->organoScoreNihByNombre,
+            'has_active_symptoms' => $this->hasActiveSymptoms(),
+        ];
     }
 }
