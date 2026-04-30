@@ -65,6 +65,13 @@
 
                     <div class="flex space-x-4 text-lg">
                         @if($diagnostico->regla_decision_id)
+                            <form method="POST" action="{{ route('diagnosticos.evidencia', $diagnostico) }}"
+                                onsubmit="openInformeWizard()">
+                                @csrf
+                                <button type="submit" class="hover:text-cyan-300" title="Generar informe clínico">
+                                    <i class="fas fa-brain"></i>
+                                </button>
+                            </form>
                             <form method="POST" action="{{ route('tratamientos.inferirDesdeDiagnostico', $diagnostico) }}">
                                 @csrf
                                 <button type="button" onclick="openTratamientoWizard()" class="hover:text-green-300"
@@ -208,6 +215,173 @@
                                         <strong>Descripción clínica:</strong> {{ $diagnostico->regla->descripcion_clinica }}
                                     </p>
                                 @endif
+                                {{-- EVIDENCIA CIENTÍFICA RAG --}}
+                                {{-- INFORME CLÍNICO DSS-RAG --}}
+                                @php
+                                    $clinicalReport = $ultimoInformeClinico?->clinical_report;
+                                    $traceability = $ultimoInformeClinico?->traceability ?? [];
+                                @endphp
+
+                                <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
+                                    <div class="flex items-start justify-between gap-4">
+                                        <div>
+                                            <h5 class="text-md font-semibold text-blue-800 mb-2">
+                                                Informe clínico DSS-RAG
+                                            </h5>
+
+                                            @if($ultimoInformeClinico)
+                                                <p class="text-xs text-gray-600">
+                                                    Estado:
+                                                    <span class="font-semibold">
+                                                        {{ $ultimoInformeClinico->status }}
+                                                    </span>
+                                                </p>
+                                            @endif
+                                        </div>
+
+                                        @if($ultimoInformeClinico && in_array($ultimoInformeClinico->status, ['pending', 'processing'], true))
+                                            <span class="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
+                                                Generando
+                                            </span>
+                                        @elseif($ultimoInformeClinico && $ultimoInformeClinico->status === 'completed')
+                                            <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
+                                                Completado
+                                            </span>
+                                        @elseif($ultimoInformeClinico && $ultimoInformeClinico->status === 'fallback')
+                                            <span class="text-xs px-2 py-1 rounded bg-orange-100 text-orange-800">
+                                                Fallback
+                                            </span>
+                                        @elseif($ultimoInformeClinico && $ultimoInformeClinico->status === 'failed')
+                                            <span class="text-xs px-2 py-1 rounded bg-red-100 text-red-800">
+                                                Fallido
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    @if($clinicalReport)
+                                        <div class="mt-4 space-y-4 text-sm text-gray-800">
+                                            <div>
+                                                <p class="font-semibold text-gray-700">Resumen clínico</p>
+                                                <p class="mt-1">
+                                                    {{ $clinicalReport['resumen_clinico'] ?? '-' }}
+                                                </p>
+                                            </div>
+
+                                            @if(!empty($clinicalReport['sospecha_diagnostica']))
+                                                <div>
+                                                    <p class="font-semibold text-gray-700">Sospecha diagnóstica</p>
+                                                    <p class="mt-1">
+                                                        {{ $clinicalReport['sospecha_diagnostica'] }}
+                                                    </p>
+                                                </div>
+                                            @endif
+
+                                            @if(!empty($clinicalReport['organos_afectados']))
+                                                <div>
+                                                    <p class="font-semibold text-gray-700">Órganos afectados</p>
+
+                                                    <div class="mt-2 space-y-2">
+                                                        @foreach($clinicalReport['organos_afectados'] as $organo)
+                                                            <div class="p-3 bg-white border border-blue-100 rounded">
+                                                                <p class="font-semibold">
+                                                                    {{ $organo['organo'] ?? 'Órgano no especificado' }}
+                                                                    @if(array_key_exists('score_nih', $organo))
+                                                                        <span class="text-xs text-gray-500">
+                                                                            — Score NIH: {{ $organo['score_nih'] ?? '-' }}
+                                                                        </span>
+                                                                    @endif
+                                                                </p>
+
+                                                                @if(!empty($organo['hallazgos']))
+                                                                    <ul class="list-disc ml-5 mt-1 text-xs text-gray-700">
+                                                                        @foreach($organo['hallazgos'] as $hallazgo)
+                                                                            <li>{{ $hallazgo }}</li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                @endif
+
+                                                                @if(!empty($organo['interpretacion']))
+                                                                    <p class="mt-2 text-xs text-gray-700">
+                                                                        {{ $organo['interpretacion'] }}
+                                                                    </p>
+                                                                @endif
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @endif
+
+                                            @if(!empty($clinicalReport['hallazgos_relevantes']))
+                                                <div>
+                                                    <p class="font-semibold text-gray-700">Hallazgos relevantes</p>
+                                                    <ul class="list-disc ml-5 mt-1">
+                                                        @foreach($clinicalReport['hallazgos_relevantes'] as $hallazgo)
+                                                            <li>{{ $hallazgo }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            @endif
+
+                                            @if(!empty($clinicalReport['evidencia_clinica_resumida']))
+                                                <div>
+                                                    <p class="font-semibold text-gray-700">Evidencia clínica resumida</p>
+                                                    <p class="mt-1">
+                                                        {{ $clinicalReport['evidencia_clinica_resumida'] }}
+                                                    </p>
+                                                </div>
+                                            @endif
+
+                                            @if(!empty($clinicalReport['limitaciones']))
+                                                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded">
+                                                    <p class="font-semibold text-yellow-800">Limitaciones</p>
+                                                    <ul class="list-disc ml-5 mt-1 text-yellow-800">
+                                                        @foreach($clinicalReport['limitaciones'] as $limitacion)
+                                                            <li>{{ $limitacion }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            @endif
+
+                                            @if(!empty($clinicalReport['recomendaciones_validacion_medica']))
+                                                <div>
+                                                    <p class="font-semibold text-gray-700">Validación médica recomendada</p>
+                                                    <ul class="list-disc ml-5 mt-1">
+                                                        @foreach($clinicalReport['recomendaciones_validacion_medica'] as $recomendacion)
+                                                            <li>{{ $recomendacion }}</li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            @endif
+
+                                            @if(!empty($clinicalReport['conclusion']))
+                                                <div>
+                                                    <p class="font-semibold text-gray-700">Conclusión</p>
+                                                    <p class="mt-1">
+                                                        {{ $clinicalReport['conclusion'] }}
+                                                    </p>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @elseif($ultimoInformeClinico && in_array($ultimoInformeClinico->status, ['pending', 'processing'], true))
+                                        <p class="text-sm text-gray-700 mt-4">
+                                            El informe clínico se está generando. Puede permanecer en esta pantalla.
+                                        </p>
+                                    @else
+                                        <p class="text-sm text-gray-700 mt-4">
+                                            Aún no se ha generado ningún informe clínico DSS-RAG para este diagnóstico.
+                                        </p>
+                                    @endif
+
+                                    @if(($traceability['llm_used'] ?? true) === false && $ultimoInformeClinico)
+                                        <div
+                                            class="mt-4 p-3 bg-orange-50 border border-orange-200 rounded text-xs text-orange-800">
+                                            El informe se ha generado en modo fallback o no ha usado LLM.
+                                            @if(!empty($traceability['fallback_reason']))
+                                                Motivo: {{ $traceability['fallback_reason'] }}
+                                            @endif
+                                        </div>
+                                    @endif
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -304,8 +478,8 @@
                 <div class="px-6 py-4 bg-gray-50 flex justify-end items-center gap-4">
 
                     <button type="button" onclick="closeTratamientoWizard()" class="inline-flex items-center gap-2 px-5 h-11 rounded-md border border-blue-300
-                       text-blue-700 bg-white hover:bg-blue-50
-                       transition font-medium">
+                                                                                   text-blue-700 bg-white hover:bg-blue-50
+                                                                                   transition font-medium">
                         <i class="fas fa-times text-sm"></i>
                         <span>Cancelar</span>
                     </button>
@@ -313,9 +487,10 @@
                     <form method="POST" action="{{ route('tratamientos.inferirDesdeDiagnostico', $diagnostico) }}"
                         class="m-0">
                         @csrf
-                        <button type="submit" class="inline-flex items-center gap-2 px-5 h-11 rounded-md
-                           bg-green-600 hover:bg-green-700
-                           text-white transition font-medium shadow-sm">
+                        <button type="submit"
+                            class="inline-flex items-center gap-2 px-5 h-11 rounded-md
+                                                                                       bg-green-600 hover:bg-green-700
+                                                                                       text-white transition font-medium shadow-sm">
                             <i class="fas fa-check text-sm"></i>
                             <span>Confirmar e iniciar</span>
                         </button>
@@ -339,5 +514,90 @@
             }
         </script>
     @endif
+    <div id="modal-informe-wizard"
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 overflow-hidden">
 
+            <div class="px-6 py-4 bg-blue-800 text-white">
+                <h3 class="text-lg font-semibold">Generando informe clínico</h3>
+                <p class="text-xs text-blue-100 mt-1">
+                    El sistema está procesando el caso clínico con apoyo DSS-RAG.
+                </p>
+            </div>
+
+            <div class="px-6 py-6 space-y-4 text-sm text-gray-800">
+                <div class="flex items-center gap-3">
+                    <div class="h-4 w-4 rounded-full border-2 border-blue-600 border-t-transparent animate-spin"></div>
+                    <p class="font-semibold">Proceso iniciado</p>
+                </div>
+
+                <div class="space-y-3 border-l-2 border-blue-100 ml-2 pl-5">
+                    <div>
+                        <p class="font-semibold text-gray-700">1. Analizando caso clínico</p>
+                        <p class="text-xs text-gray-500">
+                            Se está preparando la información estructurada del diagnóstico.
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="font-semibold text-gray-700">2. Consultando corpus científico</p>
+                        <p class="text-xs text-gray-500">
+                            El microservicio RAG recupera evidencia clínica relacionada.
+                        </p>
+                    </div>
+
+                    <div>
+                        <p class="font-semibold text-gray-700">3. Generando informe médico</p>
+                        <p class="text-xs text-gray-500">
+                            El informe se estructurará para facilitar la revisión médica.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-3 bg-blue-50 border border-blue-100 rounded text-xs text-blue-900">
+                    Puede tardar unos segundos porque el modelo de lenguaje se ejecuta como proceso asíncrono.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openInformeWizard() {
+            const modal = document.getElementById('modal-informe-wizard');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        @if(session('informe_clinico_id'))
+            document.addEventListener('DOMContentLoaded', function () {
+                const informeId = @json(session('informe_clinico_id'));
+                const statusUrl = @json(route('informes-clinicos.estado', session('informe_clinico_id')));
+
+                openInformeWizard();
+
+                const interval = setInterval(async function () {
+                    try {
+                        const response = await fetch(statusUrl, {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        });
+
+                        if (!response.ok) {
+                            return;
+                        }
+
+                        const data = await response.json();
+
+                        if (['completed', 'fallback', 'failed'].includes(data.status)) {
+                            clearInterval(interval);
+                            window.location.href = data.redirect_url;
+                        }
+                    } catch (error) {
+                        console.error('Error consultando estado del informe clínico:', error);
+                    }
+                }, 3000);
+            });
+        @endif
+    </script>
 </x-medico-layout>

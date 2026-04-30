@@ -179,6 +179,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/pacientes/{paciente}/trasplantes', [TrasplanteController::class, 'store'])
             ->name('pacientes.trasplantes.store');
 
+        Route::post(
+            '/diagnosticos/{diagnostico}/evidencia',
+            [DiagnosticoController::class, 'generarEvidencia']
+        )
+            ->name('diagnosticos.evidencia');
+
+        Route::get('/informes-clinicos/{informeClinico}/estado', [DiagnosticoController::class, 'estadoInformeClinico'])
+            ->name('informes-clinicos.estado');
+
     });
 
     /*

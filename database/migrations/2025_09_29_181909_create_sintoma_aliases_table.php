@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     public function up(): void
     {
         Schema::create('sintoma_aliases', function (Blueprint $table) {
@@ -13,8 +12,8 @@ return new class extends Migration
 
             // Relación con síntoma principal
             $table->foreignId('sintoma_id')
-                  ->constrained('sintomas')
-                  ->onDelete('cascade');
+                ->constrained('sintomas')
+                ->onDelete('cascade');
 
             // Alias semántico del síntoma (canónico o sinónimo)
             $table->string('alias');

@@ -16,6 +16,10 @@ use App\Models\Estado;
 use App\Models\Infeccion;
 use App\Models\ReglaDecision;
 use App\Services\InferenciaDiagnosticoService;
+use App\Services\Documental\EvidenciaClientService;
+use App\Jobs\GenerateClinicalReportJob;
+use App\Models\InformeClinico;
+
 
 class DiagnosticoController extends Controller
 {
@@ -156,6 +160,7 @@ class DiagnosticoController extends Controller
             'infeccion',
             'sintomas',
             'paciente',
+            'informesClinicos'
         ]);
 
         $prev = url()->previous();
@@ -179,6 +184,10 @@ class DiagnosticoController extends Controller
             ? $diagnostico->pruebas()->orderByDesc('fecha')->limit(5)->get()
             : collect();
 
+        $ultimoInformeClinico = $diagnostico->informesClinicos()
+            ->latest()
+            ->first();
+
         if (!str_contains($prev, route('diagnosticos.show', $diagnostico->id))) {
             session(['diagnosticos_back_url' => $prev]);
         }
@@ -190,9 +199,9 @@ class DiagnosticoController extends Controller
             'diasDesdeTrasplante' => $diasDesdeTrasplante,
             'trasplantes' => $trasplantes,   // NUEVO
             'pruebas' => $pruebas,           // NUEVO
+            'ultimoInformeClinico' => $ultimoInformeClinico,
         ]);
     }
-
 
     public function edit(Diagnostico $diagnostico)
     {
@@ -419,50 +428,95 @@ class DiagnosticoController extends Controller
         ]);
     }
 
-    /*public function inferirSelector(Request $request)
+    // Generar informe clínico DSS-RAG
+    public function generarEvidencia(Diagnostico $diagnostico, EvidenciaClientService $client)
     {
-        $q = trim((string) $request->get('q', ''));
+        $this->authorize('view', $diagnostico);
 
-        $user = $request->user();
+        $diagnostico->load([
+            'sintomas.aliases',
+            'sintomas.organo',
+            'paciente.organos',
+            'regla',
+        ]);
 
-        $query = Paciente::query()->with('usuarioAcceso');
+        $paciente = $diagnostico->paciente;
 
-        if ($user->es_medico) {
-            $medicoId = $user->medico?->id;
-            if (!$medicoId) {
-                abort(403);
-            }
-
-            $query->where('medico_id', $medicoId);
-        } elseif ($user->es_paciente) {
-            $pacienteId = $user->paciente?->id;
-            if (!$pacienteId) {
-                abort(403);
-            }
-
-            $query->where('id', $pacienteId);
+        if (!$paciente) {
+            return back()->with('error', 'Diagnóstico sin paciente.');
         }
 
-        $query->when($q !== '', function ($builder) use ($q) {
-            $builder->where(function ($sub) use ($q) {
-                if (ctype_digit($q)) {
-                    $sub->orWhere('id', (int) $q);
-                }
+        $aliases = $diagnostico->sintomas
+            ->flatMap(fn($sintoma) => $sintoma->aliases->pluck('alias'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->toArray();
 
-                $sub->orWhere('nuhsa', 'like', "%{$q}%");
+        $organos = $paciente->organos
+            ->filter(fn($organo) => $organo->pivot?->score_nih !== null)
+            ->mapWithKeys(fn($organo) => [
+                $organo->nombre => (int) $organo->pivot->score_nih,
+            ])
+            ->toArray();
 
-                $sub->orWhereHas('usuarioAcceso', function ($u) use ($q) {
-                    $u->where('name', 'like', "%{$q}%")
-                        ->orWhere('email', 'like', "%{$q}%");
-                });
-            });
-        });
+        $payload = [
+            'caso_clinico' => [
+                'paciente_id' => $paciente->id,
+                'active_aliases_canonical' => $aliases,
+                'organo_score_nih_by_nombre' => $organos,
+            ],
+            'resultado_inferencia' => [
+                'status' => 'match',
+                'diagnostico_id' => $diagnostico->id,
+                'tipo_enfermedad' => $diagnostico->tipo_enfermedad,
+                'grado_eich' => $diagnostico->grado_eich,
+                'estado_injerto' => $diagnostico->estado_injerto,
+                'regla_aplicada' => $diagnostico->regla ? [
+                    'id' => $diagnostico->regla->id,
+                    'nombre' => $diagnostico->regla->nombre,
+                    'prioridad' => $diagnostico->regla->prioridad,
+                    'recomendacion_clinica' => $diagnostico->regla->recomendacion_clinica,
+                ] : null,
+            ],
+        ];
 
-        $pacientes = $query
-            ->orderByDesc('id')
-            ->paginate(10)
-            ->appends($request->query());
+        /*try {
+            $response = $client->generateClinicalReport($payload);
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Error generando informe clínico: ' . $e->getMessage());
+        }*/
 
-        return view('diagnosticos.inferir_selector', compact('pacientes', 'q'));
-    }*/
+        $informe = InformeClinico::create([
+            'diagnostico_id' => $diagnostico->id,
+            'paciente_id' => $paciente->id,
+            'status' => 'pending',
+            'clinical_report' => null,
+            'traceability' => null,
+            'llm_used' => false,
+            'generated_at' => null,
+        ]);
+
+        GenerateClinicalReportJob::dispatch($informe->id, $payload);
+
+        return back()->with([
+            'success' => 'El informe clínico se está generando.',
+            'informe_clinico_id' => $informe->id,
+        ]);
+    }
+
+    public function estadoInformeClinico(InformeClinico $informeClinico)
+    {
+        $this->authorize('view', $informeClinico->diagnostico);
+
+        return response()->json([
+            'id' => $informeClinico->id,
+            'status' => $informeClinico->status,
+            'llm_used' => $informeClinico->llm_used,
+            'fallback_reason' => $informeClinico->fallback_reason,
+            'error_message' => $informeClinico->error_message,
+            'finished_at' => optional($informeClinico->finished_at)->toISOString(),
+            'redirect_url' => route('diagnosticos.show', $informeClinico->diagnostico_id),
+        ]);
+    }
 }

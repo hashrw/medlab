@@ -98,6 +98,10 @@ class Paciente extends Model
         return $this->hasMany(Cita::class);
     }
 
+    public function informesClinicos()
+    {
+        return $this->hasMany(InformeClinico::class);
+    }
 
     /*--------------------------------------------------------------
      | ACCESOR: Edad

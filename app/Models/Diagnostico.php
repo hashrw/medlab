@@ -74,4 +74,9 @@ class Diagnostico extends Model
         return $this->hasMany(\App\Models\Tratamiento::class);
     }
 
+    public function informesClinicos()
+    {
+        return $this->hasMany(InformeClinico::class);
+    }
+
 }
