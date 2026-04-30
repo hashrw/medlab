@@ -220,89 +220,119 @@
                                 @php
                                     $clinicalReport = $ultimoInformeClinico?->clinical_report;
                                     $traceability = $ultimoInformeClinico?->traceability ?? [];
+                                    $diagnosticoDss = $clinicalReport['diagnostico_dss'] ?? [];
+                                    $evidenciaCientifica = $clinicalReport['evidencia_cientifica'] ?? [];
                                 @endphp
 
-                                <div class="mt-6 p-4 bg-blue-50 border border-blue-200 rounded">
+                                <div class="mt-6 p-5 bg-blue-50 border border-blue-200 rounded">
                                     <div class="flex items-start justify-between gap-4">
                                         <div>
-                                            <h5 class="text-md font-semibold text-blue-800 mb-2">
+                                            <h5 class="text-md font-semibold text-blue-800">
                                                 Informe clínico DSS-RAG
                                             </h5>
 
+                                            <p class="text-xs text-gray-600 mt-1">
+                                                Informe generado para apoyar la validación médica del diagnóstico.
+                                            </p>
+
                                             @if($ultimoInformeClinico)
-                                                <p class="text-xs text-gray-600">
+                                                <p class="text-xs text-gray-600 mt-1">
                                                     Estado:
-                                                    <span class="font-semibold">
-                                                        {{ $ultimoInformeClinico->status }}
-                                                    </span>
+                                                    <span class="font-semibold">{{ $ultimoInformeClinico->status }}</span>
                                                 </p>
                                             @endif
                                         </div>
 
                                         @if($ultimoInformeClinico && in_array($ultimoInformeClinico->status, ['pending', 'processing'], true))
-                                            <span class="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">
-                                                Generando
-                                            </span>
+                                            <span
+                                                class="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">Generando</span>
                                         @elseif($ultimoInformeClinico && $ultimoInformeClinico->status === 'completed')
-                                            <span class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">
-                                                Completado
-                                            </span>
+                                            <span
+                                                class="text-xs px-2 py-1 rounded bg-green-100 text-green-800">Completado</span>
                                         @elseif($ultimoInformeClinico && $ultimoInformeClinico->status === 'fallback')
-                                            <span class="text-xs px-2 py-1 rounded bg-orange-100 text-orange-800">
-                                                Fallback
-                                            </span>
+                                            <span
+                                                class="text-xs px-2 py-1 rounded bg-orange-100 text-orange-800">Fallback</span>
                                         @elseif($ultimoInformeClinico && $ultimoInformeClinico->status === 'failed')
-                                            <span class="text-xs px-2 py-1 rounded bg-red-100 text-red-800">
-                                                Fallido
-                                            </span>
+                                            <span class="text-xs px-2 py-1 rounded bg-red-100 text-red-800">Fallido</span>
                                         @endif
                                     </div>
 
                                     @if($clinicalReport)
-                                        <div class="mt-4 space-y-4 text-sm text-gray-800">
-                                            <div>
-                                                <p class="font-semibold text-gray-700">Resumen clínico</p>
-                                                <p class="mt-1">
-                                                    {{ $clinicalReport['resumen_clinico'] ?? '-' }}
-                                                </p>
-                                            </div>
+                                        <div class="mt-5 space-y-5 text-sm text-gray-800">
 
-                                            @if(!empty($clinicalReport['sospecha_diagnostica']))
-                                                <div>
-                                                    <p class="font-semibold text-gray-700">Sospecha diagnóstica</p>
-                                                    <p class="mt-1">
-                                                        {{ $clinicalReport['sospecha_diagnostica'] }}
-                                                    </p>
+                                            @if(!empty($clinicalReport['resumen_ejecutivo']))
+                                                <div class="p-4 bg-white border border-blue-100 rounded">
+                                                    <p class="font-semibold text-blue-900 mb-1">Resumen ejecutivo</p>
+                                                    <p>{{ $clinicalReport['resumen_ejecutivo'] }}</p>
                                                 </div>
                                             @endif
 
-                                            @if(!empty($clinicalReport['organos_afectados']))
+                                            @if(!empty($diagnosticoDss))
+                                                <div class="p-4 bg-white border border-blue-100 rounded">
+                                                    <p class="font-semibold text-blue-900 mb-2">Diagnóstico inferido por DSS</p>
+
+                                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                                                        <p><strong>Tipo:</strong> {{ $diagnosticoDss['tipo_enfermedad'] ?? '-' }}
+                                                        </p>
+                                                        <p><strong>Grado:</strong> {{ $diagnosticoDss['grado_eich'] ?? '-' }}</p>
+                                                        <p><strong>Estado injerto:</strong>
+                                                            {{ $diagnosticoDss['estado_injerto'] ?? '-' }}</p>
+                                                        <p><strong>Regla:</strong> {{ $diagnosticoDss['regla_aplicada'] ?? '-' }}
+                                                        </p>
+                                                    </div>
+
+                                                    @if(!empty($diagnosticoDss['interpretacion']))
+                                                        <p class="mt-3 text-sm">
+                                                            {{ $diagnosticoDss['interpretacion'] }}
+                                                        </p>
+                                                    @endif
+                                                </div>
+                                            @endif
+
+                                            @if(!empty($clinicalReport['justificacion_clinica']))
                                                 <div>
-                                                    <p class="font-semibold text-gray-700">Órganos afectados</p>
+                                                    <p class="font-semibold text-blue-900 mb-2">Justificación clínica por órganos
+                                                    </p>
 
-                                                    <div class="mt-2 space-y-2">
-                                                        @foreach($clinicalReport['organos_afectados'] as $organo)
-                                                            <div class="p-3 bg-white border border-blue-100 rounded">
-                                                                <p class="font-semibold">
-                                                                    {{ $organo['organo'] ?? 'Órgano no especificado' }}
-                                                                    @if(array_key_exists('score_nih', $organo))
+                                                    <div class="space-y-3">
+                                                        @foreach($clinicalReport['justificacion_clinica'] as $item)
+                                                            <div class="p-4 bg-white border border-blue-100 rounded">
+                                                                <div class="flex items-start justify-between gap-3">
+                                                                    <p class="font-semibold">
+                                                                        {{ $item['organo'] ?? 'Órgano no especificado' }}
                                                                         <span class="text-xs text-gray-500">
-                                                                            — Score NIH: {{ $organo['score_nih'] ?? '-' }}
+                                                                            — Score NIH: {{ $item['score_nih'] ?? '-' }}
                                                                         </span>
-                                                                    @endif
-                                                                </p>
+                                                                    </p>
 
-                                                                @if(!empty($organo['hallazgos']))
-                                                                    <ul class="list-disc ml-5 mt-1 text-xs text-gray-700">
-                                                                        @foreach($organo['hallazgos'] as $hallazgo)
+                                                                    @php $alerta = strtolower($item['nivel_alerta'] ?? ''); @endphp
+
+                                                                    @if($alerta === 'alto')
+                                                                        <span
+                                                                            class="text-xs px-2 py-1 rounded bg-red-100 text-red-800">Alerta
+                                                                            alta</span>
+                                                                    @elseif($alerta === 'moderado')
+                                                                        <span
+                                                                            class="text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800">Alerta
+                                                                            moderada</span>
+                                                                    @else
+                                                                        <span
+                                                                            class="text-xs px-2 py-1 rounded bg-gray-100 text-gray-700">Alerta
+                                                                            baja</span>
+                                                                    @endif
+                                                                </div>
+
+                                                                @if(!empty($item['hallazgos_del_caso']))
+                                                                    <ul class="list-disc ml-5 mt-2 text-xs text-gray-700">
+                                                                        @foreach($item['hallazgos_del_caso'] as $hallazgo)
                                                                             <li>{{ $hallazgo }}</li>
                                                                         @endforeach
                                                                     </ul>
                                                                 @endif
 
-                                                                @if(!empty($organo['interpretacion']))
-                                                                    <p class="mt-2 text-xs text-gray-700">
-                                                                        {{ $organo['interpretacion'] }}
+                                                                @if(!empty($item['relacion_con_eich']))
+                                                                    <p class="mt-3 text-xs text-gray-700">
+                                                                        {{ $item['relacion_con_eich'] }}
                                                                     </p>
                                                                 @endif
                                                             </div>
@@ -311,28 +341,47 @@
                                                 </div>
                                             @endif
 
-                                            @if(!empty($clinicalReport['hallazgos_relevantes']))
-                                                <div>
-                                                    <p class="font-semibold text-gray-700">Hallazgos relevantes</p>
-                                                    <ul class="list-disc ml-5 mt-1">
-                                                        @foreach($clinicalReport['hallazgos_relevantes'] as $hallazgo)
-                                                            <li>{{ $hallazgo }}</li>
+                                            @if(!empty($evidenciaCientifica))
+                                                <div class="p-4 bg-white border border-blue-100 rounded">
+                                                    <p class="font-semibold text-blue-900 mb-2">Evidencia científica recuperada</p>
+
+                                                    @if(!empty($evidenciaCientifica['resumen']))
+                                                        <p>{{ $evidenciaCientifica['resumen'] }}</p>
+                                                    @endif
+
+                                                    @if(!empty($evidenciaCientifica['coherencia_con_el_caso']))
+                                                        <p class="mt-2 text-xs text-gray-700">
+                                                            <strong>Coherencia con el caso:</strong>
+                                                            {{ $evidenciaCientifica['coherencia_con_el_caso'] }}
+                                                        </p>
+                                                    @endif
+
+                                                    @if(!empty($evidenciaCientifica['incertidumbres']))
+                                                        <div class="mt-3">
+                                                            <p class="text-xs font-semibold text-gray-700">Incertidumbres:</p>
+                                                            <ul class="list-disc ml-5 mt-1 text-xs text-gray-700">
+                                                                @foreach($evidenciaCientifica['incertidumbres'] as $incertidumbre)
+                                                                    <li>{{ $incertidumbre }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            @endif
+
+                                            @if(!empty($clinicalReport['alertas_clinicas']))
+                                                <div class="p-4 bg-red-50 border border-red-200 rounded">
+                                                    <p class="font-semibold text-red-800">Alertas clínicas</p>
+                                                    <ul class="list-disc ml-5 mt-1 text-red-800">
+                                                        @foreach($clinicalReport['alertas_clinicas'] as $alerta)
+                                                            <li>{{ $alerta }}</li>
                                                         @endforeach
                                                     </ul>
                                                 </div>
                                             @endif
 
-                                            @if(!empty($clinicalReport['evidencia_clinica_resumida']))
-                                                <div>
-                                                    <p class="font-semibold text-gray-700">Evidencia clínica resumida</p>
-                                                    <p class="mt-1">
-                                                        {{ $clinicalReport['evidencia_clinica_resumida'] }}
-                                                    </p>
-                                                </div>
-                                            @endif
-
                                             @if(!empty($clinicalReport['limitaciones']))
-                                                <div class="p-3 bg-yellow-50 border border-yellow-200 rounded">
+                                                <div class="p-4 bg-yellow-50 border border-yellow-200 rounded">
                                                     <p class="font-semibold text-yellow-800">Limitaciones</p>
                                                     <ul class="list-disc ml-5 mt-1 text-yellow-800">
                                                         @foreach($clinicalReport['limitaciones'] as $limitacion)
@@ -342,11 +391,11 @@
                                                 </div>
                                             @endif
 
-                                            @if(!empty($clinicalReport['recomendaciones_validacion_medica']))
-                                                <div>
-                                                    <p class="font-semibold text-gray-700">Validación médica recomendada</p>
+                                            @if(!empty($clinicalReport['validacion_medica_recomendada']))
+                                                <div class="p-4 bg-white border border-blue-100 rounded">
+                                                    <p class="font-semibold text-blue-900">Validación médica recomendada</p>
                                                     <ul class="list-disc ml-5 mt-1">
-                                                        @foreach($clinicalReport['recomendaciones_validacion_medica'] as $recomendacion)
+                                                        @foreach($clinicalReport['validacion_medica_recomendada'] as $recomendacion)
                                                             <li>{{ $recomendacion }}</li>
                                                         @endforeach
                                                     </ul>
@@ -354,11 +403,9 @@
                                             @endif
 
                                             @if(!empty($clinicalReport['conclusion']))
-                                                <div>
-                                                    <p class="font-semibold text-gray-700">Conclusión</p>
-                                                    <p class="mt-1">
-                                                        {{ $clinicalReport['conclusion'] }}
-                                                    </p>
+                                                <div class="p-4 bg-blue-100 border border-blue-200 rounded">
+                                                    <p class="font-semibold text-blue-900">Conclusión orientada a decisión</p>
+                                                    <p class="mt-1">{{ $clinicalReport['conclusion'] }}</p>
                                                 </div>
                                             @endif
                                         </div>
@@ -477,9 +524,10 @@
 
                 <div class="px-6 py-4 bg-gray-50 flex justify-end items-center gap-4">
 
-                    <button type="button" onclick="closeTratamientoWizard()" class="inline-flex items-center gap-2 px-5 h-11 rounded-md border border-blue-300
-                                                                                   text-blue-700 bg-white hover:bg-blue-50
-                                                                                   transition font-medium">
+                    <button type="button" onclick="closeTratamientoWizard()"
+                        class="inline-flex items-center gap-2 px-5 h-11 rounded-md border border-blue-300
+                                                                                                                                           text-blue-700 bg-white hover:bg-blue-50
+                                                                                                                                           transition font-medium">
                         <i class="fas fa-times text-sm"></i>
                         <span>Cancelar</span>
                     </button>
@@ -489,8 +537,8 @@
                         @csrf
                         <button type="submit"
                             class="inline-flex items-center gap-2 px-5 h-11 rounded-md
-                                                                                       bg-green-600 hover:bg-green-700
-                                                                                       text-white transition font-medium shadow-sm">
+                                                                                                                                               bg-green-600 hover:bg-green-700
+                                                                                                                                               text-white transition font-medium shadow-sm">
                             <i class="fas fa-check text-sm"></i>
                             <span>Confirmar e iniciar</span>
                         </button>
