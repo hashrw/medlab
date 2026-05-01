@@ -20,6 +20,7 @@ use App\Http\Controllers\OrganoController;
 use App\Http\Controllers\EstadisticaController;
 use App\Http\Controllers\PruebaController;
 use App\Http\Controllers\ReglaController;
+use App\Http\Controllers\InformeClinicoController;
 
 use App\Http\Controllers\Paciente\DiagnosticoController as PacienteDiagnosticoController;
 use App\Http\Controllers\Paciente\TratamientoController as PacienteTratamientoController;
@@ -185,10 +186,41 @@ Route::middleware(['auth', 'verified'])->group(function () {
         )
             ->name('diagnosticos.evidencia');
 
-        Route::get('/informes-clinicos/{informeClinico}/estado', [DiagnosticoController::class, 'estadoInformeClinico'])
-            ->name('informes-clinicos.estado');
+        Route::get(
+            '/informes-clinicos/{informeClinico}/estado',
+            [InformeClinicoController::class, 'estado']
+        )->name('informes-clinicos.estado');
 
     });
+
+    Route::get('/informes-clinicos/notificaciones', function () {
+        $informes = \App\Models\InformeClinico::whereIn('status', ['completed', 'fallback'])
+            ->whereNull('notified_at')
+            ->latest()
+            ->take(3)
+            ->get();
+
+        $items = $informes->map(function ($inf) {
+            return [
+                'id' => $inf->id,
+                'diagnostico_id' => $inf->diagnostico_id,
+                'status' => $inf->status,
+                'message' => $inf->status === 'completed'
+                    ? 'Informe clínico generado'
+                    : 'Informe clínico generado parcialmente',
+                'url' => route('diagnosticos.show', $inf->diagnostico_id),
+            ];
+        });
+
+        if ($informes->isNotEmpty()) {
+            \App\Models\InformeClinico::whereIn('id', $informes->pluck('id'))
+                ->update(['notified_at' => now()]);
+        }
+
+        return response()->json([
+            'items' => $items,
+        ]);
+    })->name('informes-clinicos.notificaciones');
 
     /*
     |--------------------------------------------------------------------------

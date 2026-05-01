@@ -9,13 +9,14 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class GenerateClinicalReportJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public int $timeout = 180;
+    public int $timeout = 300;
     public int $tries = 1;
 
     public function __construct(
@@ -34,8 +35,19 @@ class GenerateClinicalReportJob implements ShouldQueue
             'error_message' => null,
         ]);
 
+        Log::info('GenerateClinicalReportJob START', [
+            'informe_clinico_id' => $this->informeClinicoId,
+            'payload' => $this->payload,
+        ]);
+
         try {
             $response = $client->generateClinicalReport($this->payload);
+            Log::info('GenerateClinicalReportJob RESPONSE', [
+                'informe_clinico_id' => $this->informeClinicoId,
+                'status' => $response['status'] ?? null,
+                'llm_used' => $response['traceability']['llm_used'] ?? null,
+                'fallback_reason' => $response['traceability']['fallback_reason'] ?? null,
+            ]);
 
             $traceability = $response['traceability'] ?? [];
             $llmUsed = (bool) ($traceability['llm_used'] ?? false);
@@ -54,10 +66,13 @@ class GenerateClinicalReportJob implements ShouldQueue
             $informe->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
-                'fallback_reason' => $e->getMessage(),
+                #'fallback_reason' => $e->getMessage(),
                 'finished_at' => now(),
             ]);
-
+            Log::error('GenerateClinicalReportJob ERROR', [
+                'informe_clinico_id' => $this->informeClinicoId,
+                'error' => $e->getMessage(),
+            ]);
             throw $e;
         }
     }
@@ -69,6 +84,11 @@ class GenerateClinicalReportJob implements ShouldQueue
             'error_message' => $exception->getMessage(),
             'fallback_reason' => $exception->getMessage(),
             'finished_at' => now(),
+        ]);
+
+        Log::critical('GenerateClinicalReportJob FAILED', [
+            'informe_clinico_id' => $this->informeClinicoId,
+            'error' => $exception->getMessage(),
         ]);
     }
 }

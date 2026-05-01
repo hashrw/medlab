@@ -1,4 +1,3 @@
-@vite(['resources/css/app.css', 'resources/js/app.js'])
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 
@@ -17,7 +16,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <!-- Estilos propios -->
-    @vite(['resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="{{ asset('css/medico.css') }}">
     @stack('styles')
 
@@ -33,7 +32,7 @@
         <!-- Main layout content -->
         <div class="flex-grow flex justify-center">
             {{-- 🔽 CAMBIO: antes era "w-full max-w-[1440px] px-6 py-4 flex"
-                 ahora centramos y dejamos márgenes ajustables con mx-auto y max-w --}}
+            ahora centramos y dejamos márgenes ajustables con mx-auto y max-w --}}
             <div class="w-full max-w-[1200px] flex mx-auto px-6 lg:px-12 py-6">
                 <!-- Sidebar -->
                 <aside class="w-[240px] shrink-0">
@@ -62,6 +61,60 @@
             </div>
         </div>
     </div>
+    <div id="clinical-report-toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+    <script>
+        function showClinicalToast(message, url) {
+            const container = document.getElementById('clinical-report-toast-container');
+
+            if (!container) return;
+
+            const toast = document.createElement('div');
+
+            toast.className = "bg-white border border-blue-200 shadow-lg rounded px-4 py-3 text-sm text-gray-800 flex items-center gap-3";
+
+            toast.innerHTML = `
+            <div class="flex-1">
+                <p class="font-semibold text-blue-900">${message}</p>
+                <p class="text-xs text-gray-500">Disponible para revisión</p>
+            </div>
+            <a href="${url}"
+               class="text-blue-600 hover:underline text-xs">
+               Abrir
+            </a>
+        `;
+
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.remove();
+            }, 8000);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+
+            setInterval(async function () {
+                try {
+                    const response = await fetch("{{ route('informes-clinicos.notificaciones') }}");
+
+                    if (!response.ok) return;
+
+                    const data = await response.json();
+
+                    if (!data.items || !data.items.length) return;
+
+                    data.items.forEach(item => {
+                        showClinicalToast(item.message, item.url);
+                    });
+
+                } catch (e) {
+                    console.error('Error notificaciones informe clínico', e);
+                }
+
+            }, 10000); // cada 60s
+
+        });
+    </script>
+    @stack('scripts')
 </body>
 
 </html>

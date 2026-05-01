@@ -28,7 +28,7 @@
                 <ul class="space-y-1 mb-6">
                     <li>
                         <a href="{{ route('dashboard.medico') }}"
-                           class="sidebar-link flex items-center px-3 py-2 rounded-md
+                            class="sidebar-link flex items-center px-3 py-2 rounded-md
                            {{ $enInicio ? 'bg-blue-100 text-blue-600 font-semibold' : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50' }}">
                             <i class="fas fa-home w-5 mr-2"></i>
                             <span>Inicio clínico</span>
@@ -63,36 +63,28 @@
                     </ul>
                 @endif
 
-                {{-- DATOS CLÍNICOS Y SEGUIMIENTO (MÓDULOS FUTUROS) --}}
+                {{-- DATOS CLÍNICOS Y SEGUIMIENTO --}}
                 <h3 class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-3">
                     Datos clínicos y seguimiento
                 </h3>
 
                 <ul class="space-y-1">
                     <li>
-                        <a href="#"
-                           class="flex items-center px-3 py-2 rounded-md text-gray-400 cursor-not-allowed">
+                        <a href="{{ route('estadisticas.index') }}"
+                            class="flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
                             <i class="fas fa-chart-line w-5 mr-2"></i>
-                            <span>Módulo 1 (pendiente)</span>
-                        </a>
-                    </li>
-
-                    <li>
-                        <a href="#"
-                           class="flex items-center px-3 py-2 rounded-md text-gray-400 cursor-not-allowed">
-                            <i class="fas fa-database w-5 mr-2"></i>
-                            <span>Módulo 2 (pendiente)</span>
+                            <span>Estadísticas clínicas</span>
                         </a>
                     </li>
                 </ul>
             </div>
         </div>
 
-        <div class="px-4 py-3 border-t border-gray-200">
+        {{-- <div class="px-4 py-3 border-t border-gray-200">
             <div class="text-sm text-gray-600 flex items-center">
                 <i class="fas fa-user-md mr-2 text-blue-500"></i>
                 <span>{{ Auth::user()->name ?? 'Médico' }}</span>
             </div>
-        </div>
+        </div>--}}
     </nav>
 </aside>
