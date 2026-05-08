@@ -5,28 +5,6 @@
         </h3>
     </x-slot>
 
-    {{-- KPIs informativos --}}
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4">
-        <div class="bg-white shadow-md rounded-lg p-4 border border-gray-200">
-            <div class="text-sm text-gray-500">Pacientes</div>
-            <div class="text-2xl font-semibold text-gray-800">{{ $stats['pacientes'] ?? 0 }}</div>
-        </div>
-
-        <div class="bg-white shadow-md rounded-lg p-4 border border-gray-200">
-            <div class="text-sm text-gray-500">Diagnósticos</div>
-            <div class="text-2xl font-semibold text-gray-800">{{ $stats['diagnosticos'] ?? 0 }}</div>
-        </div>
-
-        <div class="bg-white shadow-md rounded-lg p-4 border border-gray-200">
-            <div class="text-sm text-gray-500">Tratamientos</div>
-            <div class="text-2xl font-semibold text-gray-800">{{ $stats['tratamientos'] ?? 0 }}</div>
-        </div>
-
-        <div class="bg-white shadow-md rounded-lg p-4 border border-gray-200">
-            <div class="text-sm text-gray-500">Pruebas clínicas</div>
-            <div class="text-2xl font-semibold text-gray-800">{{ $stats['pruebas'] ?? 0 }}</div>
-        </div>
-    </div>
 
     {{-- Acciones rápidas (workflow) --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
@@ -36,7 +14,7 @@
                 <div>
                     <h3 class="text-lg font-semibold text-gray-800">Buscar paciente</h3>
                     <p class="text-sm text-gray-600">
-                        Entrar en ficha clínica para inferir, revisar y registrar evolución.
+                        Acceda para consultar los datos de pacientes EICH.
                     </p>
                 </div>
                 <i class="fas fa-search text-blue-600 text-2xl"></i>

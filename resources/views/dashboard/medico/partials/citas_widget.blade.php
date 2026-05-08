@@ -3,7 +3,7 @@
         <div>
             <h3 class="text-lg font-semibold text-gray-800">Solicitudes de cita pendientes</h3>
             <p class="text-sm text-gray-600">
-                Revisa y responde solicitudes. Al aceptar, asignas fecha/hora.
+                Revisa y responde solicitudes de pacientes.
             </p>
         </div>
         <div class="text-right">

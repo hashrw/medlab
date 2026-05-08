@@ -43,52 +43,6 @@ class HomeController extends Controller
             ->where('medico_id', $medicoId)
             ->pluck('id');
 
-        // KPIs filtrados
-        $stats = [
-            'pacientes' => $pacienteIds->count(),
-
-            // Diagnósticos: si Diagnostico tiene paciente_id
-            'diagnosticos' => Diagnostico::query()
-                ->whereIn('paciente_id', $pacienteIds)
-                ->count(),
-
-            // Tratamientos: si Tratamiento tiene paciente_id
-            'tratamientos' => Tratamiento::query()
-                ->whereIn('paciente_id', $pacienteIds)
-                ->count(),
-
-            // Pruebas: si Prueba tiene paciente_id
-            'pruebas' => Prueba::query()
-                ->whereIn('paciente_id', $pacienteIds)
-                ->count(),
-        ];
-
-        // Últimos filtrados
-        $ultimos = [
-            'pacientes' => Paciente::query()
-                ->whereIn('id', $pacienteIds)
-                ->latest('id')
-                ->limit(5)
-                ->get(),
-
-            'diagnosticos' => Diagnostico::query()
-                ->whereIn('paciente_id', $pacienteIds)
-                ->latest('id')
-                ->limit(5)
-                ->get(),
-
-            'tratamientos' => Tratamiento::query()
-                ->whereIn('paciente_id', $pacienteIds)
-                ->latest('id')
-                ->limit(5)
-                ->get(),
-
-            'pruebas' => Prueba::query()
-                ->whereIn('paciente_id', $pacienteIds)
-                ->latest('id')
-                ->limit(5)
-                ->get(),
-        ];
 
         // Citas (igual que lo tenías)
         $citasPendientesCount = Cita::query()
@@ -105,8 +59,6 @@ class HomeController extends Controller
             ->get();
 
         return view('dashboard.medico', compact(
-            'stats',
-            'ultimos',
             'citasPendientesCount',
             'citasPendientesTop'
         ));
