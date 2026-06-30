@@ -4,9 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Paciente;
-use App\Models\Diagnostico;
-use App\Models\Tratamiento;
-use App\Models\Prueba;
 use App\Models\Cita;
 use Illuminate\Support\Facades\Auth;
 
@@ -19,7 +16,7 @@ class HomeController extends Controller
         return match ($user->tipo_usuario_id) {
             1 => redirect()->route('dashboard.medico'),
             2 => redirect()->route('dashboard.paciente'),
-            3 => redirect()->route('dashboard.admin'),
+            3 => redirect()->route('admin.usuarios.create'),
             default => abort(403),
         };
     }
@@ -36,15 +33,15 @@ class HomeController extends Controller
         $medicoId = $user->medico->id;
 
         /**
-         * Fuente de verdad: pacientes del médico.
-         * OPCIÓN A (más común): columna medico_id en pacientes
+         * pacientes del médico.
+         * 
          */
         $pacienteIds = Paciente::query()
             ->where('medico_id', $medicoId)
             ->pluck('id');
 
 
-        // Citas (igual que lo tenías)
+        // Citas 
         $citasPendientesCount = Cita::query()
             ->where('medico_id', $medicoId)
             ->where('estado', 'pendiente')
@@ -68,7 +65,7 @@ class HomeController extends Controller
     public function paciente(Request $request)
     {
         $paciente = Auth::user()->paciente;
-
+        //dd(Auth::user()->id, Auth::user()->tipo_usuario_id, Auth::user()->paciente_id);
         $ultimasCitas = $paciente->citas()
             ->orderByDesc('created_at')
             ->limit(5)

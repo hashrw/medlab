@@ -47,7 +47,7 @@
 @endphp
 
 <div id="clinical-report-panel" data-status="{{ $estadoInforme }}"
-    data-status-url="{{ $ultimoInformeClinico ? route('informes-clinicos.estado', $ultimoInformeClinico) : '' }}"
+    data-status-url="{{ $ultimoInformeClinico ? route('informes.estado', $ultimoInformeClinico) : '' }}"
     class="mt-6 bg-blue-50 border border-blue-200 rounded overflow-hidden">
 
     <div class="p-5 bg-white border-b border-blue-100">
@@ -136,8 +136,21 @@
 
             @if($estadoInforme === 'fallback')
                 <div class="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-900">
-                    El informe se ha generado con información clínica parcial. Revisar limitaciones antes de utilizarlo como
-                    apoyo para decisiones posteriores.
+                    <p>
+                        El informe se ha generado con información clínica parcial. Requiere revisión médica antes de utilizarlo
+                        como
+                        apoyo para decisiones posteriores.
+                    </p>
+
+                    <form method="POST" action="{{ route('informes.validar', $ultimoInformeClinico) }}"
+                        onsubmit="return confirm('¿Validar este informe ?')" class="mt-3">
+                        @csrf
+
+                        <button type="submit"
+                            class="px-3 py-2 text-xs font-medium bg-green-600 hover:bg-green-700 text-white rounded">
+                            Validar informe 
+                        </button>
+                    </form>
                 </div>
             @endif
 

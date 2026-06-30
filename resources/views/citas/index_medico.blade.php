@@ -7,7 +7,7 @@
 
             <a href="{{ route('citas.create') }}"
                class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
-                Crear cita
+                
             </a>
         </div>
 

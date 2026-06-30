@@ -10,7 +10,7 @@ class ReglaDecisionSeeder extends Seeder
 {
     public function run(): void
     {
-        // Nombres exactos de órganos (DEBEN coincidir con organos.nombre)
+        // Nombres de órganos
         $ORG_GI = 'Tracto gastrointestinal';
         $ORG_HIG = 'Hígado';
         $ORG_PIEL = 'Piel';

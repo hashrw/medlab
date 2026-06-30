@@ -15,7 +15,7 @@ class StorePacienteSintomaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sintomas' => ['required', 'array', 'min:1'],
+            'sintomas' => ['nullable', 'array'],
             'sintomas.*' => ['integer', 'distinct', 'exists:sintomas,id'],
             'fecha_observacion' => ['nullable', 'date'],
             'fuente' => ['nullable', 'string', 'max:100'],
@@ -24,9 +24,6 @@ class StorePacienteSintomaRequest extends FormRequest
 
     public function messages(): array
     {
-        return [
-            'sintomas.required' => 'Debe seleccionarse al menos un síntoma.',
-            'sintomas.min' => 'Debe seleccionarse al menos un síntoma.',
-        ];
+        return [];
     }
 }

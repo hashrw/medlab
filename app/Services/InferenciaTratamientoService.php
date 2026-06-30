@@ -25,6 +25,7 @@ class InferenciaTratamientoService
      */
     public function inferirDesdeDiagnostico(Diagnostico $diagnostico, int $medicoId): ?Tratamiento
     {
+        // Validación de los datos mínimos necesarios para la inferencia
         $pacienteId = (int) ($diagnostico->paciente_id ?? 0);
         if ($pacienteId <= 0) {
             throw new \LogicException("Diagnóstico {$diagnostico->id} no tiene paciente_id.");
@@ -35,18 +36,18 @@ class InferenciaTratamientoService
             throw new \LogicException("Diagnóstico {$diagnostico->id} no tiene tipo_enfermedad.");
         }
 
+        // Los diagnósticos no concluyentes no generan propuestas de tratamiento
         $grado = (string) ($diagnostico->grado_eich ?? '');
         if ($grado === '' || $grado === 'no_concluyente') {
             return null;
         }
 
-        // Resolver regla aplicable (prioridad ascendente)
+        // Resolver regla aplicable 
         $regla = $this->resolverRegla($diagnostico);
 
         $acciones = (array) ($regla->acciones ?? []);
         $tData = $acciones['tratamiento'] ?? null;
 
-        // Fallback o regla vacía
         if (!$tData || empty($tData['tratamiento'])) {
             return null;
         }
@@ -67,6 +68,8 @@ class InferenciaTratamientoService
                 'paciente_id' => $pacienteId,
                 'medico_id' => $medicoId,
                 'diagnostico_id' => $diagnostico->id,
+                'activo' => true,
+                'fecha_cierre' => null,
             ]);
 
             // 3) Adjuntar líneas
@@ -74,9 +77,6 @@ class InferenciaTratamientoService
             foreach ($lineas as $linea) {
                 $this->attachLinea($tratamiento, (array) $linea);
             }
-
-            // 4) Recalcular duracion_total (opcional, útil para tu accesor)
-            $this->actualizarDuracionTotalPivot($tratamiento);
 
             return $tratamiento;
         });
@@ -180,9 +180,8 @@ class InferenciaTratamientoService
 
         $tratamiento->lineasTratamiento()->attach($medId, [
             'fecha_ini_linea' => $ini,
-            'duracion_linea' => $dur,
-            'duracion_total' => null,
             'fecha_fin_linea' => $fin,
+            'duracion_linea' => $dur,
             'fecha_resp_linea' => $linea['fecha_resp_linea'] ?? null,
             'observaciones' => $linea['observaciones'] ?? null,
             'tomas' => $linea['tomas'] ?? null,
@@ -216,39 +215,5 @@ class InferenciaTratamientoService
      * - inicio mínimo
      * - fin máximo
      */
-    private function actualizarDuracionTotalPivot(Tratamiento $tratamiento): void
-    {
-        $tratamiento->loadMissing('lineasTratamiento');
 
-        if ($tratamiento->lineasTratamiento->isEmpty()) {
-            return;
-        }
-
-        $iniMin = null;
-        $finMax = null;
-
-        foreach ($tratamiento->lineasTratamiento as $med) {
-            if ($med->pivot->fecha_ini_linea) {
-                $ini = Carbon::parse($med->pivot->fecha_ini_linea);
-                $iniMin = $iniMin ? $iniMin->min($ini) : $ini;
-            }
-            if ($med->pivot->fecha_fin_linea) {
-                $fin = Carbon::parse($med->pivot->fecha_fin_linea);
-                $finMax = $finMax ? $finMax->max($fin) : $fin;
-            }
-        }
-
-        if (!$iniMin || !$finMax) {
-            return;
-        }
-
-        $total = $finMax->diffInDays($iniMin);
-
-        foreach ($tratamiento->lineasTratamiento as $med) {
-            $tratamiento->lineasTratamiento()->updateExistingPivot(
-                $med->id,
-                ['duracion_total' => $total]
-            );
-        }
-    }
 }

@@ -47,7 +47,7 @@
                             <li>
                                 <div class="flex items-center px-3 py-2 rounded-md bg-blue-100 text-blue-600 font-semibold">
                                     <i class="fas fa-stethoscope w-5 mr-2"></i>
-                                    <span>Buscar paciente (motor e inferencia)</span>
+                                    <span>Mis pacientes</span>
                                 </div>
                             </li>
                         @endif
@@ -63,6 +63,20 @@
                     </ul>
                 @endif
 
+                <h3 class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-3 mt-6">
+                    Catálogos clínicos
+                </h3>
+
+                <ul class="space-y-1 mb-8">
+                    <li>
+                        <a href="{{ route('medicamentos.index') }}"
+                            class="flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
+                            <i class="fas fa-pills w-5 mr-2"></i>
+                            <span>Medicamentos</span>
+                        </a>
+                    </li>
+                </ul>
+
                 {{-- DATOS CLÍNICOS Y SEGUIMIENTO --}}
                 <h3 class="text-xs uppercase tracking-wider text-gray-400 font-semibold mb-3">
                     Datos clínicos y seguimiento
@@ -70,10 +84,20 @@
 
                 <ul class="space-y-1">
                     <li>
-                        <a href="{{ route('estadisticas.index') }}"
+                        <a href="{{ route('diagnosticos.index') }}"
                             class="flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
-                            <i class="fas fa-chart-line w-5 mr-2"></i>
-                            <span>Estadísticas clínicas</span>
+                            <i class="fas fa-stethoscope w-5 mr-2"></i>
+                            <span>Diagnósticos</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="space-y-1">
+                    <li>
+                        <a href="{{ route('tratamientos.index') }}"
+                            class="flex items-center px-3 py-2 rounded-md text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition">
+                            <i class="fas fa-pills w-5 mr-2"></i>
+                            <span>Tratamientos</span>
                         </a>
                     </li>
                 </ul>

@@ -29,6 +29,14 @@ class GenerateClinicalReportJob implements ShouldQueue
     {
         $informe = InformeClinico::findOrFail($this->informeClinicoId);
 
+        if ($informe->status === 'cancelled') {
+            Log::info('GenerateClinicalReportJob CANCELLED before start', [
+                'informe_clinico_id' => $this->informeClinicoId,
+            ]);
+
+            return;
+        }
+
         $informe->update([
             'status' => 'processing',
             'started_at' => now(),
@@ -42,37 +50,75 @@ class GenerateClinicalReportJob implements ShouldQueue
 
         try {
             $response = $client->generateClinicalReport($this->payload);
+
+            $informe->refresh();
+
+            if ($informe->status === 'cancelled') {
+                Log::info('GenerateClinicalReportJob CANCELLED after Flask response', [
+                    'informe_clinico_id' => $this->informeClinicoId,
+                ]);
+
+                return;
+            }
+
+            $status = $response['status'] ?? null;
+
             Log::info('GenerateClinicalReportJob RESPONSE', [
                 'informe_clinico_id' => $this->informeClinicoId,
                 'status' => $response['status'] ?? null,
-                'llm_used' => $response['traceability']['llm_used'] ?? null,
-                'fallback_reason' => $response['traceability']['fallback_reason'] ?? null,
+                'llm_used' => $response['llm_used'] ?? null,
+                'error_type' => $response['error_type'] ?? null,
+                'fallback_reason' => $response['fallback_reason'] ?? null,
             ]);
 
-            $traceability = $response['traceability'] ?? [];
-            $llmUsed = (bool) ($traceability['llm_used'] ?? false);
+            $traceability = [
+                'llm_used' => $response['llm_used'] ?? false,
+                'llm_model' => $response['llm_model'] ?? null,
+                'error_type' => $response['error_type'] ?? null,
+                'fallback_reason' => $response['fallback_reason'] ?? null,
+                'technical_detail' => $response['technical_detail'] ?? null,
+                'warnings' => $response['warnings'] ?? [],
+                'sources_count' => count($response['sources'] ?? []),
+            ];
+
+            $llmUsed = (bool) ($response['llm_used'] ?? false);
 
             $informe->update([
-                'status' => $llmUsed ? 'completed' : 'fallback',
+                'status' => $status === 'completed' ? 'completed' : 'fallback',
                 'clinical_report' => $response['clinical_report'] ?? null,
                 'traceability' => $traceability,
                 'llm_used' => $llmUsed,
-                'llm_model' => $traceability['llm_model'] ?? null,
-                'fallback_reason' => $traceability['fallback_reason'] ?? null,
+                'llm_model' => $response['llm_model'] ?? null,
+                'fallback_reason' => $response['fallback_reason'] ?? null,
+                'error_message' => $status === 'fallback'
+                    ? ($response['fallback_reason'] ?? 'Informe generado en modo fallback.')
+                    : null,
                 'generated_at' => $response['generated_at'] ?? now(),
                 'finished_at' => now(),
             ]);
         } catch (Throwable $e) {
+            $informe->refresh();
+
+            if ($informe->status === 'cancelled') {
+                Log::info('GenerateClinicalReportJob CANCELLED after exception', [
+                    'informe_clinico_id' => $this->informeClinicoId,
+                    'error' => $e->getMessage(),
+                ]);
+
+                return;
+            }
+
             $informe->update([
                 'status' => 'failed',
                 'error_message' => $e->getMessage(),
-                #'fallback_reason' => $e->getMessage(),
                 'finished_at' => now(),
             ]);
+
             Log::error('GenerateClinicalReportJob ERROR', [
                 'informe_clinico_id' => $this->informeClinicoId,
                 'error' => $e->getMessage(),
             ]);
+
             throw $e;
         }
     }

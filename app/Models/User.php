@@ -19,7 +19,7 @@ class User extends Authenticatable
         'password',
         'foto',
         'tipo_usuario_id',
-        'paciente_id',          // vinculación opcional a paciente clínico
+        'paciente_id',          // vinculación opcional a paciente clínico ¿?
     ];
 
     protected $hidden = [
@@ -61,7 +61,7 @@ class User extends Authenticatable
     }
 
     /*--------------------------------------------------------------
-     | ROLES (NO SE TOCAN)
+     | ROLES 
      --------------------------------------------------------------*/
     public function getTipoUsuarioIdAttribute()
     {

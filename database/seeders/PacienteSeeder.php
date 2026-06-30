@@ -13,51 +13,42 @@ class PacienteSeeder extends Seeder
     {
         $faker = Faker::create('es_ES');
 
-        // Requisitos mínimos
         foreach (['pacientes', 'users', 'sintomas', 'sintoma_aliases', 'organos', 'medicos'] as $t) {
             if (!Schema::hasTable($t)) {
                 throw new \RuntimeException("Falta tabla requerida: {$t}");
             }
         }
 
-        // 5 users libres para vincular pacientes
-        // IMPORTANTE: filtrar por tipo_usuario_id = 2 (Paciente)
         $userIds = DB::table('users')
             ->whereNull('paciente_id')
-            ->where('tipo_usuario_id', 2) // 2 = Paciente
+            ->where('tipo_usuario_id', 2)
             ->orderBy('id')
-            ->limit(5)
+            ->limit(3)
             ->pluck('id')
-            ->map(fn ($v) => (int) $v)
+            ->map(fn($v) => (int) $v)
             ->toArray();
 
-        if (count($userIds) < 5) {
+        if (count($userIds) < 3) {
             throw new \RuntimeException(
-                "Se necesitan al menos 5 users PACIENTE con users.paciente_id NULL (tipo_usuario_id=2). Encontrados: " . count($userIds)
+                "Se necesitan al menos 3 users PACIENTE con users.paciente_id NULL. Encontrados: " . count($userIds)
             );
         }
 
-        // Médicos disponibles para asignación (round-robin)
-        $medicoIds = DB::table('medicos')
-            ->orderBy('id')
-            ->pluck('id')
-            ->map(fn ($v) => (int) $v)
-            ->toArray();
-
-        if (count($medicoIds) < 1) {
-            throw new \RuntimeException("PacienteSeeder: se necesita al menos 1 médico en tabla medicos.");
+        if (!DB::table('medicos')->where('id', 1)->exists()) {
+            throw new \RuntimeException("PacienteSeeder: no existe medico_id=1.");
         }
 
-        // Nombres exactos de órganos (deben coincidir con organos.nombre)
         $ORG_GI = 'Tracto gastrointestinal';
         $ORG_HIG = 'Hígado';
         $ORG_PIEL = 'Piel';
 
         $oid = function (string $organoNombre): int {
             $id = DB::table('organos')->where('nombre', $organoNombre)->value('id');
+
             if (!$id) {
-                throw new \RuntimeException("Órgano no encontrado en organos.nombre: '{$organoNombre}'");
+                throw new \RuntimeException("Órgano no encontrado: {$organoNombre}");
             }
+
             return (int) $id;
         };
 
@@ -65,7 +56,6 @@ class PacienteSeeder extends Seeder
         $OID_HIG = $oid($ORG_HIG);
         $OID_PIEL = $oid($ORG_PIEL);
 
-        // Construye alias canónico como en ReglaDecisionSeeder: o{organo_id}_{slug(Str::ascii(texto))}
         $slug = function (string $txt): string {
             $txt = trim($txt);
             $txt = preg_replace('/\s+/u', ' ', $txt);
@@ -77,7 +67,6 @@ class PacienteSeeder extends Seeder
             return 'o' . $organoId . '_' . $slug($textoSintoma);
         };
 
-        // Resuelve sintoma_id a partir del alias canónico (validando órgano)
         $sidByCanonicalAlias = function (string $canonicalAlias, int $organoId): int {
             $row = DB::table('sintoma_aliases as sa')
                 ->join('sintomas as s', 's.id', '=', 'sa.sintoma_id')
@@ -88,21 +77,17 @@ class PacienteSeeder extends Seeder
                 ->first();
 
             if (!$row) {
-                throw new \RuntimeException("Alias canónico no encontrado o no pertenece al órgano: '{$canonicalAlias}' (organo_id={$organoId})");
+                throw new \RuntimeException("Alias canónico no encontrado: {$canonicalAlias}");
             }
 
             return (int) $row->sintoma_id;
         };
 
         $sidFromText = function (string $textoSintoma, int $organoId) use ($canon, $sidByCanonicalAlias): int {
-            $alias = $canon($textoSintoma, $organoId);
-            return $sidByCanonicalAlias($alias, $organoId);
+            return $sidByCanonicalAlias($canon($textoSintoma, $organoId), $organoId);
         };
 
-        // Si tu motor lee scores desde organo_paciente, los insertamos. Si no existe la tabla, no bloquea.
         $hasOrganoPaciente = Schema::hasTable('organo_paciente');
-
-        // Si tu proyecto usa paciente_enfermedad para fecha_trasplante, lo insertamos si existe.
         $hasPacienteEnfermedad = Schema::hasTable('paciente_enfermedad');
 
         $enfermedadId = null;
@@ -110,36 +95,28 @@ class PacienteSeeder extends Seeder
             $enfermedadId = DB::table('enfermedads')->value('id');
         }
 
-        $insertPaciente = function (
-            int $userId,
-            int $medicoId,
-            array $sintomaIds,
-            array $organScores,
-            int $diasDesdeTrasplante,
-            string $tag
-        ) use ($faker, $hasOrganoPaciente, $hasPacienteEnfermedad, $enfermedadId): int {
-
-            // BLINDAJE: asegurar que el user es paciente (tipo_usuario_id=2)
+        $insertPaciente = function (int $userId, int $medicoId, string $nuhsa, array $sintomaIds, array $organScores, int $diasDesdeTrasplante, string $tag) use ($faker, $hasOrganoPaciente, $hasPacienteEnfermedad, $enfermedadId): int {
             $u = DB::table('users')->select('id', 'tipo_usuario_id', 'paciente_id')->where('id', $userId)->first();
+
             if (!$u) {
                 throw new \RuntimeException("PacienteSeeder: user {$userId} no existe.");
             }
+
             if ((int) $u->tipo_usuario_id !== 2) {
-                throw new \RuntimeException("PacienteSeeder: user {$userId} NO es paciente (tipo_usuario_id={$u->tipo_usuario_id}).");
-            }
-            if (!is_null($u->paciente_id)) {
-                throw new \RuntimeException("PacienteSeeder: user {$userId} ya tiene paciente_id={$u->paciente_id}.");
+                throw new \RuntimeException("PacienteSeeder: user {$userId} no es paciente.");
             }
 
-            // BLINDAJE: médico existe
-            $m = DB::table('medicos')->where('id', $medicoId)->value('id');
-            if (!$m) {
-                throw new \RuntimeException("PacienteSeeder: medico {$medicoId} no existe.");
+            if (!is_null($u->paciente_id)) {
+                throw new \RuntimeException("PacienteSeeder: user {$userId} ya tiene paciente asociado.");
+            }
+
+            if (!DB::table('medicos')->where('id', $medicoId)->exists()) {
+                throw new \RuntimeException("PacienteSeeder: médico {$medicoId} no existe.");
             }
 
             $pacienteId = DB::table('pacientes')->insertGetId([
                 'medico_id' => $medicoId,
-                'nuhsa' => 'DIA' . $faker->unique()->numerify('##########'),
+                'nuhsa' => $nuhsa,
                 'fecha_nacimiento' => $faker->dateTimeBetween('-70 years', '-18 years')->format('Y-m-d'),
                 'peso' => $faker->randomFloat(2, 50, 120),
                 'altura' => $faker->numberBetween(150, 200),
@@ -150,20 +127,18 @@ class PacienteSeeder extends Seeder
 
             DB::table('users')->where('id', $userId)->update(['paciente_id' => $pacienteId]);
 
-            // paciente_sintoma (síntomas activos)
             foreach (array_values(array_unique($sintomaIds)) as $sid) {
                 DB::table('paciente_sintoma')->insert([
                     'paciente_id' => $pacienteId,
                     'sintoma_id' => (int) $sid,
                     'fecha_observacion' => now()->toDateString(),
                     'activo' => true,
-                    'fuente' => "seed_diana:{$tag}",
+                    'fuente' => "seed_controlado:{$tag}",
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
 
-            // organo_paciente (scores NIH por órgano) si existe
             if ($hasOrganoPaciente) {
                 foreach ($organScores as $organoId => $scoreNih) {
                     DB::table('organo_paciente')->updateOrInsert(
@@ -174,23 +149,20 @@ class PacienteSeeder extends Seeder
                         [
                             'score_nih' => (int) $scoreNih,
                             'fecha_evaluacion' => now()->toDateString(),
-                            'comentario' => "seed_diana:{$tag}",
+                            'comentario' => "seed_controlado:{$tag}",
                             'sintomas_asociados' => null,
-                            'updated_at' => now(),
                             'created_at' => now(),
+                            'updated_at' => now(),
                         ]
                     );
                 }
             }
 
-            // paciente_enfermedad (fecha_trasplante) si existe y hay enfermedad
             if ($hasPacienteEnfermedad && $enfermedadId) {
-                $fechaTrasplante = now()->subDays($diasDesdeTrasplante)->toDateString();
-
                 DB::table('paciente_enfermedad')->insert([
                     'paciente_id' => $pacienteId,
                     'enfermedad_id' => (int) $enfermedadId,
-                    'fecha_trasplante' => $fechaTrasplante,
+                    'fecha_trasplante' => now()->subDays($diasDesdeTrasplante)->toDateString(),
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -199,7 +171,6 @@ class PacienteSeeder extends Seeder
             return (int) $pacienteId;
         };
 
-        // Síntomas exactos de tus reglas
         $sx_hig = [
             $sidFromText('Hiperbilirrubinemia', $OID_HIG),
             $sidFromText('ALT elevada', $OID_HIG),
@@ -225,31 +196,22 @@ class PacienteSeeder extends Seeder
 
         $casos = [
             [
-                'tag' => 'SEVERA_1',
+                'tag' => 'SEVERA',
+                'nuhsa' => 'AN0876037616',
                 'sintomas' => array_merge($sx_hig, $sx_gi_severa),
                 'scores' => [$OID_HIG => 2, $OID_GI => 2],
                 'dias' => 25,
             ],
             [
-                'tag' => 'SEVERA_2',
-                'sintomas' => array_merge($sx_hig, $sx_gi_severa),
-                'scores' => [$OID_HIG => 2, $OID_GI => 2],
-                'dias' => 30,
-            ],
-            [
-                'tag' => 'MODERADA_1',
+                'tag' => 'MODERADA',
+                'nuhsa' => 'AN0876037717',
                 'sintomas' => array_merge($sx_gi_moderada, $sx_piel),
                 'scores' => [$OID_GI => 1, $OID_PIEL => 1],
                 'dias' => 35,
             ],
             [
-                'tag' => 'MODERADA_2',
-                'sintomas' => array_merge($sx_gi_moderada, $sx_piel),
-                'scores' => [$OID_GI => 1, $OID_PIEL => 1],
-                'dias' => 40,
-            ],
-            [
-                'tag' => 'LEVE_1',
+                'tag' => 'LEVE',
+                'nuhsa' => 'AN0876037818',
                 'sintomas' => $sx_piel,
                 'scores' => [$OID_PIEL => 1],
                 'dias' => 20,
@@ -257,19 +219,17 @@ class PacienteSeeder extends Seeder
         ];
 
         foreach ($casos as $i => $c) {
-            $userId = $userIds[$i];
-            $medicoId = $medicoIds[$i % count($medicoIds)];
-
             $pid = $insertPaciente(
-                $userId,
-                $medicoId,
+                $userIds[$i],
+                1,
+                $c['nuhsa'],
                 $c['sintomas'],
                 $c['scores'],
                 $c['dias'],
                 $c['tag']
             );
 
-            echo "PacienteSeeder: creado paciente {$pid} ({$c['tag']}) enlazado a user {$userId} y medico {$medicoId}\n";
+            echo "PacienteSeeder: creado paciente {$pid} ({$c['tag']}) NUHSA {$c['nuhsa']}\n";
         }
     }
 }

@@ -15,7 +15,7 @@
 
                     @can('create', \App\Models\Paciente::class)
                         <a href="{{ route('pacientes.create') }}"
-                           class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+                            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
                             + Crear Paciente
                         </a>
                     @endcan
@@ -24,13 +24,19 @@
                 {{-- FILTROS CLÍNICOS --}}
                 <div class="bg-gray-50 border-b p-4">
                     <form method="GET" action="{{ route('pacientes.index') }}"
-                          class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {{-- NUHSA --}}
+                        <div>
+                            <label class="text-sm font-semibold text-gray-700">NUHSA</label>
+                            <input type="text" name="nuhsa" value="{{ request('nuhsa') }}"
+                                class="mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                        </div>
 
                         {{-- Nombre --}}
                         <div>
                             <label class="text-sm font-semibold text-gray-700">Nombre</label>
                             <input type="text" name="nombre" value="{{ request('nombre') }}"
-                                   class="mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                                class="mt-1 w-full border-gray-300 rounded-md shadow-sm">
                         </div>
 
                         {{-- Sexo --}}
@@ -43,18 +49,11 @@
                             </select>
                         </div>
 
-                        {{-- Edad mínima --}}
+                        {{-- Apellidos --}}
                         <div>
-                            <label class="text-sm font-semibold text-gray-700">Edad mínima</label>
-                            <input type="number" name="edad_min" value="{{ request('edad_min') }}"
-                                   class="mt-1 w-full border-gray-300 rounded-md shadow-sm">
-                        </div>
-
-                        {{-- Edad máxima --}}
-                        <div>
-                            <label class="text-sm font-semibold text-gray-700">Edad máxima</label>
-                            <input type="number" name="edad_max" value="{{ request('edad_max') }}"
-                                   class="mt-1 w-full border-gray-300 rounded-md shadow-sm">
+                            <label class="text-sm font-semibold text-gray-700">Apellidos</label>
+                            <input type="text" name="apellidos" value="{{ request('apellidos') }}"
+                                class="mt-1 w-full border-gray-300 rounded-md shadow-sm">
                         </div>
 
                         {{-- IMC --}}
@@ -63,8 +62,10 @@
                             <select name="imc" class="mt-1 w-full border-gray-300 rounded-md shadow-sm">
                                 <option value="">Todos</option>
                                 <option value="normal" {{ request('imc') == 'normal' ? 'selected' : '' }}>Normal</option>
-                                <option value="sobrepeso" {{ request('imc') == 'sobrepeso' ? 'selected' : '' }}>Sobrepeso</option>
-                                <option value="obesidad" {{ request('imc') == 'obesidad' ? 'selected' : '' }}>Obesidad</option>
+                                <option value="sobrepeso" {{ request('imc') == 'sobrepeso' ? 'selected' : '' }}>Sobrepeso
+                                </option>
+                                <option value="obesidad" {{ request('imc') == 'obesidad' ? 'selected' : '' }}>Obesidad
+                                </option>
                             </select>
                         </div>
 

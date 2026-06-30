@@ -19,7 +19,9 @@ use App\Services\InferenciaDiagnosticoService;
 use App\Services\Documental\EvidenciaClientService;
 use App\Jobs\GenerateClinicalReportJob;
 use App\Models\InformeClinico;
-
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Carbon\Carbon;
 
 class DiagnosticoController extends Controller
 {
@@ -330,16 +332,45 @@ class DiagnosticoController extends Controller
             ->first();
 
         if ($existente) {
-            return redirect()
-                ->route('pacientes.show', (int) $pacienteId)
-                ->with([
-                    'warning' => 'diagnostico_ya_existe',
-                    'flash_ctx' => [
-                        'paciente_id' => (int) $pacienteId,
-                        'diagnostico_id' => (int) $existente->id,
-                        'grado_eich' => (string) ($existente->grado_eich ?? ''),
-                    ],
-                ]);
+            $fechaReferencia = $existente->updated_at
+                ?? $existente->created_at
+                ?? Carbon::parse($existente->fecha_diagnostico);
+
+            $ultimaModificacionSintomas = DB::table('paciente_sintoma')
+                ->where('paciente_id', (int) $pacienteId)
+                ->max('updated_at');
+
+            $queryOrganos = DB::table('organo_paciente')
+                ->where('paciente_id', (int) $pacienteId);
+
+            $ultimaModificacionOrganos = Schema::hasColumn('organo_paciente', 'updated_at')
+                ? $queryOrganos->max('updated_at')
+                : $queryOrganos->max('fecha_evaluacion');
+
+            $ultimaModificacionClinica = collect([
+                $ultimaModificacionSintomas,
+                $ultimaModificacionOrganos,
+            ])
+                ->filter()
+                ->map(fn($fecha) => Carbon::parse($fecha))
+                ->max();
+
+            $hayCambiosClinicosPosteriores =
+                $ultimaModificacionClinica &&
+                $ultimaModificacionClinica->greaterThan($fechaReferencia);
+
+            if (!$hayCambiosClinicosPosteriores) {
+                return redirect()
+                    ->route('pacientes.show', (int) $pacienteId)
+                    ->with([
+                        'warning' => 'diagnostico_ya_existe',
+                        'flash_ctx' => [
+                            'paciente_id' => (int) $pacienteId,
+                            'diagnostico_id' => (int) $existente->id,
+                            'grado_eich' => (string) ($existente->grado_eich ?? ''),
+                        ],
+                    ]);
+            }
         }
 
         try {
@@ -486,6 +517,18 @@ class DiagnosticoController extends Controller
         } catch (\Throwable $e) {
             return back()->with('error', 'Error generando informe clínico: ' . $e->getMessage());
         }*/
+
+        $informeEnCurso = InformeClinico::where('diagnostico_id', $diagnostico->id)
+            ->whereIn('status', ['pending', 'processing'])
+            ->latest()
+            ->first();
+
+        if ($informeEnCurso) {
+            return back()->with([
+                'warning' => 'Ya hay un informe clínico en generación. Consulte su estado antes de regenerar.',
+                'informe_clinico_id' => $informeEnCurso->id,
+            ]);
+        }
 
         $informe = InformeClinico::create([
             'diagnostico_id' => $diagnostico->id,

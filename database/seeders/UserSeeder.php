@@ -19,7 +19,7 @@ class UserSeeder extends Seeder
         // Crear médicos
         for ($i = 1; $i <= 3; $i++) { // Crear 3 médicos
             DB::table('users')->insert([
-                'name' => "Medico$i",
+                'name' => "Dr",
                 'email' => "medico$i@medico.com",
                 'apellidos' => $faker->lastName,
                 'telefono' => $faker->numerify('6#########'), // Número de teléfono español

@@ -74,10 +74,11 @@ class TrasplanteController extends Controller
         }
 
         // Si viene desde ficha paciente (ruta nested)
+        // Si viene desde ficha paciente (ruta nested)
         if ($paciente) {
-
             return view('trasplantes.create', [
-                'pacientes' => collect([$paciente])
+                'paciente' => $paciente,
+                'pacientes' => collect([$paciente]),
             ]);
         }
 

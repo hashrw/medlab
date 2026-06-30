@@ -62,6 +62,7 @@ class AdminController extends Controller
      */
     public function storePaciente(StorePacienteBackofficeRequest $request)
     {
+        //dd('entra storePaciente');
         $validated = $request->validated();
 
         try {
@@ -99,25 +100,22 @@ class AdminController extends Controller
                 }
 
                 $user->save();
+
             });
+
 
             return redirect()
                 ->route('admin.usuarios.createPaciente')
-                ->with('success', 'Usuario paciente creado correctamente.');
+                ->with('success', 'Paciente creado correctamente.');
 
         } catch (\Throwable $e) {
             return back()
                 ->withInput()
-                ->withErrors(['error' => 'Error al crear usuario: ' . $e->getMessage()]);
+                ->withErrors(['error' => 'Error al crear paciente: ' . $e->getMessage()]);
         }
     }
 
-    /**
-     * Guardar médico (Backoffice):
-     * - Validación via StoreMedicoBackofficeRequest
-     * - Transacción
-     * - Avatar opcional (se guarda en users.avatar)
-     */
+
     public function storeMedico(StoreMedicoBackofficeRequest $request)
     {
         $validated = $request->validated();
@@ -133,7 +131,7 @@ class AdminController extends Controller
                 $user->email = $validated['email'];
                 $user->password = Hash::make($validated['password']);
                 $user->tipo_usuario_id = 1; // médico
-                
+
                 // 2) Avatar opcional
                 if ($request->hasFile('foto')) {
                     $path = $request->file('foto')->store('avatars', 'public');

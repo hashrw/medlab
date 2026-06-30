@@ -198,12 +198,26 @@ class PacienteController extends Controller
 
         $data = $request->validated();
 
+        $sintomasSeleccionados = collect($data['sintomas'] ?? [])
+            ->map(fn($sid) => (int) $sid)
+            ->unique()
+            ->values();
+
         $fecha = $data['fecha_observacion'] ?? now()->toDateString();
         $fuente = $data['fuente'] ?? 'UI_MEDICO';
 
-        DB::transaction(function () use ($paciente, $data, $fecha, $fuente) {
+        DB::transaction(function () use ($paciente, $sintomasSeleccionados, $fecha, $fuente) {
 
-            foreach ($data['sintomas'] as $sid) {
+            // Primero desactivamos todos los síntomas actuales del paciente.
+            DB::table('paciente_sintoma')
+                ->where('paciente_id', (int) $paciente->id)
+                ->update([
+                    'activo' => false,
+                    'updated_at' => now(),
+                ]);
+
+            // Después activamos únicamente los síntomas seleccionados en el formulario.
+            foreach ($sintomasSeleccionados as $sid) {
                 DB::table('paciente_sintoma')->updateOrInsert(
                     [
                         'paciente_id' => (int) $paciente->id,
@@ -214,11 +228,22 @@ class PacienteController extends Controller
                         'fecha_observacion' => $fecha,
                         'fuente' => $fuente,
                         'updated_at' => now(),
-                        // si la fila es nueva, se setea created_at; si ya existe, se mantiene
-                        'created_at' => DB::raw('COALESCE(created_at, NOW())'),
+                        'created_at' => now(),
                     ]
                 );
             }
+
+            $organosConSintomasActivos = DB::table('paciente_sintoma')
+                ->join('sintomas', 'sintomas.id', '=', 'paciente_sintoma.sintoma_id')
+                ->where('paciente_sintoma.paciente_id', $paciente->id)
+                ->where('paciente_sintoma.activo', true)
+                ->pluck('sintomas.organo_id')
+                ->unique()
+                ->toArray();
+
+            $paciente->organos()
+                ->wherePivotNotIn('organo_id', $organosConSintomasActivos)
+                ->detach();
         });
 
         return redirect()

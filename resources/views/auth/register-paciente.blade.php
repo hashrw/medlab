@@ -5,7 +5,6 @@
                 <div class="text-xs uppercase tracking-wider text-gray-400 font-semibold">Acceso clínico</div>
                 <h1 class="text-xl font-semibold text-gray-800">Alta de paciente</h1>
                 <p class="text-sm text-gray-600 mt-1">
-                    Crear usuario de acceso y ficha clínica mínima del paciente.
                 </p>
             </div>
 

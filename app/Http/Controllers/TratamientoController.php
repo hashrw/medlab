@@ -233,26 +233,19 @@ class TratamientoController extends Controller
             'medicamento_id' => 'required|exists:medicamentos,id',
             'fecha_ini_linea' => 'required|date',
             'fecha_fin_linea' => 'nullable|date|after:fecha_ini_linea',
+            'duracion_linea' => 'nullable|integer|min:0',
             'fecha_resp_linea' => 'required|date|after:fecha_ini_linea',
             'observaciones' => 'nullable|string',
             'tomas' => 'required|numeric|min:0',
         ]);
 
-        $fechaIni = Carbon::parse($request->fecha_ini_linea);
-
-        $duracionLinea = null;
-        if ($request->filled('fecha_fin_linea')) {
-            $fechaFin = Carbon::parse($request->fecha_fin_linea);
-            $duracionLinea = $fechaFin->diffInDays($fechaIni);
-        }
-
         $tratamiento->lineasTratamiento()->attach($request->medicamento_id, [
             'fecha_ini_linea' => $request->fecha_ini_linea,
             'fecha_fin_linea' => $request->fecha_fin_linea,
+            'duracion_linea' => $request->duracion_linea,
             'fecha_resp_linea' => $request->fecha_resp_linea,
             'observaciones' => $request->observaciones,
             'tomas' => $request->tomas,
-            'duracion_linea' => $duracionLinea,
         ]);
 
         return redirect()

@@ -65,42 +65,52 @@ class InferenciaDiagnosticoService
     }
 
     public function ejecutar(Paciente $paciente): array
-    {
-        //caso
-        $case = CasoClinicoFactory::fromPaciente($paciente);
+{
+    // Construcción del caso clínico a partir de la información del paciente
+    $case = CasoClinicoFactory::fromPaciente($paciente);
 
-        // PRECONDICIÓN NIH (no toca reglas, solo bloquea si faltan datos)
-        $this->assertPrecondicionNih($paciente);
+    // Verificación de los datos clínicos necesarios para la inferencia
+    $this->assertPrecondicionNih($paciente);
 
-        //$aliasesActivos = $this->obtenerAliasesActivos($paciente);
-        $aliasesActivos = $case->activeAliasesCanonical;
+    // Recuperación de síntomas clínicos 
+    $aliasesActivos = $case->activeAliasesCanonical;
 
-        // ya carga organos la precondición, pero lo dejo para no romper tu flujo mental
-        $paciente->loadMissing('organos');
-        $organosPaciente = $paciente->organos->keyBy('nombre');
+    // Recuperación de órganos evaluados y sus puntuaciones NIH
+    $paciente->loadMissing('organos');
+    $organosPaciente = $paciente->organos->keyBy('nombre');
 
-        $reglas = ReglaDecision::orderBy('prioridad')->get();
+    // Obtención de las reglas clínicas definidas en el sistema
+    $reglas = ReglaDecision::orderBy('prioridad')->get();
 
-        $fallback = null;
+    $fallback = null;
 
-        foreach ($reglas as $regla) {
-            $condiciones = $regla->condiciones ?? [];
+    // Evaluación de las reglas clínicas
+    foreach ($reglas as $regla) {
+        $condiciones = $regla->condiciones ?? [];
 
-            if (empty($condiciones)) {
-                // guardamos por si no hay match real (regla sin condiciones)
-                $fallback = $regla;
-                continue;
-            }
-
-            if ($this->evaluarCondiciones($condiciones, $organosPaciente, $aliasesActivos)) {
-                $diag = $this->crearDiagnosticoInferido($paciente, $regla, $aliasesActivos);
-                return [$diag, null];
-            }
+        if (empty($condiciones)) {
+            
+            $fallback = $regla;
+            continue;
         }
 
-        // no match real: devolvemos fallback si existe
-        return [null, $fallback];
+        // Comparación de síntomas y órganos con las condiciones de la regla
+        if ($this->evaluarCondiciones($condiciones, $organosPaciente, $aliasesActivos)) {
+
+            // Generación automática del diagnóstico inferido
+            $diag = $this->crearDiagnosticoInferido(
+                $paciente,
+                $regla,
+                $aliasesActivos
+            );
+
+            return [$diag, null];
+        }
     }
+
+    
+    return [null, $fallback];
+}
 
 
     /**

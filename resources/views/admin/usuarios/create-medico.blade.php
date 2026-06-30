@@ -19,7 +19,7 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white border rounded-lg p-6 shadow-sm">
 
-                <div class="text-lg font-semibold text-gray-800">Identidad de acceso</div>
+                <div class="text-lg font-semibold text-gray-800"></div>
                 <p class="text-sm text-gray-600 mt-1">
                     Se crea un usuario de acceso y se vincula al perfil médico.
                 </p>

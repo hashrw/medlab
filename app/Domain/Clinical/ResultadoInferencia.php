@@ -14,7 +14,8 @@ final class ResultadoInferencia
         public readonly ?int $fallback_regla_decision_id,
         public readonly array $evidencia_interna, // trazabilidad mínima
         public readonly array $warnings = [],
-    ) {}
+    ) {
+    }
 
     public static function fromServiceResult(
         ?Diagnostico $diag,
@@ -37,7 +38,7 @@ final class ResultadoInferencia
                     'active_aliases_canonical' => $casoClinico->activeAliasesCanonical,
                     'organo_score_nih_by_nombre' => $casoClinico->organoScoreNihByNombre,
                     // trazabilidad concreta en el diagnóstico generado:
-                    'diagnostico_sintoma_ids' => $diag->sintomas->pluck('id')->map(fn($v) => (int)$v)->values()->all(),
+                    'diagnostico_sintoma_ids' => $diag->sintomas->pluck('id')->map(fn($v) => (int) $v)->values()->all(),
                 ],
                 warnings: [],
             );

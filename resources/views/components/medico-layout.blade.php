@@ -102,7 +102,17 @@
 
                     if (!data.items || !data.items.length) return;
 
+                    const currentPath = window.location.pathname;
+
                     data.items.forEach(item => {
+                        if (item.url) {
+                            const itemPath = new URL(item.url, window.location.origin).pathname;
+
+                            if (currentPath === itemPath) {
+                                return;
+                            }
+                        }
+
                         showClinicalToast(item.message, item.url);
                     });
 
@@ -110,7 +120,7 @@
                     console.error('Error notificaciones informe clínico', e);
                 }
 
-            }, 10000); // cada 60s
+            }, 10000);
 
         });
     </script>

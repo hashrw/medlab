@@ -20,6 +20,7 @@ class Tratamiento extends Model
         'paciente_id',
         'medico_id',
         'diagnostico_id',
+        'duracion_linea',
     ];
 
     protected $casts = [
@@ -33,7 +34,7 @@ class Tratamiento extends Model
     {
         return $this->belongsToMany(Medicamento::class, 'medicamento_tratamiento', 'tratamiento_id', 'medicamento_id')
             ->using(MedicamentoTratamiento::class)
-            ->withPivot('fecha_ini_linea', 'fecha_fin_linea', 'fecha_resp_linea', 'observaciones', 'tomas')
+            ->withPivot('fecha_ini_linea', 'duracion_linea', 'fecha_fin_linea', 'fecha_resp_linea', 'observaciones', 'tomas')
             ->withTimestamps();
     }
 

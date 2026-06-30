@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            Backoffice · Administración
+            Administración de usuarios
         </h2>
     </x-slot>
 
@@ -15,7 +15,7 @@
                     Alta de médico
                 </h3>
                 <p class="mt-2 text-sm text-gray-600">
-                    Crear usuario con perfil médico y asignar especialidad.
+                    Crear usuario con perfil médico.
                 </p>
             </a>
 
@@ -26,7 +26,7 @@
                     Alta de paciente
                 </h3>
                 <p class="mt-2 text-sm text-gray-600">
-                    Crear usuario con perfil clínico de paciente.
+                    Crear usuario con perfil de paciente.
                 </p>
             </a>
 

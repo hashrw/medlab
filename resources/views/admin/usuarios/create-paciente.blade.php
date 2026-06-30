@@ -5,16 +5,18 @@
                 Alta de paciente
             </h2>
 
-            {{-- Antes no había "Volver" (inconsistente con Alta médico) --}}
             <a href="{{ route('admin.usuarios.create') }}" class="text-sm text-gray-600 hover:text-gray-900">
                 Volver
             </a>
         </div>
+
+        <x-flash-message type="success" />
+        <x-flash-message type="warning" />
+        <x-flash-message type="error" />
     </x-slot>
 
     <div class="py-1 max-w-5xl mx-auto sm:px-6 lg:px-8">
         <div class="bg-white p-6 rounded-lg shadow">
-
             <form method="POST" action="{{ route('admin.usuarios.storePaciente') }}" enctype="multipart/form-data">
                 @csrf
 
@@ -55,8 +57,8 @@
                                     </p>
 
                                     {{-- BASURA CORREGIDA:
-                                         Antes: @error('avatar') -> NO existe en rules.
-                                         Correcto: @error('foto') porque el input se llama name="foto"
+                                    Antes: @error('avatar') -> NO existe en rules.
+                                    Correcto: @error('foto') porque el input se llama name="foto"
                                     --}}
                                     @error('foto')
                                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>

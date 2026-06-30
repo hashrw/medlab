@@ -29,7 +29,7 @@
                     @csrf
 
                     <button type="submit" title="Cerrar sesión" class="inline-flex items-center justify-center w-10 h-10 rounded-md
-                                   bg-teal-700 hover:bg-teal-800 text-white transition shadow-sm">
+       bg-blue-600 hover:bg-blue-700 text-white transition shadow-sm">
                         <i class="fas fa-power-off"></i>
                     </button>
                 </form>

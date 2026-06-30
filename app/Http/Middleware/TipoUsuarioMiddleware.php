@@ -13,7 +13,7 @@ class TipoUsuarioMiddleware
      *
      * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
-    public function handle(Request $request, Closure $next, int $tipo)
+    public function handle(Request $request, Closure $next, ...$tipos)
     {
         $user = $request->user();
 
@@ -21,7 +21,12 @@ class TipoUsuarioMiddleware
             return redirect()->route('login');
         }
 
-        abort_unless($user && (int) $user->tipo_usuario_id === (int) $tipo, 403);
+        $tipos = array_map('intval', $tipos);
+
+        abort_unless(
+            in_array((int) $user->tipo_usuario_id, $tipos, true),
+            403
+        );
 
         return $next($request);
     }

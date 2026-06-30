@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -20,7 +21,8 @@
 
         body {
             font-family: 'Nunito', sans-serif;
-            background-color: #e3f2fd; /* Fondo azul claro */
+            background-color: #ffffff;
+            /* Fondo azul claro */
             color: #2d3748;
             line-height: 1.6;
         }
@@ -41,13 +43,15 @@
 
         .welcome-header h1 {
             font-size: 2.5rem;
-            color: #1a73e8; /* Azul brillante para el título */
+            color: #1a73e8;
+            /* Azul brillante para el título */
             margin-bottom: 0.5rem;
         }
 
         .welcome-header p {
             font-size: 1.25rem;
-            color: #4a5568; /* Gris oscuro para el subtítulo */
+            color: #4a5568;
+            /* Gris oscuro para el subtítulo */
         }
 
         .welcome-logo {
@@ -70,12 +74,14 @@
         }
 
         .login-options a.patient {
-            background-color: #1a73e8; /* Azul brillante para pacientes */
+            background-color: #1a73e8;
+            /* Azul brillante para pacientes */
             color: white;
         }
 
         .login-options a.doctor {
-            background-color: #34a853; /* Verde para médicos */
+            background-color: #34a853;
+            /* Verde para médicos */
             color: white;
         }
 
@@ -93,61 +99,74 @@
         }
 
         .auth-links a {
-            color: #1a73e8; /* Azul brillante para enlaces */
+            color: #1a73e8;
+            /* Azul brillante para enlaces */
             text-decoration: none;
             font-weight: 600;
             transition: color 0.3s ease;
         }
 
         .auth-links a:hover {
-            color: #1557b3; /* Azul más oscuro al hacer hover */
+            color: #1557b3;
+            /* Azul más oscuro al hacer hover */
         }
 
         .footer {
             margin-top: 3rem;
             font-size: 0.875rem;
-            color: #718096; /* Gris para el pie de página */
+            color: #718096;
+            /* Gris para el pie de página */
+        }
+
+        .login-options a.admin {
+            background-color: #4a5568;
+            color: white;
         }
     </style>
 </head>
+
 <body class="antialiased">
 
-<div class="welcome-container">
-    <!-- Enlaces de autenticación en la esquina superior derecha -->
-    <div class="auth-links">
-        @if (Route::has('login'))
-            @auth
-                <a href="{{ url('/dashboard') }}">Dashboard</a>
-            @else
-                <a href="{{ route('login') }}">Acceder</a>
-                @if (Route::has('register'))
-                    <a href="{{ route('register') }}">Registrarse</a>
-                @endif
-                @if (Route::has('register-medico'))
-                    <a href="{{ route('register-medico') }}">Registrarse como Médico</a>
-                @endif
-            @endauth
-        @endif
-    </div>
+    <div class="welcome-container">
+        <!-- Enlaces de autenticación en la esquina superior derecha -->
+        <div class="auth-links">
+            @if (Route::has('login'))
+                @auth
+                    <a href="{{ url('/dashboard') }}">Dashboard</a>
+                @else
+                    @if (Route::has('register'))
+                        <a href="{{ route('register-paciente') }}">Registrarse como paciente</a>
+                    @endif
+                    @if (Route::has('register-medico'))
+                        <a href="{{ route('register-medico') }}">Registrarse como médico</a>
+                    @endif
+                @endauth
+            @endif
+        </div>
 
-    <!-- Contenido principal -->
-    <div class="welcome-header">
-        <img src="https://cdn-icons-png.flaticon.com/512/2967/2967178.png" alt="Logo EICHSYS" class="welcome-logo">
-        <h1>Bienvenido a EICHSYS</h1>
-        <p>Inicie sesión con su perfil</p>
-    </div>
+        <!-- Contenido principal -->
+        <div class="welcome-header">
+            <img src="{{ asset('images/logo.png') }}" alt="MedLab" style="max-width:900px;width:100%;height:auto;">
 
-    <!-- Opciones de inicio de sesión -->
-    <div class="login-options">
-        <a href="{{ route('login') }}" class="patient">Acceder como Paciente</a>
-        <a href="{{ route('login') }}" class="doctor">Acceder como Médico</a>
-    </div>
+            <h1>Bienvenido a EICHSYS</h1>
+            <p>Inicie sesión con su perfil</p>
+        </div>
 
-    <!-- Pie de página -->
-    <div class="footer">
-        &copy; {{ date('Y') }} EICHSYS. Todos los derechos reservados.
+        <!-- Opciones de inicio de sesión -->
+        <div class="login-options">
+            <a href="{{ route('login') }}" class="patient">Acceder como Paciente</a>
+            <a href="{{ route('login') }}" class="doctor">Acceder como Médico</a>
+            <a href="{{ route('login') }}" class="admin">
+                Acceder como Administrador
+            </a>
+        </div>
+
+        <!-- Pie de página -->
+        <div class="footer">
+            &copy; {{ date('Y') }} EICHSYS.
+        </div>
     </div>
-</div>
 
 </body>
+
 </html>

@@ -5,7 +5,7 @@
     {{-- CABECERA --}}
     <div class="flex justify-between items-center border-b pb-2 mb-3">
         <h4 class="font-semibold text-blue-800">
-            {{ $paciente->nombre }}
+            {{ $paciente->nuhsa }}
         </h4>
 
         <div class="flex space-x-3 text-gray-600">
@@ -40,6 +40,13 @@
     {{-- CUERPO --}}
     <div class="space-y-2 text-sm text-gray-700">
 
+        <p>
+            <span class="font-semibold">Paciente:</span>
+
+            {{ $paciente->usuarioAcceso?->name }}
+            {{ $paciente->usuarioAcceso?->apellidos }}
+        </p>
+
         {{-- Edad + Sexo --}}
         <p>
             <span class="font-semibold">Edad:</span>
@@ -49,12 +56,6 @@
         <p>
             <span class="font-semibold">Sexo:</span>
             {{ $paciente->sexo ?? 'No especificado' }}
-        </p>
-
-        {{-- NUHSA --}}
-        <p>
-            <span class="font-semibold">NUHSA:</span>
-            {{ $paciente->nuhsa ?? '-' }}
         </p>
 
         {{-- Peso / Altura --}}
@@ -76,13 +77,13 @@
                 @php $cat = $paciente->imc_categoria; @endphp
 
                 <span class="
-                        px-2 py-1 rounded-full text-xs
-                        @if($cat === 'Normal') bg-green-100 text-green-700
-                        @elseif($cat === 'Sobrepeso') bg-yellow-100 text-yellow-700
-                        @elseif(is_string($cat) && str_starts_with($cat, 'Obesidad')) bg-red-100 text-red-700
-                        @else bg-gray-100 text-gray-700
-                        @endif
-                    ">
+                                px-2 py-1 rounded-full text-xs
+                                @if($cat === 'Normal') bg-green-100 text-green-700
+                                @elseif($cat === 'Sobrepeso') bg-yellow-100 text-yellow-700
+                                @elseif(is_string($cat) && str_starts_with($cat, 'Obesidad')) bg-red-100 text-red-700
+                                @else bg-gray-100 text-gray-700
+                                @endif
+                            ">
                     {{ number_format((float) $paciente->imc, 1, '.', '') }} — {{ $cat ?? 'No clasificado' }}
                 </span>
             </p>
